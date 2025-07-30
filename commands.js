@@ -211,9 +211,10 @@ async function handleHelpCommand(interaction) {
 
     const DiscordEmbed = new EmbedBuilder()
     .setColor('DarkBlue')
-    .setTitle(`Hello ${interaction.user.username}, how may I help you today?`)
+    .setTitle(`Hello ${interaction.user.username}!`)
+    .setDescription('Welcome to the **Crucified** bot! Here you can find information about the bot, the discord server, and more!')
     .setThumbnail(`${avatar}`)
-    .setFooter({text: 'Thank you for using crucified'})
+    .setFooter({text: 'Thank you for using crucified || Developed by crucifiedxx'})
     .setTimestamp();
 
     await interaction.reply({
@@ -241,11 +242,12 @@ async function handleHelpCommand(interaction) {
                 {name: 'Sunken', value: 'A community welcoming of all with total acceptance and no judgement.'},
                 {name: 'What we offer', value: 'We offer a variety of channels for discussion, gaming, and more. We also have a variety of bots to enhance your experience.'},
                 {name: 'Join us', value: 'Join us today and become a part of our community! We are always looking for new members to join us in our journey.'},
-                {name: 'Rules', value: '1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!'},
+                {name: 'Rules', value: '**1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!**'},
+                {name: 'Hierarchy', value: 'Owner: Crucified, Crucified-Bot\nCo-owner: Chichi\nSenior Moderator: N/A\nMod: N/A\nTrial Mod: N/A'},
                 {name: 'Events', value: 'We host regular events such as game nights, movie nights, and more! Stay tuned for announcements.'},
-                {name: 'Schedule', value: 'I stream on twitch every friday at 6ish PM GMT. You can also check out my YouTube channel and TikTok for more content!'}
+                {name: 'Schedule', value: 'I stream on twitch **every friday** at **6ish PM GMT**. You can also check out my YouTube channel and TikTok for more content!'}
             )
-            .setFooter({text: 'Thank you for using the crucified bot!'})
+            .setFooter({text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'})
             .setTimestamp();
 
             await i.update({
