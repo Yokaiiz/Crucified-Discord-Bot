@@ -1,0 +1,29 @@
+{
+  "users": [
+    {
+      "id": "961370035555811388",
+      "balance": 7944,
+      "experience": 0,
+      "lastDaily": null,
+      "inventory": {
+        "Sword": 2,
+        "Shovel": 4,
+        "Pickaxe": 1,
+        "Shield": 1
+      },
+      "dailyStreak": 0,
+      "timezone": "UTC",
+      "gambleHistory": []
+    },
+    {
+      "id": "1362484993665929226",
+      "balance": 0,
+      "experience": 0,
+      "lastDaily": null,
+      "inventory": {},
+      "dailyStreak": 0,
+      "timezone": "UTC",
+      "gambleHistory": []
+    }
+  ]
+}

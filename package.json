@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@discordjs/builders": "^1.10.0",
+    "@discordjs/rest": "^2.4.3",
+    "axios": "^1.8.4",
+    "discord-api-types": "^0.37.120",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "lowdb": "^7.0.1",
+    "luxon": "^3.6.1"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot",
+  "main": "index.js",
+  "type": "commonjs"
+}
