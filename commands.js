@@ -237,6 +237,14 @@ async function handleHelpCommand(interaction) {
             .setDescription('Welcome to `Sunken`!')
             .setImage('https://cdn.discordapp.com/attachments/1396996504719462452/1399854208840241312/download_21.jpg?ex=688a8353&is=688931d3&hm=6bc0d72b833654b00f21fbba3389ebfecc301bacd2861e5d7a8aafe8deac9992&')
             .setThumbnail('https://cdn.discordapp.com/attachments/1396996504719462452/1399854208504565801/Ocean.jpg?ex=688a8353&is=688931d3&hm=12afa3340e0b369b0d6def7b529d9d95197b4a6d09a4ba3fff25063e48655c29&')
+            .addFields(
+                {name: 'Sunken', value: 'A community welcoming of all with total acceptance and no judgement.'},
+                {name: 'What we offer', value: 'We offer a variety of channels for discussion, gaming, and more. We also have a variety of bots to enhance your experience.'},
+                {name: 'Join us', value: 'Join us today and become a part of our community! We are always looking for new members to join us in our journey.'},
+                {name: 'Rules', value: '1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!'},
+                {name: 'Events', value: 'We host regular events such as game nights, movie nights, and more! Stay tuned for announcements.'},
+                {name: 'Schedule', value: 'I stream on twitch every friday at 6ish PM GMT. You can also check out my YouTube channel and TikTok for more content!'}
+            )
             .setFooter({text: 'Thank you for using the crucified bot!'})
             .setTimestamp();
 
