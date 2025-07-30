@@ -192,6 +192,11 @@ async function handleHelpCommand(interaction) {
     .setStyle(ButtonStyle.Link)
     .setURL('https://www.tiktok.com/@crucified_xx');
 
+    const GitHubButton = new ButtonBuilder()
+    .setLabel('Github')
+    .setStyle(ButtonStyle.Link)
+    .setURL('https://github.com/Yokaiiz');
+
     const mainEmbedSelectMenu = new StringSelectMenuBuilder()
     .setCustomId('main-select-menu')
     .setPlaceholder('Make a selection')
@@ -207,7 +212,7 @@ async function handleHelpCommand(interaction) {
     ]);
     
     const mainselectmenu = new ActionRowBuilder().addComponents(mainEmbedSelectMenu);
-    const mainButtonRow = new ActionRowBuilder().addComponents(DiscordServerButton, YouTubeButton, TikTokButton, TwitchButton);
+    const mainButtonRow = new ActionRowBuilder().addComponents(DiscordServerButton, YouTubeButton, TikTokButton, TwitchButton, GitHubButton);
 
     const DiscordEmbed = new EmbedBuilder()
     .setColor('DarkBlue')
@@ -219,7 +224,7 @@ async function handleHelpCommand(interaction) {
 
     await interaction.reply({
         embeds: [DiscordEmbed],
-        components: [mainselectmenu, mainButtonRow]
+        components: [mainButtonRow, mainselectmenu]
     });
 
     const collector = interaction.channel.createMessageComponentCollector({
