@@ -124,17 +124,26 @@ client.on('interactionCreate', async interaction => {
         timestamps.set(interaction.user.id, now);
         setTimeout(() => timestamps.delete(interaction.user.id), cooldownTime);
 
+        // Gwen: Updated to be a switch casement for faster, more reliable and efficient code. Better than if else statements.
         // ✅ Command execution
-        if (commandName === 'help') {
-            await handleHelpCommand(interaction);
-        } else if (commandName === 'cat') {
-            await handleCatCommand(interaction);
-        } else if (commandName === 'beg') {
-            await handleBegCommand(interaction);
-        } else if (commandName === 'profile') {
-            await handleProfileCommand(interaction);
-        } else if (commandName === 'gamble') {
-            await handleGambleCommand(interaction);
+
+
+        switch (commandName) {
+            case 'help':
+                await handleHelpCommand(interaction);
+                break;
+            case 'cat':
+                await handleCatCommand(interaction);
+                break;
+            case 'beg':
+                await handleBegCommand(interaction);
+                break;
+            case 'profile':
+                await handleProfileCommand(interaction);
+                break;
+            case 'gamble':
+                await handleGambleCommand(interaction);
+                break;
         }
 
     } catch (error) {
