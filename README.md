@@ -1,3 +1,0 @@
-# Crucified-Bot
-
-# The crucified bot is based on Bleach, my personal favourite manga and anime OAT alongside Tokyo Ghoul. This repo showcases what is on the bot alongside the new updates I put on it! There is still more likely to go on this README as I genuinely do not know what to write about the bot and of course I do not permit anybody to use this code as a way to copy what I have done instead of use it to make their own unique discord bot. If there are any inquiries please DM me at crucifiedxx on Discord, the forms of connection will likely increase but this is the most comfortable one I am with at the time that I am writing this.
