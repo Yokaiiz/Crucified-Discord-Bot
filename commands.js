@@ -259,6 +259,24 @@ async function handleHelpCommand(interaction) {
                 embeds: [discordserverEmbed],
                 components: [mainselectmenu, mainButtonRow]
             });
+        } else if (i.values[0] === 'crucified-bot') {
+            const botEmbed = new EmbedBuilder()
+            .setColor('DarkBlue')
+            .setTitle('`Crucified Bot`')
+            .setDescription('Welcome to the `Crucified Bot`!')
+            .setThumbnail(`${avatar}`)
+            .addFields(
+                {name: 'What is Crucified Bot?', value: 'Crucified Bot is a multipurpose bot that offers a variety of features such as economy, moderation, and more!'},
+                {name: 'Commands', value: '`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away'},
+                {name: 'Support', value: 'If you need help with the bot, feel free to join our discord server and ask for help!'}
+            )
+            .setFooter({text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'})
+            .setTimestamp();
+
+            await i.update({
+                embeds: [botEmbed],
+                components: [mainselectmenu, mainButtonRow]
+            });
         }
     })
 }
