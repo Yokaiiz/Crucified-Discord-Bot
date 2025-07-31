@@ -275,7 +275,7 @@ async function handleHelpCommand(interaction) {
 
             await i.update({
                 embeds: [botEmbed],
-                components: [mainselectmenu, mainButtonRow]
+                components: [mainButtonRow, mainselectmenu]
             });
         }
     })
