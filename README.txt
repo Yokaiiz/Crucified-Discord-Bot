@@ -1,4 +1,4 @@
-Guide on how to use Mike Ross:
+Guide on how to use Crucified bot:
 
 - npm install if it's you're first time with this repo//project
 - Enter your discord bot token inside of the .env file.
