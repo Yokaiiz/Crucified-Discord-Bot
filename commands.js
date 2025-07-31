@@ -257,7 +257,7 @@ async function handleHelpCommand(interaction) {
 
             await i.update({
                 embeds: [discordserverEmbed],
-                components: [mainselectmenu, mainButtonRow]
+                components: [mainButtonRow, mainselectmenu]
             });
         } else if (i.values[0] === 'crucified-bot') {
             const botEmbed = new EmbedBuilder()
