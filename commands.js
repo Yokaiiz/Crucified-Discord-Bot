@@ -364,10 +364,10 @@ async function handleDigCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   const digItemPool = [
-    { item: 'raw gold', chance: 0.10 },
-    { item: 'raw diamond', chance: 0.05 },
-    { item: 'raw iron', chance: 0.20 },
-    { item: 'raw copper', chance: 0.25 },
+    { item: 'raw gold', chance: 0.15 },
+    { item: 'raw diamond', chance: 0.025 },
+    { item: 'raw iron', chance: 0.15 },
+    { item: 'raw copper', chance: 0.20 },
     { item: 'nothing', chance: 0.40 }
   ];
 
@@ -392,7 +392,6 @@ async function handleDigCommand(interaction) {
     await database.saveUserData(userId, userData);
     return interaction.reply({
       content: `You dug and found **${item}**!`,
-      ephemeral: true,
     });
   }
 }
