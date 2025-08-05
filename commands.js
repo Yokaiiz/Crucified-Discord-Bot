@@ -248,9 +248,9 @@ async function handleHelpCommand(interaction) {
                 {name: 'What we offer', value: 'We offer a variety of channels for discussion, gaming, and more. We also have a variety of bots to enhance your experience.'},
                 {name: 'Join us', value: 'Join us today and become a part of our community! We are always looking for new members to join us in our journey.'},
                 {name: 'Rules', value: '**1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!**'},
-                {name: 'Hierarchy', value: 'Owner: Crucified, Crucified-Bot\nCo-owner: Chichi\nSenior Moderator: N/A\nMod: N/A\nTrial Mod: N/A'},
-                {name: 'Events', value: 'We host regular events such as game nights, movie nights, and more! Stay tuned for announcements.'},
-                {name: 'Schedule', value: 'I stream on twitch **every friday** at **6ish PM GMT**. You can also check out my YouTube channel and TikTok for more content!'}
+                {name: 'Hierarchy', value: 'Owner: Crucified, Crucified-Bot\nCo-owner: Chichi\nSenior Moderator: N/A\nMod: N/A\nTrial Mod: N/A\nTwitch Mod: Chichi, Eto, dooD, Cairo'},
+                {name: 'Events', value: 'We host regular events such as game nights, movie nights, and more! We have set the events to happen every friday and sunday so please check the server updates channel for more information regarding the events!'},
+                {name: 'Schedule', value: 'I stream on twitch **every day** at **6:30 PM UK time**. You can also check out my YouTube channel and TikTok for more content!'}
             )
             .setFooter({text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'})
             .setTimestamp();
