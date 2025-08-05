@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -17,7 +17,7 @@ if (!token) {
 
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
@@ -28,15 +28,15 @@ async function initializeBot() {
         console.log('Began starting up bot');
         await client.login(token);
         console.log('Logged in successfully');
-       
+
         console.log('Deploying commands');
         await deployCommands(client);
         console.log('Commands deployed successfully');
-       
+
         console.log('Starting LOWDB');
         await database.initialize();
         console.log('LOWDB started successfully');
-       
+
         console.log(`Logged in as ${client.user.tag}!`);
     } catch (error) {
         console.error('Error during initialization:', error);
@@ -47,7 +47,7 @@ async function initializeBot() {
 const cooldowns = new Map();
 
 const commands = [
-    
+
     new SlashCommandBuilder().setName('help').setDescription('general support'),
     new SlashCommandBuilder().setName('cat').setDescription('Sends a pic of kitty!!'),
     new SlashCommandBuilder().setName('beg').setDescription('You beg for money!'),
@@ -60,7 +60,8 @@ const commands = [
         .setDescription('the amount you wish to bet')
         .setRequired(true)
     ),
-    
+    new SlashCommandBuilder().setName('dig').setDescription('Dig for items!'),
+
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(token);
@@ -86,6 +87,7 @@ function getCooldownTime(commandName) {
         beg: 8500,
         profile: 9000,
         gamble: 10000,
+        dig: 12000,
 
         // default fallback
         default: 5000
@@ -141,6 +143,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'gamble':
                 await handleGambleCommand(interaction);
+                break;
+            case 'dig':
+                await handleDigCommand(interaction);
                 break;
         }
 

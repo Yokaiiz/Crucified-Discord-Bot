@@ -95,7 +95,7 @@ async function handleCatCommand(interaction) {
       .setTitle("Here's a cute kitty")
       .setImage(imageUrl)
       .setColor("Default")
-      .setFooter({ text: "kittyuh" });
+      .setFooter({ text: "kittyuh || Catawampus" });
 
     await interaction.reply({ embeds: [embed] });
   } catch (error) {
@@ -342,6 +342,68 @@ async function handleHelpCommand(interaction) {
   });
 }
 
+async function handleDigCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  if (userData.inventory['shovel'] <= 0) {
+    return interaction.reply({
+      content: 'You need a shovel to dig, go beg for one brokie.',
+      ephemeral: true,
+    });
+  } else if (userData.inventory['shovel'] > 0) {
+    userData.inventory['shovel'] -= 1;
+    await database.saveUserData(userId, userData);
+    const digItemPool = [
+      {
+        item: 'raw gold',
+        chance: 0.10,
+      },
+      {
+        item: 'raw diamond',
+        chance: 0.05,
+      },
+      {
+        item: 'raw iron',
+        chance: 0.20,
+      },
+      {
+        item: 'raw copper',
+        chance: 0.25,
+      },
+      {
+        item: 'nothing',
+        chance: 0.40,
+      }
+    ];
+
+    const random = Math.random(digItemPool);
+    let cumulative = 0;
+    let item = null;
+    for (const obj of digItemPool) {
+      cumulative += obj.chance;
+      if (random <= cumulative) {
+        item = obj.item;
+        break;
+      }
+    }
+    if (item === 'nothing') {
+      return interaction.reply({
+        content: 'You dug but found nothing, better luck next time brokie.',
+        ephemeral: true,
+      });
+    } else {
+      userData.inventory[item] = (userData.inventory[item] || 0) + 1;
+      await database.saveUserData(userId, userData);
+      return interaction.reply({
+        content: `You dug and found **${item}**!`,
+        ephemeral: true,
+      });
+    }
+  }
+}
+
 // Add more functions here
 
 module.exports = {
@@ -350,5 +412,6 @@ module.exports = {
   handleProfileCommand,
   handleGambleCommand,
   handleHelpCommand,
+  handleDigCommand,
   // Add more functions to export here
 };
