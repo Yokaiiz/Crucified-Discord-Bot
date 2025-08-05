@@ -364,9 +364,9 @@ async function handleDigCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   const digItemPool = [
-    { item: 'raw gold', chance: 0.15 },
-    { item: 'raw diamond', chance: 0.025 },
-    { item: 'raw iron', chance: 0.15 },
+    { item: 'raw gold', chance: 0.05 },
+    { item: 'raw diamond', chance: 0.05 },
+    { item: 'raw iron', chance: 0.30 },
     { item: 'raw copper', chance: 0.20 },
     { item: 'nothing', chance: 0.40 }
   ];
