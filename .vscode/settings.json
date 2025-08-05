@@ -1,6 +1,6 @@
 {
 	// Title
-	"window.title": "JJK Bot",
+	"window.title": "Crucified Bot",
 
 	// Tidy when saving
 	"editor.formatOnSave": true,
@@ -76,25 +76,4 @@
 	"workbench.editor.pinnedTabSizing": "normal",
 	"workbench.editor.showTabs": "multiple",
 
-	// Check code, configs & docs for spelling mistakes
-	"cSpell.language": "en-GB",
-	"cSpell.enabled": false,
-	"cSpell.files": [
-		"**/*.ts",
-		"**/*.tsx",
-		"**/*.css",
-		"*.config.ts",
-		"*.config.js",
-		"*.md",
-	],
-	"cSpell.words": [
-		"botlistme",
-		"Jogos",
-		"nullifu",
-		"Rikugan",
-		"Sukuna",
-		"Talisman",
-		"topgg",
-		"Uncs"
-	]
 }
