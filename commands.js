@@ -1,293 +1,354 @@
-const { ButtonBuilder, ActionRowBuilder, userMention, roleMention, bold, time, channelMention } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonStyle, ButtonInteraction, ButtonComponent, BaseSelectMenuComponent, SelectMenuInteraction, StringSelectMenuComponent, StringSelectMenuInteraction, ActionRow, ALLOWED_SIZES, Component, embedLength, User, Locale, ThreadOnlyChannel, SelectMenuBuilder, ComponentType, Options, Guild,  } = require('discord.js');
-const database = require('./database.js');
-const {getUserData} = require('./db.json');
-const { StringSelectMenuBuilder } = require('@discordjs/builders');
-const { StringSelectMenuOptionBuilder } = require('@discordjs/builders');
-const { SelectMenuOptionBuilder } = require('@discordjs/builders');
-const {DateTime} = require('luxon');
-const BOT_OWNER_ID = process.env.BOT_OWNER_ID;
-const BOT_OWNER_ID2 = process.env.BOT_OWNER_ID2;
+const { ButtonBuilder, ActionRowBuilder } = require("@discordjs/builders");
+const { EmbedBuilder, ButtonStyle } = require("discord.js");
+const database = require("./database.js");
+const { StringSelectMenuBuilder } = require("@discordjs/builders");
+const { StringSelectMenuOptionBuilder } = require("@discordjs/builders");
+const { ComponentType } = require("discord.js");
 
 async function handleBegCommand(interaction) {
-    const userId = interaction.user.id;
+  const userId = interaction.user.id;
 
-    // Ensure user exists in DB
-    await database.ensureUser(userId);
+  // Ensure user exists in DB
+  await database.ensureUser(userId);
 
-    // Get user data
-    const userData = await database.getUserData(userId);
+  // Get user data
+  const userData = await database.getUserData(userId);
 
-    // Generate random amount
-    const amount = Math.floor(Math.random() * 300) + 50;
-    const itempool = [
+  // Generate random amount
+  const amount = Math.floor(Math.random() * 300) + 50;
+  const itempool = [
+    { item: "Sword", chance: 0.4 },
+    { item: "Shovel", chance: 0.4 },
+    { item: "Shield", chance: 0.1 },
+    { item: "Pickaxe", chance: 0.1 },
+  ];
 
-        {item: 'Sword', chance: 0.4},
-        {item: 'Shovel', chance: 0.4},
-        {item: 'Shield', chance: 0.1},
-        {item: 'Pickaxe', chance: 0.1},
+  const random = Math.random();
+  let cumulative = 0;
+  let item = null;
 
-    ];
-
-    const random = Math.random();
-    let cumulative = 0;
-    let item = null;
-
-    for (const obj of itempool) {
+  for (const obj of itempool) {
     cumulative += obj.chance;
     if (random <= cumulative) {
-        item = obj.item;
-        break;
+      item = obj.item;
+      break;
     }
-}
+  }
 
-    // Update balance
-    userData.balance += amount;
-    if (userData.inventory[item]) {
+  // Update balance
+  userData.balance += amount;
+  if (userData.inventory[item]) {
     userData.inventory[item] += 1;
-} else {
-    userData.inventory[item] = 1;   
-}
+  } else {
+    userData.inventory[item] = 1;
+  }
 
+  // Save back to DB
+  await database.saveUserData(userId, userData);
 
-    // Save back to DB
-    await database.saveUserData(userId, userData);
-
-    // Build embed
-    const embed = new EmbedBuilder()
-        .setColor('Green')
-        .setTitle('You begged!')
-        .setDescription(`You begged and received **¥${amount}** along with **${item}**!`)
-        .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
-}
-
-async function handleProfileCommand(interaction) {
-    const userId = interaction.user.id;
-    await database.ensureUser(userId);
-    const userData = await database.getUserData(userId);
-    const balance = userData.balance;
-    const inventory = userData.inventory
-    const profile = interaction.user.displayAvatarURL();
-    const inventoryText = Object.entries(inventory)
-        .map(([item, qty]) => `${item} x${qty}`)
-        .join('\n');
-    const username = interaction.user.username;
-
-    const embed = new EmbedBuilder()
-    .setColor('Default')
-    .setTitle(`${username}'s inventory and balance!`)
-    .setThumbnail(profile)
-    .addFields(
-        {name: '**Balance**', value: `**¥${balance}**`},
-        {name: '**Inventory**', value: `**${inventoryText}**`}
+  // Build embed
+  const embed = new EmbedBuilder()
+    .setColor("Green")
+    .setTitle("You begged!")
+    .setDescription(
+      `You begged and received **¥${amount}** along with **${item}**!`
     )
     .setTimestamp();
 
-    await interaction.reply({
-        embeds: [embed]
-    });
-    
+  await interaction.reply({ embeds: [embed] });
+}
+
+async function handleProfileCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const balance = userData.balance;
+  const inventory = userData.inventory;
+  const profile = interaction.user.displayAvatarURL();
+  const inventoryText = Object.entries(inventory)
+    .map(([item, qty]) => `${item} x${qty}`)
+    .join("\n");
+  const username = interaction.user.username;
+
+  const embed = new EmbedBuilder()
+    .setColor("Default")
+    .setTitle(`${username}'s inventory and balance!`)
+    .setThumbnail(profile)
+    .addFields(
+      { name: "**Balance**", value: `**¥${balance}**` },
+      { name: "**Inventory**", value: `**${inventoryText}**` }
+    )
+    .setTimestamp();
+
+  await interaction.reply({
+    embeds: [embed],
+  });
 }
 
 async function handleCatCommand(interaction) {
-    try {
-        const response = await fetch('https://api.thecatapi.com/v1/images/search');
-        const data = await response.json();
-        const imageUrl = data[0].url;
+  try {
+    const response = await fetch("https://api.thecatapi.com/v1/images/search");
+    const data = await response.json();
+    const imageUrl = data[0].url;
 
-        const embed = new EmbedBuilder()
-        .setTitle('Here\'s a cute kitty')
-        .setImage(imageUrl)
-        .setColor('Default')
-        .setFooter({ text: 'kittyuh'});
+    const embed = new EmbedBuilder()
+      .setTitle("Here's a cute kitty")
+      .setImage(imageUrl)
+      .setColor("Default")
+      .setFooter({ text: "kittyuh" });
 
-        await interaction.reply({ embeds: [embed]});
-    } catch (error) {
-        console.error('Failed to fetch cat image:', error);
-        await interaction.reply('Sorry, I could not fetch a kitty image right now.');
-    }
+    await interaction.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error("Failed to fetch cat image:", error);
+    await interaction.reply(
+      "Sorry, I could not fetch a kitty image right now."
+    );
+  }
 }
 
 async function handleGambleCommand(interaction) {
-    const userId = interaction.user.id;
-    const amount = interaction.options.getInteger('amount');
-    await database.ensureUser(userId);
-    const userData = await database.getUserData(userId);
+  const userId = interaction.user.id;
+  const amount = interaction.options.getInteger("amount");
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
 
-    if (!amount || amount <= 0 || userData.balance < amount) {
-        return interaction.reply({
-            content: 'Go beg so you can actually give me some money.',
-            ephemeral: true
-        });
+  if (!amount || amount <= 0 || userData.balance < amount) {
+    return interaction.reply({
+      content: "Go beg so you can actually give me some money.",
+      ephemeral: true,
+    });
+  }
+
+  const outcomes = [
+    { name: "Jackpot", multiplier: 5, chance: 0.1 },
+    { name: "High Win", multiplier: 3, chance: 0.15 },
+    { name: "Mid Win", multiplier: 2, chance: 0.2 },
+    { name: "Low Win", multiplier: 1, chance: 0.25 },
+    { name: "Loss", multiplier: 0, chance: 0.3 },
+  ];
+
+  // Select outcome based on weighted chance
+  const rand = Math.random();
+  let totalChance = 0;
+  let selected = outcomes[outcomes.length - 1]; // Default to 'Loss'
+
+  for (const outcome of outcomes) {
+    totalChance += outcome.chance;
+    if (rand <= totalChance) {
+      selected = outcome;
+      break;
     }
+  }
 
-    const outcomes = [
-        { name: 'Jackpot', multiplier: 5, chance: 0.10 },
-        { name: 'High Win', multiplier: 3, chance: 0.15 },
-        { name: 'Mid Win', multiplier: 2, chance: 0.20 },
-        { name: 'Low Win', multiplier: 1, chance: 0.25 },
-        { name: 'Loss', multiplier: 0, chance: 0.30 }
-    ];
+  let messageEmbed;
+  const winnings = amount * selected.multiplier;
 
-    // Select outcome based on weighted chance
-    const rand = Math.random();
-    let totalChance = 0;
-    let selected = outcomes[outcomes.length - 1]; // Default to 'Loss'
+  if (selected.multiplier > 0) {
+    userData.balance += winnings;
+    messageEmbed = new EmbedBuilder()
+      .setTitle(`🎉 You hit a **${selected.name}**!`)
+      .setDescription(`You won **¥${winnings}**!`)
+      .setColor("Green")
+      .setTimestamp();
+  } else {
+    userData.balance -= amount;
+    messageEmbed = new EmbedBuilder()
+      .setTitle("💸 You lost...")
+      .setDescription(
+        `You lost ¥${amount}, but nothing is stopping you from trying again!`
+      )
+      .setColor("Red")
+      .setTimestamp();
+  }
 
-    for (const outcome of outcomes) {
-        totalChance += outcome.chance;
-        if (rand <= totalChance) {
-            selected = outcome;
-            break;
-        }
-    }
+  await database.saveUserData(userId, userData);
 
-    let messageEmbed;
-    const winnings = amount * selected.multiplier;
-
-    if (selected.multiplier > 0) {
-        userData.balance += winnings;
-        messageEmbed = new EmbedBuilder()
-            .setTitle(`🎉 You hit a **${selected.name}**!`)
-            .setDescription(`You won **¥${winnings}**!`)
-            .setColor('Green')
-            .setTimestamp();
-    } else {
-        userData.balance -= amount;
-        messageEmbed = new EmbedBuilder()
-            .setTitle('💸 You lost...')
-            .setDescription(`You lost ¥${amount}, but nothing is stopping you from trying again!`)
-            .setColor('Red')
-            .setTimestamp();
-    }
-
-    await database.saveUserData(userId, userData);
-
-    return interaction.reply({ embeds: [messageEmbed] });
+  return interaction.reply({ embeds: [messageEmbed] });
 }
 
 async function handleHelpCommand(interaction) {
-    
-    const avatar = interaction.user.displayAvatarURL();
+  const avatar = interaction.user.displayAvatarURL();
 
-    const DiscordServerButton = new ButtonBuilder()
-    .setLabel('Discord Server')
+  const DiscordServerButton = new ButtonBuilder()
+    .setLabel("Discord Server")
     .setStyle(ButtonStyle.Link)
-    .setURL('https://discord.gg/DPrxwz8nEQ');
+    .setURL("https://discord.gg/DPrxwz8nEQ");
 
-    const TwitchButton = new ButtonBuilder()
-    .setLabel('Twitch')
+  const TwitchButton = new ButtonBuilder()
+    .setLabel("Twitch")
     .setStyle(ButtonStyle.Link)
-    .setURL('https://www.twitch.tv/crucified_xx');
+    .setURL("https://www.twitch.tv/crucified_xx");
 
-    const YouTubeButton = new ButtonBuilder()
-    .setLabel('YouTube')
+  const YouTubeButton = new ButtonBuilder()
+    .setLabel("YouTube")
     .setStyle(ButtonStyle.Link)
-    .setURL('https://www.youtube.com/@Sunken_zz');
-    
-    const TikTokButton = new ButtonBuilder()
-    .setLabel('TikTok')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://www.tiktok.com/@crucified_xx');
+    .setURL("https://www.youtube.com/@Sunken_zz");
 
-    const GitHubButton = new ButtonBuilder()
-    .setLabel('Github')
+  const TikTokButton = new ButtonBuilder()
+    .setLabel("TikTok")
     .setStyle(ButtonStyle.Link)
-    .setURL('https://github.com/Yokaiiz');
+    .setURL("https://www.tiktok.com/@crucified_xx");
 
-    const mainEmbedSelectMenu = new StringSelectMenuBuilder()
-    .setCustomId('main-select-menu')
-    .setPlaceholder('Make a selection')
+  const GitHubButton = new ButtonBuilder()
+    .setLabel("Github")
+    .setStyle(ButtonStyle.Link)
+    .setURL("https://github.com/Yokaiiz");
+
+  const mainEmbedSelectMenu = new StringSelectMenuBuilder()
+    .setCustomId("main-select-menu")
+    .setPlaceholder("Make a selection")
     .addOptions([
-        new StringSelectMenuOptionBuilder()
-        .setValue('discord-server')
-        .setLabel('Discord Server 🗣️')
-        .setDescription('Updates the embed to show information regarding the discord server'),
-        new StringSelectMenuOptionBuilder()
-        .setValue('crucified-bot')
-        .setLabel('Crucified Bot 🤖')
-        .setDescription('Updates the embed to show information regarding the discord bot')
+      new StringSelectMenuOptionBuilder()
+        .setValue("discord-server")
+        .setLabel("Discord Server 🗣️")
+        .setDescription(
+          "Updates the embed to show information regarding the discord server"
+        ),
+      new StringSelectMenuOptionBuilder()
+        .setValue("crucified-bot")
+        .setLabel("Crucified Bot 🤖")
+        .setDescription(
+          "Updates the embed to show information regarding the discord bot"
+        ),
     ]);
-    
-    const mainselectmenu = new ActionRowBuilder().addComponents(mainEmbedSelectMenu);
-    const mainButtonRow = new ActionRowBuilder().addComponents(DiscordServerButton, YouTubeButton, TikTokButton, TwitchButton, GitHubButton);
 
-    const DiscordEmbed = new EmbedBuilder()
-    .setColor('DarkBlue')
+  const mainselectmenu = new ActionRowBuilder().addComponents(
+    mainEmbedSelectMenu
+  );
+  const mainButtonRow = new ActionRowBuilder().addComponents(
+    DiscordServerButton,
+    YouTubeButton,
+    TikTokButton,
+    TwitchButton,
+    GitHubButton
+  );
+
+  const DiscordEmbed = new EmbedBuilder()
+    .setColor("DarkBlue")
     .setTitle(`Hello ${interaction.user.username}!`)
-    .setDescription('Welcome to the **Crucified** bot! Here you can find information about the bot, the discord server, and more!')
+    .setDescription(
+      "Welcome to the **Crucified** bot! Here you can find information about the bot, the discord server, and more!"
+    )
     .setThumbnail(`${avatar}`)
-    .setFooter({text: 'Thank you for using crucified || Developed by crucifiedxx'})
+    .setFooter({
+      text: "Thank you for using crucified || Developed by crucifiedxx",
+    })
     .setTimestamp();
 
-    await interaction.reply({
-        embeds: [DiscordEmbed],
-        components: [mainButtonRow, mainselectmenu]
-    });
+  await interaction.reply({
+    embeds: [DiscordEmbed],
+    components: [mainButtonRow, mainselectmenu],
+  });
 
-    const collector = interaction.channel.createMessageComponentCollector({
-        ComponentType: ComponentType.StringSelect,
-        time: 60000,
-        filter: i => i.user.id === interaction.user.id,
-    });
+  const collector = interaction.channel.createMessageComponentCollector({
+    ComponentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
 
-    collector.on('collect', async i => {
-        if (i.customId !== 'main-select-menu') return;
+  collector.on("collect", async (i) => {
+    if (i.customId !== "main-select-menu") return;
 
-        if (i.values[0] === 'discord-server') {
-            const discordserverEmbed = new EmbedBuilder()
-            .setColor('DarkBlue')
-            .setTitle('`Sunken`')
-            .setDescription('Welcome to `Sunken`!')
-            .setImage('https://cdn.discordapp.com/attachments/1396996504719462452/1399854208840241312/download_21.jpg?ex=688a8353&is=688931d3&hm=6bc0d72b833654b00f21fbba3389ebfecc301bacd2861e5d7a8aafe8deac9992&')
-            .setThumbnail('https://cdn.discordapp.com/attachments/1396996504719462452/1399854208504565801/Ocean.jpg?ex=688a8353&is=688931d3&hm=12afa3340e0b369b0d6def7b529d9d95197b4a6d09a4ba3fff25063e48655c29&')
-            .addFields(
-                {name: 'Sunken', value: 'A community welcoming of all with total acceptance and no judgement.'},
-                {name: 'What we offer', value: 'We offer a variety of channels for discussion, gaming, and more. We also have a variety of bots to enhance your experience.'},
-                {name: 'Join us', value: 'Join us today and become a part of our community! We are always looking for new members to join us in our journey.'},
-                {name: 'Rules', value: '**1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!**'},
-                {name: 'Hierarchy', value: 'Owner: Crucified, Crucified-Bot\nCo-owner: Chichi\nSenior Moderator: N/A\nMod: N/A\nTrial Mod: N/A\nTwitch Mod: Chichi, Eto, dooD, Cairo'},
-                {name: 'Events', value: 'We host regular events such as game nights, movie nights, and more! We have set the events to happen every friday and sunday so please check the server updates channel for more information regarding the events!'},
-                {name: 'Schedule', value: 'I stream on twitch **every day** at **6:30 PM UK time**. You can also check out my YouTube channel and TikTok for more content!'}
-            )
-            .setFooter({text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'})
-            .setTimestamp();
+    if (i.values[0] === "discord-server") {
+      const discordserverEmbed = new EmbedBuilder()
+        .setColor("DarkBlue")
+        .setTitle("`Sunken`")
+        .setDescription("Welcome to `Sunken`!")
+        .setImage(
+          "https://cdn.discordapp.com/attachments/1396996504719462452/1399854208840241312/download_21.jpg?ex=688a8353&is=688931d3&hm=6bc0d72b833654b00f21fbba3389ebfecc301bacd2861e5d7a8aafe8deac9992&"
+        )
+        .setThumbnail(
+          "https://cdn.discordapp.com/attachments/1396996504719462452/1399854208504565801/Ocean.jpg?ex=688a8353&is=688931d3&hm=12afa3340e0b369b0d6def7b529d9d95197b4a6d09a4ba3fff25063e48655c29&"
+        )
+        .addFields(
+          {
+            name: "Sunken",
+            value:
+              "A community welcoming of all with total acceptance and no judgement.",
+          },
+          {
+            name: "What we offer",
+            value:
+              "We offer a variety of channels for discussion, gaming, and more. We also have a variety of bots to enhance your experience.",
+          },
+          {
+            name: "Join us",
+            value:
+              "Join us today and become a part of our community! We are always looking for new members to join us in our journey.",
+          },
+          {
+            name: "Rules",
+            value:
+              "**1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow members.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!**",
+          },
+          {
+            name: "Hierarchy",
+            value:
+              "Owner: Crucified, Crucified-Bot\nCo-owner: Chichi\nSenior Moderator: N/A\nMod: N/A\nTrial Mod: N/A\nTwitch Mod: Chichi, Eto, dooD, Cairo",
+          },
+          {
+            name: "Events",
+            value:
+              "We host regular events such as game nights, movie nights, and more! We have set the events to happen every friday and sunday so please check the server updates channel for more information regarding the events!",
+          },
+          {
+            name: "Schedule",
+            value:
+              "I stream on twitch **every day** at **6:30 PM UK time**. You can also check out my YouTube channel and TikTok for more content!",
+          }
+        )
+        .setFooter({
+          text: "Thank you for using the crucified bot! || Developed by crucifiedxx",
+        })
+        .setTimestamp();
 
-            await i.update({
-                embeds: [discordserverEmbed],
-                components: [mainButtonRow, mainselectmenu]
-            });
-        } else if (i.values[0] === 'crucified-bot') {
-            const botEmbed = new EmbedBuilder()
-            .setColor('DarkBlue')
-            .setTitle('`Crucified Bot`')
-            .setDescription('Welcome to the `Crucified Bot`!')
-            .setThumbnail(`${avatar}`)
-            .addFields(
-                {name: 'What is Crucified Bot?', value: 'Crucified Bot is a multipurpose bot that offers a variety of features such as economy, moderation, and more!'},
-                {name: 'Commands', value: '`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away'},
-                {name: 'Support', value: 'If you need help with the bot, feel free to join our discord server and ask for help!'}
-            )
-            .setFooter({text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'})
-            .setTimestamp();
+      await i.update({
+        embeds: [discordserverEmbed],
+        components: [mainButtonRow, mainselectmenu],
+      });
+    } else if (i.values[0] === "crucified-bot") {
+      const botEmbed = new EmbedBuilder()
+        .setColor("DarkBlue")
+        .setTitle("`Crucified Bot`")
+        .setDescription("Welcome to the `Crucified Bot`!")
+        .setThumbnail(`${avatar}`)
+        .addFields(
+          {
+            name: "What is Crucified Bot?",
+            value:
+              "Crucified Bot is a multipurpose bot that offers a variety of features such as economy, moderation, and more!",
+          },
+          {
+            name: "Commands",
+            value:
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away",
+          },
+          {
+            name: "Support",
+            value:
+              "If you need help with the bot, feel free to join our discord server and ask for help!",
+          }
+        )
+        .setFooter({
+          text: "Thank you for using the crucified bot! || Developed by crucifiedxx",
+        })
+        .setTimestamp();
 
-            await i.update({
-                embeds: [botEmbed],
-                components: [mainButtonRow, mainselectmenu]
-            });
-        }
-    })
+      await i.update({
+        embeds: [botEmbed],
+        components: [mainButtonRow, mainselectmenu],
+      });
+    }
+  });
 }
 
 // Add more functions here
 
 module.exports = {
-    handleCatCommand,
-    handleBegCommand,
-    handleProfileCommand,
-    handleGambleCommand,
-    handleHelpCommand,
-    // Add more functions to export here
+  handleCatCommand,
+  handleBegCommand,
+  handleProfileCommand,
+  handleGambleCommand,
+  handleHelpCommand,
+  // Add more functions to export here
 };

@@ -1,12 +1,10 @@
 // REQUIREMENTS
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, InteractionType, Embed, ButtonStyle, ActionRow, ApplicationCommand, Collection, } = require("discord.js");
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
 const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
 
-const BOT_OWNER_ID = process.env.BOT_OWNER_ID;
-const BOT_OWNER_ID2 = process.env.BOT_OWNER_ID2;
 
 // LOAD SECRETS HERE
 dotenv.config();
