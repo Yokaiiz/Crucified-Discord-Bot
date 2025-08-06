@@ -367,7 +367,12 @@ async function handleHelpCommand(interaction) {
       .setFooter({
         text: 'Thank you for using the crucified bot! || Developed by crucifiedxx',
       })
-      .settimestamp();
+      .setTimestamp();
+
+      await i.update({
+        embeds: [craftingEmbed],
+        components: [mainButtonRow, mainselectmenu]
+      });
     }
   });
 }
