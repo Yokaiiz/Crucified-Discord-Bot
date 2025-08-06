@@ -546,6 +546,7 @@ async function handleSellCommand(interaction) {
 
   await interaction.reply({
     content: `You sold **${ItemToSell}** for **¥${priceObj.price}**!`,
+    ephemeral: true,
   });
 }
 
