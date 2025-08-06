@@ -210,12 +210,6 @@ async function handleHelpCommand(interaction) {
         .setDescription(
           "Updates the embed to show information regarding the discord bot"
         ),
-      new StringSelectMenuOptionBuilder()
-        .setValue('crafting')
-        .setLabel('Crafting 🛠️')
-        .setDescription(
-          'Updates the embed to show information regarding crafting items'
-        ),
     ]);
 
   const mainselectmenu = new ActionRowBuilder().addComponents(
@@ -344,35 +338,6 @@ async function handleHelpCommand(interaction) {
         embeds: [botEmbed],
         components: [mainButtonRow, mainselectmenu],
       });
-    } else if (i.values[0] === 'crafting') {
-      const craftingEmbed = new EmbedBuilder()
-      .setColor("DarkBlue")
-      .setTitle('`crafting`')
-      .setThumbnail(`${avatar}`)
-      .setDescription('Welcome to the `crafting` section, here you can find information regarding craftable items and how to craft them!')
-      .addFields(
-        {
-          name: 'Gold Bar',
-          value: 'To craft a Gold Bar, you need **5 Raw Gold**. Use the `/dig` command to find Raw Gold, you will also need 1000 yen to craft this item so if you do not have that amount please utilise the beg command.',
-        },
-        {
-          name: 'Iron Bar',
-          value: 'To craft an Iron Bar, you need **5 Raw Iron**. Use the `/dig` command to find Raw Iron, you will also need 500 yen to craft this item so if you do not have this amount please utilise the beg command.',
-        },
-        {
-          name: 'Copper Bar',
-          value: 'To craft a Copper Bar, you need **5 Raw Copper**. Use the `/dig` command to find Raw Copper, you will also need 250 yen to craft this item so if you do not have this amount please utilise the beg command',
-        }
-      )
-      .setFooter({
-        text: 'Thank you for using the crucified bot! || Developed by crucifiedxx',
-      })
-      .setTimestamp();
-
-      await i.update({
-        embeds: [craftingEmbed],
-        components: [mainButtonRow, mainselectmenu]
-      });
     }
   });
 }
@@ -431,6 +396,105 @@ async function handleDigCommand(interaction) {
   }
 }
 
+async function handleCraftCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const avatar = interaction.user.displayAvatarURL();
+
+  const craftingEmbed = new EmbedBuilder()
+    .setColor('Default')
+    .setTitle('Crafting Menu')
+    .setDescription('Select an item to craft from the dropdown menu below.')
+    .setThumbnail(`${avatar}`)
+    .setFooter({
+      text: 'Thank you for using the crucified bot! || Developed by crucifiedxx',
+    })
+    .setTimestamp();
+
+  const craftingOptions = new StringSelectMenuBuilder()
+    .setCustomId('crafting-select-menu')
+    .setPlaceholder('Choose an item to craft')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setValue('gold_bar')
+        .setLabel('gold bar')
+        .setDescription('Craft a gold bar using 5 raw gold and 1000 yen.'),
+      new StringSelectMenuOptionBuilder()
+        .setValue('iron_bar')
+        .setLabel('iron bar')
+        .setDescription('Craft an iron bar using 5 raw iron and 500 yen.'),
+      new StringSelectMenuOptionBuilder()
+        .setValue('copper_bar')
+        .setLabel('copper bar')
+        .setDescription('Craft a copper bar using 5 raw copper and 250 yen.')
+    ]);
+
+  const craftingselectmenu = new ActionRowBuilder().addComponents(
+    craftingOptions,
+  );
+
+  await interaction.reply({
+    embeds: [craftingEmbed],
+    components: [craftingselectmenu],
+  });
+
+  const craftingCollector = interaction.channel.createMessageComponentCollector({
+    ComponentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  craftingCollector.on('collect', async (i) => {
+    let crafted = false;
+    let itemName = '';
+    let requiredItem = '';
+    let requiredAmount = 0;
+    let requiredMoney = 0;
+
+    if (i.values[0] === 'gold_bar') {
+      itemName = 'gold bar';
+      requiredItem = 'raw gold';
+      requiredAmount = 5;
+      requiredMoney = 1000;
+    } else if (i.values[0] === 'iron_bar') {
+      itemName = 'iron bar';
+      requiredItem = 'raw iron';
+      requiredAmount = 5;
+      requiredMoney = 500;
+    } else if (i.values[0] === 'copper_bar') {
+      itemName = 'copper bar';
+      requiredItem = 'raw copper';
+      requiredAmount = 5;
+      requiredMoney = 250;
+    } else {
+      return i.reply({ content: 'Invalid crafting option.', ephemeral: true });
+    }
+
+    if ((userData.inventory[requiredItem] || 0) < requiredAmount || userData.balance < requiredMoney) {
+      return i.reply({
+        content: `You do not have enough resources to craft a ${itemName}.`,
+        ephemeral: true
+      });
+    }
+
+    // Deduct resources and add crafted item
+    userData.inventory[requiredItem] -= requiredAmount;
+    if (userData.inventory[requiredItem] === 0) {
+      delete userData.inventory[requiredItem];
+    }
+    userData.balance -= requiredMoney;
+    userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
+
+    await database.saveUserData(userId, userData);
+
+    await i.reply({
+      content: `You crafted a **${itemName}**!`,
+      ephemeral: true
+    });
+  });
+}
+
 // Add more functions here
 
 module.exports = {
@@ -440,5 +504,6 @@ module.exports = {
   handleGambleCommand,
   handleHelpCommand,
   handleDigCommand,
+  handleCraftCommand,
   // Add more functions to export here
 };
