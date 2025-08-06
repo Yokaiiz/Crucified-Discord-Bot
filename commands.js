@@ -1,4 +1,4 @@
-const { ButtonBuilder, ActionRowBuilder } = require("@discordjs/builders");
+const { ButtonBuilder, ActionRowBuilder, subtext } = require("@discordjs/builders");
 const { EmbedBuilder, ButtonStyle } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder } = require("@discordjs/builders");
@@ -148,6 +148,12 @@ async function handleGambleCommand(interaction) {
     messageEmbed = new EmbedBuilder()
       .setTitle(`🎉 You hit a **${selected.name}**!`)
       .setDescription(`You won **¥${winnings}**!`)
+      .addFields(
+        {
+          name: 'Your new balance',
+          value: `${subtext(`¥${userData.balance}`)}`,
+        }
+      )
       .setColor("Green")
       .setTimestamp();
   } else {
