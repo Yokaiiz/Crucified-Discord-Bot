@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -61,6 +61,7 @@ const commands = [
         .setRequired(true)
     ),
     new SlashCommandBuilder().setName('dig').setDescription('Dig for items!'),
+    new SlashCommandBuilder().setName('craft').setDescription('Craft items using raw materials'),
 
 ].map(command => command.toJSON());
 
@@ -88,6 +89,7 @@ function getCooldownTime(commandName) {
         profile: 9000,
         gamble: 10000,
         dig: 12000,
+        craft: 20000,
 
         // default fallback
         default: 5000
@@ -146,6 +148,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'dig':
                 await handleDigCommand(interaction);
+                break;
+            case 'craft':
+                await handleCraftCommand(interaction);
                 break;
         }
 
