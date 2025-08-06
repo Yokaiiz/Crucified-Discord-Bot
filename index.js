@@ -120,6 +120,7 @@ client.on('interactionCreate', async interaction => {
             const timeLeft = ((userCooldown + cooldownTime - now) / 1000).toFixed(1);
             return interaction.reply({
                 content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
+                ephemeral: true,
             });
         }
 
