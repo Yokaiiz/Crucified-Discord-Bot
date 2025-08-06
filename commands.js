@@ -210,6 +210,12 @@ async function handleHelpCommand(interaction) {
         .setDescription(
           "Updates the embed to show information regarding the discord bot"
         ),
+      new StringSelectMenuOptionBuilder()
+        .setValue('crafting')
+        .setLabel('Crafting 🛠️')
+        .setDescription(
+          'Updates the embed to show information regarding crafting items'
+        ),
     ]);
 
   const mainselectmenu = new ActionRowBuilder().addComponents(
@@ -338,6 +344,25 @@ async function handleHelpCommand(interaction) {
         embeds: [botEmbed],
         components: [mainButtonRow, mainselectmenu],
       });
+    } else if (i.values[0] === 'crafting') {
+      const craftingEmbed = new EmbedBuilder()
+      .setColor("DarkBlue")
+      .setTitle('`crafting`')
+      .setDescription('Welcome to the `crafting` section, here you can find information regarding craftable items and how to craft them!')
+      .addFields(
+        {
+          name: 'Gold Bar',
+          value: 'To craft a Gold Bar, you need **5 Raw Gold**. Use the `/dig` command to find Raw Gold.',
+        },
+        {
+          name: 'Iron Bar',
+          value: 'To craft an Iron Bar, you need **5 Raw Iron**. Use the `/dig` command to find Raw Iron.',
+        },
+        {
+          name: 'Copper Bar',
+          value: 'To craft a Copper Bar, you need **5 Raw Copper**. Use the `/dig` command to find Raw Copper.',
+        }
+      )
     }
   });
 }
