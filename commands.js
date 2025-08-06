@@ -501,6 +501,54 @@ async function handleCraftCommand(interaction) {
   });
 }
 
+async function handleSellCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const ItemToSell = interaction.options.getString('item');
+
+  const itemPrice = [
+    { name: 'raw gold', price: 500 },
+    { name: 'raw diamond', price: 1000 },
+    { name: 'raw iron', price: 100 },
+    { name: 'raw copper', price: 50 },
+    { name: 'gold bar', price: 5000 },
+    { name: 'iron bar', price: 1000 },
+    { name: 'copper bar', price: 500 },
+    { name: 'sword', price: 5000 },
+    { name: 'shield', price: 3000 },
+    { name: 'pickaxe', price: 500 },
+    { name: 'shovel', price: 500 },
+  ];
+
+  const priceObj = itemPrice.find(item => item.name === ItemToSell);
+  if (!priceObj) {
+    return interaction.reply({
+      content: `**${ItemToSell}** cannot be sold.`,
+      ephemeral: true,
+    });
+  }
+
+  if (!userData.inventory[ItemToSell] || userData.inventory[ItemToSell] <= 0) {
+    return interaction.reply({
+      content: `You do not have any of **${ItemToSell}** to sell.`,
+      ephemeral: true,
+    });
+  }
+
+  userData.inventory[ItemToSell] -= 1;
+  if (userData.inventory[ItemToSell] === 0) {
+    delete userData.inventory[ItemToSell];
+  }
+
+  userData.balance += priceObj.price;
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You sold **${ItemToSell}** for **¥${priceObj.price}**!`,
+  });
+}
+
 // Add more functions here
 
 module.exports = {
@@ -511,5 +559,6 @@ module.exports = {
   handleHelpCommand,
   handleDigCommand,
   handleCraftCommand,
+  handleSellCommand,
   // Add more functions to export here
 };
