@@ -327,7 +327,7 @@ async function handleHelpCommand(interaction) {
           {
             name: "Commands",
             value:
-              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away",
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials",
           },
           {
             name: "Support",
@@ -348,21 +348,26 @@ async function handleHelpCommand(interaction) {
       const craftingEmbed = new EmbedBuilder()
       .setColor("DarkBlue")
       .setTitle('`crafting`')
+      .setThumbnail(`${avatar}`)
       .setDescription('Welcome to the `crafting` section, here you can find information regarding craftable items and how to craft them!')
       .addFields(
         {
           name: 'Gold Bar',
-          value: 'To craft a Gold Bar, you need **5 Raw Gold**. Use the `/dig` command to find Raw Gold.',
+          value: 'To craft a Gold Bar, you need **5 Raw Gold**. Use the `/dig` command to find Raw Gold, you will also need 1000 yen to craft this item so if you do not have that amount please utilise the beg command.',
         },
         {
           name: 'Iron Bar',
-          value: 'To craft an Iron Bar, you need **5 Raw Iron**. Use the `/dig` command to find Raw Iron.',
+          value: 'To craft an Iron Bar, you need **5 Raw Iron**. Use the `/dig` command to find Raw Iron, you will also need 500 yen to craft this item so if you do not have this amount please utilise the beg command.',
         },
         {
           name: 'Copper Bar',
-          value: 'To craft a Copper Bar, you need **5 Raw Copper**. Use the `/dig` command to find Raw Copper.',
+          value: 'To craft a Copper Bar, you need **5 Raw Copper**. Use the `/dig` command to find Raw Copper, you will also need 250 yen to craft this item so if you do not have this amount please utilise the beg command',
         }
       )
+      .setFooter({
+        text: 'Thank you for using the crucified bot! || Developed by crucifiedxx',
+      })
+      .settimestamp();
     }
   });
 }
