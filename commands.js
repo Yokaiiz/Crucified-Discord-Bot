@@ -370,10 +370,10 @@ async function handleDigCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   const digItemPool = [
-    { item: 'raw gold', chance: 0.05 },
-    { item: 'raw diamond', chance: 0.05 },
-    { item: 'raw iron', chance: 0.30 },
-    { item: 'raw copper', chance: 0.20 },
+    { item: 'Raw gold', chance: 0.05 },
+    { item: 'Raw diamond', chance: 0.05 },
+    { item: 'Raw iron', chance: 0.30 },
+    { item: 'Raw copper', chance: 0.20 },
     { item: 'nothing', chance: 0.40 }
   ];
 
@@ -459,18 +459,18 @@ async function handleCraftCommand(interaction) {
     let requiredMoney = 0;
 
     if (i.values[0] === 'gold_bar') {
-      itemName = 'gold bar';
-      requiredItem = 'raw gold';
+      itemName = 'Gold bar';
+      requiredItem = 'Raw gold';
       requiredAmount = 5;
       requiredMoney = 1000;
     } else if (i.values[0] === 'iron_bar') {
-      itemName = 'iron bar';
-      requiredItem = 'raw iron';
+      itemName = 'Iron bar';
+      requiredItem = 'Raw iron';
       requiredAmount = 5;
       requiredMoney = 500;
     } else if (i.values[0] === 'copper_bar') {
-      itemName = 'copper bar';
-      requiredItem = 'raw copper';
+      itemName = 'Copper bar';
+      requiredItem = 'Raw copper';
       requiredAmount = 5;
       requiredMoney = 250;
     } else {
@@ -508,17 +508,17 @@ async function handleSellCommand(interaction) {
   const ItemToSell = interaction.options.getString('item');
 
   const itemPrice = [
-    { name: 'raw gold', price: 500 },
-    { name: 'raw diamond', price: 1000 },
-    { name: 'raw iron', price: 100 },
-    { name: 'raw copper', price: 50 },
+    { name: 'Raw gold', price: 500 },
+    { name: 'Raw diamond', price: 1000 },
+    { name: 'Raw iron', price: 100 },
+    { name: 'Raw copper', price: 50 },
     { name: 'gold bar', price: 5000 },
-    { name: 'iron bar', price: 1000 },
-    { name: 'copper bar', price: 500 },
-    { name: 'sword', price: 5000 },
-    { name: 'shield', price: 3000 },
-    { name: 'pickaxe', price: 500 },
-    { name: 'shovel', price: 500 },
+    { name: 'Iron bar', price: 1000 },
+    { name: 'Copper bar', price: 500 },
+    { name: 'Sword', price: 5000 },
+    { name: 'Shield', price: 3000 },
+    { name: 'Pickaxe', price: 500 },
+    { name: 'Shovel', price: 500 },
   ];
 
   const priceObj = itemPrice.find(item => item.name === ItemToSell);
