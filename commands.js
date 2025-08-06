@@ -244,6 +244,7 @@ async function handleHelpCommand(interaction) {
   await interaction.reply({
     embeds: [DiscordEmbed],
     components: [mainButtonRow, mainselectmenu],
+    ephemeral: true,
   });
 
   const collector = interaction.channel.createMessageComponentCollector({
@@ -311,6 +312,7 @@ async function handleHelpCommand(interaction) {
       await i.update({
         embeds: [discordserverEmbed],
         components: [mainButtonRow, mainselectmenu],
+        ephemeral: true,
       });
     } else if (i.values[0] === "crucified-bot") {
       const botEmbed = new EmbedBuilder()
@@ -343,6 +345,7 @@ async function handleHelpCommand(interaction) {
       await i.update({
         embeds: [botEmbed],
         components: [mainButtonRow, mainselectmenu],
+        ephemeral: true,
       });
     }
   });
@@ -398,6 +401,7 @@ async function handleDigCommand(interaction) {
     await database.saveUserData(userId, userData);
     return interaction.reply({
       content: `You dug and found **${item}**!`,
+      ephemeral: true
     });
   }
 }
