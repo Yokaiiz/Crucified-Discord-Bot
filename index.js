@@ -91,6 +91,19 @@ const commands = [
         .setDescription('The user they want to reset')
         .setRequired(true)
     ),
+    new SlashCommandBuilder()
+    .setName('givemoney')
+    .setDescription('Gives a user money (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user you want to give money to')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount of money you want to give')
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 
@@ -122,6 +135,7 @@ function getCooldownTime(commandName) {
         sell: 5000,
         donate: 15000,
         reset: 30000,
+        givemoney: 30000,
 
         // default fallback
         default: 5000
@@ -193,6 +207,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'reset':
                 await handleResetCommand(interaction);
+                break;
+            case 'givemoney':
+                await handleGiveMoneyCommand(interaction);
                 break;
         }
 
