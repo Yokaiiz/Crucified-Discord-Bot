@@ -664,6 +664,7 @@ async function handleGiveMoneyCommand(interaction) {
 async function handleGiveItemCommand(interaction) {
   const userId = interaction.options.getUser('user').id;
   const item = interaction.options.getString('item');
+  const quantity = interaction.options.getInteger('amount');
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
   if (!interaction.client.application.owner) {
@@ -688,7 +689,7 @@ async function handleGiveItemCommand(interaction) {
   if (!userData.inventory[item]) {
     userData.inventory[item] = 0;
   }
-  userData.inventory[item] += 1;
+  userData.inventory[item] += quantity;
   await database.saveUserData(userId, userData);
   await interaction.reply({
     content: `You gave **${item}** to <@${userId}>!`,

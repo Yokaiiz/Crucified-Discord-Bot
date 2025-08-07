@@ -116,6 +116,11 @@ const commands = [
         option.setName('item')
         .setDescription('The item you want to give')
         .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount of the item you want to give')
+        .setRequired(true)
     ),
 
 ].map(command => command.toJSON());
