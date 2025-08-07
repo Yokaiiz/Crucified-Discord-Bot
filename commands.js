@@ -351,7 +351,7 @@ async function handleDigCommand(interaction) {
   const shovelKey = "Shovel";
   if (!userData.inventory[shovelKey] || userData.inventory[shovelKey] <= 0) {
     return interaction.reply({
-      content: 'You need a Shovel to dig, go beg for one brokie.',
+      content: "You need a Shovel to dig, go beg for one brokie.",
       ephemeral: true,
     });
   }
@@ -364,11 +364,11 @@ async function handleDigCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   const digItemPool = [
-    { item: 'raw gold', chance: 0.05 },
-    { item: 'raw diamond', chance: 0.05 },
-    { item: 'raw iron', chance: 0.30 },
-    { item: 'raw copper', chance: 0.20 },
-    { item: 'nothing', chance: 0.40 }
+    { item: "raw gold", chance: 0.05 },
+    { item: "raw diamond", chance: 0.05 },
+    { item: "raw iron", chance: 0.3 },
+    { item: "raw copper", chance: 0.2 },
+    { item: "nothing", chance: 0.4 },
   ];
 
   const random = Math.random();
@@ -382,9 +382,9 @@ async function handleDigCommand(interaction) {
     }
   }
 
-  if (item === 'nothing') {
+  if (item === "nothing") {
     return interaction.reply({
-      content: 'You dug but found nothing, better luck next time brokie.',
+      content: "You dug but found nothing, better luck next time brokie.",
       ephemeral: true,
     });
   } else {
