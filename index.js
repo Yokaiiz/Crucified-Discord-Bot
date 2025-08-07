@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -104,6 +104,19 @@ const commands = [
         .setDescription('The amount of money you want to give')
         .setRequired(true)
     ),
+    new SlashCommandBuilder()
+    .setName('giveitem')
+    .setDescription('Gives a user an item (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user you want to give an item to')
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+        option.setName('item')
+        .setDescription('The item you want to give')
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 
@@ -136,6 +149,7 @@ function getCooldownTime(commandName) {
         donate: 15000,
         reset: 30000,
         givemoney: 30000,
+        giveitem: 30000,
 
         // default fallback
         default: 5000
@@ -210,6 +224,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'givemoney':
                 await handleGiveMoneyCommand(interaction);
+                break;
+            case 'giveitem':
+                await handleGiveItemCommand(interaction);
                 break;
         }
 
