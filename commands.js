@@ -55,7 +55,7 @@ async function handleBegCommand(interaction) {
     )
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [embed], ephemeral: true, });
 }
 
 async function handleProfileCommand(interaction) {
@@ -82,6 +82,7 @@ async function handleProfileCommand(interaction) {
 
   await interaction.reply({
     embeds: [embed],
+    ephemeral: true,
   });
 }
 
@@ -169,7 +170,8 @@ async function handleGambleCommand(interaction) {
 
   await database.saveUserData(userId, userData);
 
-  return interaction.reply({ embeds: [messageEmbed] });
+  return interaction.reply({ embeds: [messageEmbed], ephemeral: true,
+   });
 }
 
 async function handleHelpCommand(interaction) {
@@ -447,6 +449,7 @@ async function handleCraftCommand(interaction) {
   await interaction.reply({
     embeds: [craftingEmbed],
     components: [craftingselectmenu],
+    ephemeral: true,
   });
 
   const craftingCollector = interaction.channel.createMessageComponentCollector({
@@ -692,7 +695,7 @@ async function handleGiveItemCommand(interaction) {
   userData.inventory[item] += quantity;
   await database.saveUserData(userId, userData);
   await interaction.reply({
-    content: `You gave **${item}** to <@${userId}>!`,
+    content: `You gave **${quantity}** of **${item}** to <@${userId}>!`,
     ephemeral: true,
   });
 }
