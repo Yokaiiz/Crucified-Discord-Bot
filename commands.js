@@ -331,7 +331,7 @@ async function handleHelpCommand(interaction) {
           {
             name: "Commands",
             value:
-              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials",
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials\n`/Sell` - Sell different items at different quantities\n`/Donate` - Donate money to others that are in need (brokies)\n`/Reset` - Full wipe of the target's data and only the bot team members can utilise this.\n`/Give Money` - Allows the bot team members to give anyone money by adding an amount to their overall balance without requiring to be on the PC where the bot is ran.\n`/Give Item` - Allows the bot team members to different items at different quantities",
           },
           {
             name: "Support",
