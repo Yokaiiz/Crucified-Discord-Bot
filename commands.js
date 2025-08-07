@@ -710,60 +710,52 @@ async function handleGiveItemCommand(interaction) {
 async function handleWorkCommand(interaction) {
   const userId = interaction.user.id;
   await database.ensureUser(userId);
-  const userData = database.getUserData(userId);
+  const userData = await database.getUserData(userId); // <-- await added!
   const avatar = interaction.user.displayAvatarURL();
 
   const workEmbed = new EmbedBuilder()
-  .setColor('Default')
-  .setTitle(`Hello, ${interaction.user.username}`)
-  .setDescription('Here are your work options!')
-  .setThumbnail(`${avatar}`)
-  .addFields(
-    {
-      name: 'Janitor',
-      value: '`Experience required: 150`\n`Wage: 10000`'
-    },
-    {
-      name: 'Waitress',
-      value: '`Experience required: 500`\n`Wage: 20000`'
-    },
-    {
-      name: 'Cashier',
-      value: '`Experience required: 1000`\n`Wage: 30000`'
-    }
-  )
-  .setFooter({
-    text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'
-  })
-  .setTimestamp();
+    .setColor('Default')
+    .setTitle(`Hello, ${interaction.user.username}`)
+    .setDescription('Here are your work options!')
+    .setThumbnail(`${avatar}`)
+    .addFields(
+      {
+        name: 'Janitor',
+        value: '`Experience required: 150`\n`Wage: 10000`'
+      },
+      {
+        name: 'Waitress',
+        value: '`Experience required: 500`\n`Wage: 20000`'
+      },
+      {
+        name: 'Cashier',
+        value: '`Experience required: 1000`\n`Wage: 30000`'
+      }
+    )
+    .setFooter({
+      text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'
+    })
+    .setTimestamp();
 
   const selectWorkMenu = new StringSelectMenuBuilder()
-  .setCustomId('select-work-menu')
-  .setPlaceholder('Choice of work')
-  .addOptions([
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Janitor')
-    .setValue('janitor')
-    .setDescription(
-      'You work as a janitor in your local school.'
-    ),
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Waitress')
-    .setValue('waitress')
-    .setDescription(
-      'You work as a waitress in your local café.'
-    ),
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Cashier')
-    .setValue('cashier')
-    .setDescription(
-      'You work as a cashier at your local supermarket.'
-    )
-  ]);
+    .setCustomId('select-work-menu')
+    .setPlaceholder('Choice of work')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Janitor')
+        .setValue('janitor')
+        .setDescription('You work as a janitor in your local school.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Waitress')
+        .setValue('waitress')
+        .setDescription('You work as a waitress in your local café.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Cashier')
+        .setValue('cashier')
+        .setDescription('You work as a cashier at your local supermarket.')
+    ]);
 
-  const selectWorkMenuRow = new ActionRowBuilder().addComponents(
-    selectWorkMenu,
-  )
+  const selectWorkMenuRow = new ActionRowBuilder().addComponents(selectWorkMenu);
 
   await interaction.reply({
     embeds: [workEmbed],
@@ -777,62 +769,58 @@ async function handleWorkCommand(interaction) {
   });
 
   workSelectionCollector.on('collect', async (i) => {
-    if (!i.customId === 'select-work-menu') return;
+    if (i.customId !== 'select-work-menu') return;
 
     if (i.values[0] === 'janitor') {
-      if (!userData.experience <= 0 || userData.experience < 0) {
+      if (userData.experience < 150) {
         return i.update({
           content: 'You do not have enough experience required.',
           ephemeral: true,
         });
-      } else if (userData.experience >= 150) {
-        userData.balance += 10000
+      } else {
+        userData.balance += 10000;
+        userData.experience += 250;
         await database.saveUserData(userId, userData);
-
         await i.update({
-          content: 'You earned **¥10,000**',
+          content: `You earned **¥10,000** alongside **250** EXP, now your balance is: ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
     }
 
     if (i.values[0] === 'waitress') {
-      if (!userData.experience <= 0 || userData.experience < 0) {
+      if (userData.experience < 500) {
         return i.update({
-          content: 'You do not have enough **experience** to work',
+          content: 'You do not have enough **experience** to work as a waitress.',
           ephemeral: true,
         });
-      } else if (userData.experience > 500) {
+      } else {
         userData.balance += 20000;
+        userData.experience += 500;
         await database.saveUserData(userId, userData);
-
         await i.update({
-          content: 'You earned **¥20,000**',
+          content: `You earned **¥20,000** alongside **500** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
     }
 
     if (i.values[0] === 'cashier') {
-      if (!userData.experience <= 0 || userData.experience < 0) {
+      if (userData.experience < 1000) {
         return i.update({
-          content: 'You do not have enough **experience** to work',
+          content: 'You do not have enough **experience** to work as a cashier.',
           ephemeral: true,
         });
-      } else if (userData.experience > 1000) {
+      } else {
         userData.balance += 30000;
+        userData.experience += 750;
         await database.saveUserData(userId, userData);
-
         await i.update({
-          content: 'You earned **¥30,000**',
+          content: `You earned **¥30,000** alongside **750** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
     }
-
-    workSelectionCollector.on('end', async (i) => {
-      console.log(`You collected ${collected.size} interactions`)
-    });
   });
 }
 
