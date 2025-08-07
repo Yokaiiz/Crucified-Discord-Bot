@@ -824,6 +824,41 @@ async function handleWorkCommand(interaction) {
   });
 }
 
+async function handleGiveEXPCommand(interaction) {
+  const userId = interaction.options.getuser('user').id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const amount = interaction.options.getInteger('amount');
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.experience += amount
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You have given <@${userId}> ${amount} EXP, their total EXP is now ${userData.experience}`,
+    ephemeral: true
+  });
+
+}
+
 // Add more functions here
 
 module.exports = {
@@ -840,5 +875,6 @@ module.exports = {
   handleGiveMoneyCommand,
   handleGiveItemCommand,
   handleWorkCommand,
+  handleGiveEXPCommand,
   // Add more functions to export here
 };

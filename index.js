@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -130,6 +130,23 @@ const commands = [
     new SlashCommandBuilder()
     .setName('work')
     .setDescription('Lets you work'),
+    new SlashCommandBuilder()
+    .setName('give_experience')
+    .setDescription('Gives a user an amount of EXP (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription(
+            'The user you want to give the EXP to'
+        )
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription(
+            'The amount you want to give to this user'
+        )
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 
@@ -164,6 +181,7 @@ function getCooldownTime(commandName) {
         givemoney: 30000,
         giveitem: 30000,
         work: 300000,
+        give_experience: 30000,
 
         // default fallback
         default: 5000
@@ -244,6 +262,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'work':
                 await handleWorkCommand(interaction);
+                break;
+            case 'give_experience':
+                await handleGiveEXPCommand(interaction);
                 break;
         }
 
