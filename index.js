@@ -127,6 +127,14 @@ const commands = [
         .setDescription('The amount of the item you want to give')
         .setRequired(true)
     ),
+    new SlashCommandBuilder()
+    .setName('work')
+    .setDescription('Lets you work')
+    .addStringOption(option =>
+        option.setName('work')
+        .setDescription('The job you want to have')
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 

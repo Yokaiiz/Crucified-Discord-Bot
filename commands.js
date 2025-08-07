@@ -16,6 +16,7 @@ async function handleBegCommand(interaction) {
 
   // Generate random amount
   const amount = Math.floor(Math.random() * 300) + 50;
+  const experiencegain = Math.floor(Math.random() * 100) + 50;
   const itempool = [
     { item: "Sword", chance: 0.4 },
     { item: "Shovel", chance: 0.4 },
@@ -37,6 +38,7 @@ async function handleBegCommand(interaction) {
 
   // Update balance
   userData.balance += amount;
+  userData.experience += experiencegain
   if (userData.inventory[item]) {
     userData.inventory[item] += 1;
   } else {
@@ -51,7 +53,7 @@ async function handleBegCommand(interaction) {
     .setColor("Green")
     .setTitle("You begged!")
     .setDescription(
-      `You begged and received **¥${amount}** along with **${item}**!`
+      `You begged and received **¥${amount}** along with **${item}** and **${experiencegain} experience**!`
     )
     .setTimestamp();
 
@@ -64,6 +66,7 @@ async function handleProfileCommand(interaction) {
   const userData = await database.getUserData(userId);
   const balance = userData.balance;
   const inventory = userData.inventory;
+  const experience = userData.experience;
   const profile = interaction.user.displayAvatarURL();
   const inventoryText = Object.entries(inventory)
     .map(([item, qty]) => `${item} x${qty}`)
@@ -76,6 +79,7 @@ async function handleProfileCommand(interaction) {
     .setThumbnail(profile)
     .addFields(
       { name: "**Balance**", value: `**¥${balance.toLocaleString("en-US")}**`},
+      { name: "**Experience**", value: `**${experience.toLocaleString("en-US")}**`},
       { name: "**Inventory**", value: `**${inventoryText}**` }
     )
     .setTimestamp();
@@ -331,7 +335,7 @@ async function handleHelpCommand(interaction) {
           {
             name: "Commands",
             value:
-              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials\n`/Sell` - Sell different items at different quantities\n`/Donate` - Donate money to others that are in need (brokies)\n`/Reset` - Full wipe of the target's data and only the bot team members can utilise this.\n`/Give Money` - Allows the bot team members to give anyone money by adding an amount to their overall balance without requiring to be on the PC where the bot is ran.\n`/Give Item` - Allows the bot team members to different items at different quantities",
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials\n`/Sell` - Sell different items at different quantities\n`/Donate` - Donate money to others that are in need (brokies)\n`/Reset` - Full wipe of the target's data and only the bot team members can utilise this.\n`/Give Money` - Allows the bot team members to give anyone money by adding an amount to their overall balance without requiring to be on the PC where the bot is ran.\n`/Give Item` - Allows the bot team members to different items at different quantities\n`/Work` - Let's you work for money",
           },
           {
             name: "Support",
