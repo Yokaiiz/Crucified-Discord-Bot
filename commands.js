@@ -513,6 +513,7 @@ async function handleSellCommand(interaction) {
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
   const ItemToSell = interaction.options.getString('item');
+  const ItemQuantity = interaction.options.getInteger('amount')
 
   const itemPrice = [
     { name: 'Raw gold', price: 500 },
@@ -543,16 +544,16 @@ async function handleSellCommand(interaction) {
     });
   }
 
-  userData.inventory[ItemToSell] -= 1;
+  userData.inventory[ItemToSell] -= ItemQuantity;
   if (userData.inventory[ItemToSell] === 0) {
     delete userData.inventory[ItemToSell];
   }
 
-  userData.balance += priceObj.price;
+  userData.balance += priceObj.price * ItemQuantity;
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You sold **${ItemToSell}** for **¥${priceObj.price}**!`,
+    content: `You sold  **${ItemQuantity}** **${ItemToSell}** for **¥${priceObj.price}**!`,
     ephemeral: true,
   });
 }

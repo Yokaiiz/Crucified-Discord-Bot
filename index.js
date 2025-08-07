@@ -69,6 +69,11 @@ const commands = [
         option.setName('item')
         .setDescription('The item you want to sell')
         .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('Amount of the item that you wish to sell')
+        .setRequired(true)
     ),
     new SlashCommandBuilder()
     .setName('donate')
