@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
