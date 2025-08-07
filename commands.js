@@ -554,6 +554,45 @@ async function handleSellCommand(interaction) {
   });
 }
 
+async function handleDonateCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const amount = interaction.options.getInteger('amount');
+  const targetUserId = interaction.options.getUser('user').id;
+
+  if (!amount || amount <= 0 || userData.balance < amount) {
+    return interaction.reply({
+      content: `You do not have enough balance to donate ¥${amount}.`,
+      ephemeral: true,
+    });
+  } else if (targetUserId === userId) {
+    return interaction.reply({
+      content: "You can't donate to yourself, brokie.",
+      ephemeral: true,
+    });
+  }
+  const targetUserData = await database.getUserData(targetUserId);
+  if (!targetUserData) {
+    return interaction.reply({
+      content: "The user you are trying to donate to does not exist.",
+      ephemeral: true,
+    });
+  }
+
+  userData.balance -= amount;
+  targetUserData.balance += amount;
+  await database.saveUserData(userId, userData);
+  await database.saveUserData(targetUserId, targetUserData);
+  await interaction.reply({
+    content: `You donated **¥${amount}** to <@${targetUserId}>!`,
+    ephemeral: true,
+  });
+  await interaction.client.users.send(targetUserId, {
+    content: `You received a donation of **¥${amount}** from <@${userId}>!`,
+  });
+}
+
 // Add more functions here
 
 module.exports = {
@@ -565,5 +604,6 @@ module.exports = {
   handleDigCommand,
   handleCraftCommand,
   handleSellCommand,
+  handleDonateCommand,
   // Add more functions to export here
 };
