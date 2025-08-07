@@ -721,15 +721,15 @@ async function handleWorkCommand(interaction) {
     .addFields(
       {
         name: 'Janitor',
-        value: '`Experience required: 150`\n`Wage: 10000`'
+        value: '`Experience required: 150`\n`Wage: 1,000`'
       },
       {
         name: 'Waitress',
-        value: '`Experience required: 500`\n`Wage: 20000`'
+        value: '`Experience required: 500`\n`Wage: 2,000`'
       },
       {
         name: 'Cashier',
-        value: '`Experience required: 1000`\n`Wage: 30000`'
+        value: '`Experience required: 1000`\n`Wage: 3,000`'
       }
     )
     .setFooter({
@@ -778,11 +778,11 @@ async function handleWorkCommand(interaction) {
           ephemeral: true,
         });
       } else {
-        userData.balance += 10000;
+        userData.balance += 1000;
         userData.experience += 250;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥10,000** alongside **250** EXP, now your balance is: ${userData.balance} and your EXP is ${userData.experience}`,
+          content: `You earned **¥1,000** alongside **250** EXP, now your balance is: ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
@@ -795,11 +795,11 @@ async function handleWorkCommand(interaction) {
           ephemeral: true,
         });
       } else {
-        userData.balance += 20000;
+        userData.balance += 2000;
         userData.experience += 500;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥20,000** alongside **500** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
+          content: `You earned **¥2,000** alongside **500** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
@@ -812,11 +812,11 @@ async function handleWorkCommand(interaction) {
           ephemeral: true,
         });
       } else {
-        userData.balance += 30000;
+        userData.balance += 3000;
         userData.experience += 750;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥30,000** alongside **750** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
+          content: `You earned **¥3,000** alongside **750** EXP, now your balance is ${userData.balance} and your EXP is ${userData.experience}`,
           ephemeral: true,
         });
       }
@@ -825,7 +825,7 @@ async function handleWorkCommand(interaction) {
 }
 
 async function handleGiveEXPCommand(interaction) {
-  const userId = interaction.options.getuser('user').id;
+  const userId = interaction.options.getUser('user').id;
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
   const amount = interaction.options.getInteger('amount');
@@ -853,7 +853,7 @@ async function handleGiveEXPCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You have given <@${userId}> ${amount} EXP, their total EXP is now ${userData.experience}`,
+    content: `You have given <@${userId}> **${amount}** EXP, their total EXP is now **${userData.experience}**`,
     ephemeral: true
   });
 
