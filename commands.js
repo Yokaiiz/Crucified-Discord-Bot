@@ -593,6 +593,42 @@ async function handleDonateCommand(interaction) {
   });
 }
 
+async function handleResetCommand(interaction) {
+  try {
+    const targetUserId = interaction.options.getUser('user').id;
+    // Ensure application owner is fetched
+    if (!interaction.client.application.owner) {
+      await interaction.client.application.fetch();
+    }
+    const owner = interaction.client.application.owner;
+    let isOwner = false;
+    if (owner.members) {
+      // Team ownership: check if user is in the team
+      isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+    } else {
+      // Single user owner
+      isOwner = owner.id === interaction.user.id;
+    }
+    if (!isOwner) {
+      return interaction.reply({
+        content: "You do not have permission to use this command.",
+        ephemeral: true,
+      });
+    }
+    await database.resetUserData(targetUserId);
+    await interaction.reply({
+      content: `Successfully reset data for <@${targetUserId}>`,
+      ephemeral: true,
+    });
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({
+      content: "An error occurred while resetting user data.",
+      ephemeral: true,
+    });
+  }
+}
+
 // Add more functions here
 
 module.exports = {
@@ -605,5 +641,6 @@ module.exports = {
   handleCraftCommand,
   handleSellCommand,
   handleDonateCommand,
+  handleResetCommand,
   // Add more functions to export here
 };

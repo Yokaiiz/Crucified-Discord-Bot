@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -83,6 +83,14 @@ const commands = [
         .setDescription('The amount of money you want to donate')
         .setRequired(true)
     ),
+    new SlashCommandBuilder()
+    .setName('reset')
+    .setDescription('Allows the bot owner to reset your data!')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user they want to reset')
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 
@@ -113,6 +121,7 @@ function getCooldownTime(commandName) {
         craft: 20000,
         sell: 5000,
         donate: 15000,
+        reset: 30000,
 
         // default fallback
         default: 5000
@@ -181,6 +190,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'donate':
                 await handleDonateCommand(interaction);
+                break;
+            case 'reset':
+                await handleResetCommand(interaction);
                 break;
         }
 

@@ -50,9 +50,9 @@ class Database {
     async saveUserData(userId, userData) {
         if (!this.db) throw new Error('Database not initialized');
         if (typeof userId !== 'string' || userId.trim() === '') throw new Error('Invalid user ID');
-    
+
         let userIndex = this.db.data.users.findIndex(u => u.id === userId);
-    
+
         if (userIndex === -1) {
             const newUser = {
                 id: userId,
@@ -72,7 +72,7 @@ class Database {
                 ...userData
             };
         }
-    
+
         await this.write();
         return this.db.data.users.find(u => u.id === userId);
     }
@@ -241,42 +241,57 @@ class Database {
 
         return user
     }
-    
+
     async incrementUserBalance(userId, amount) {
         if (!this.db) throw new Error('Database not initialized');
         if (typeof userId !== 'string' || userId.trim() === '') throw new Error('Invalid user ID');
         if (typeof amount !== 'number' || isNaN(amount)) throw new Error('Invalid balance amount');
-    
+
         const user = await this.ensureUser(userId);
-    
+
         user.balance += amount;
         await this.write();
-    
+
         return user;
     }
 
     async recordGambleHistory(userId, entry) {
         if (!this.db) throw new Error('Database not initialized');
         if (typeof userId !== 'string' || userId.trim() === '') throw new Error('Invalid user ID');
-    
+
         const user = await this.ensureUser(userId);
-    
+
         if (!Array.isArray(user.gambleHistory)) {
             user.gambleHistory = [];
         }
-    
+
         user.gambleHistory.unshift(entry); // Add new entry to front
-    
+
         // Optional: Keep only the 10 most recent entries
         if (user.gambleHistory.length > 10) {
             user.gambleHistory = user.gambleHistory.slice(0, 10);
         }
-    
+
         await this.write();
     }
 }
 
-const database = new Database();
+async function resetUserData(userId) {
+  // Example: Reset user data to defaults
+  const defaultData = {
+    id: userId,
+    balance: 0,
+    experience: 0,
+    lastDaily: null,
+    inventory: {},
+    dailyStreak: 0,
+    timezone: 'UTC',
+    gambleHistory: [],
+    // add other default fields here
+  };
+  // Save default data for the user
+  await saveUserData(userId, defaultData);
+}
 
 // Export the instance
 module.exports = database;
