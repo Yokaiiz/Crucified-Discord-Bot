@@ -75,7 +75,7 @@ async function handleProfileCommand(interaction) {
     .setTitle(`${username}'s inventory and balance!`)
     .setThumbnail(profile)
     .addFields(
-      { name: "**Balance**", value: `**¥${balance}**` },
+      { name: "**Balance**", value: `**¥${balance.toLocaleString("en-US")}**`},
       { name: "**Inventory**", value: `**${inventoryText}**` }
     )
     .setTimestamp();
@@ -520,7 +520,7 @@ async function handleSellCommand(interaction) {
     { name: 'Raw diamond', price: 1000 },
     { name: 'Raw iron', price: 100 },
     { name: 'Raw copper', price: 50 },
-    { name: 'gold bar', price: 5000 },
+    { name: 'Gold bar', price: 5000 },
     { name: 'Iron bar', price: 1000 },
     { name: 'Copper bar', price: 500 },
     { name: 'Sword', price: 5000 },
@@ -537,6 +537,8 @@ async function handleSellCommand(interaction) {
     });
   }
 
+  const TotalItemPrice = priceObj.price * ItemQuantity;
+
   if (!userData.inventory[ItemToSell] || userData.inventory[ItemToSell] <= 0) {
     return interaction.reply({
       content: `You do not have any of **${ItemToSell}** to sell.`,
@@ -549,11 +551,11 @@ async function handleSellCommand(interaction) {
     delete userData.inventory[ItemToSell];
   }
 
-  userData.balance += priceObj.price * ItemQuantity;
+  userData.balance += TotalItemPrice
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You sold  **${ItemQuantity}** **${ItemToSell}** for **¥${priceObj.price}**!`,
+    content: `You sold  **${ItemQuantity}** of **${ItemToSell}** for **¥${TotalItemPrice.toLocaleString("en-US")}**!`,
     ephemeral: true,
   });
 }
