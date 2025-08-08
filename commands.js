@@ -75,7 +75,7 @@ async function handleProfileCommand(interaction) {
     .setTitle(`${username}'s inventory and balance!`)
     .setThumbnail(profile)
     .addFields(
-      { name: "**Balance**", value: `**¥${balance}**` },
+      { name: "**Balance**", value: `**¥${balance.toLocaleString("en-US")}**` },
       { name: "**Inventory**", value: `**${inventoryText}**` }
     )
     .setTimestamp();
@@ -459,7 +459,6 @@ async function handleCraftCommand(interaction) {
   });
 
   craftingCollector.on('collect', async (i) => {
-    let crafted = false;
     let itemName = '';
     let requiredItem = '';
     let requiredAmount = 0;
