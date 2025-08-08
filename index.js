@@ -44,8 +44,6 @@ async function initializeBot() {
     }
 }
 
-const cooldowns = new Map();
-
 const commands = [
 
     new SlashCommandBuilder().setName('help').setDescription('general support'),
@@ -182,117 +180,131 @@ async function deployCommands(client) {
     }
 }
 
-function getCooldownTime(commandName) {
-    // Define cooldowns per command (in milliseconds)
-    const cooldowns = {
-        help: 5000,
-        cat: 5000,
-        beg: 8500,
-        profile: 9000,
-        gamble: 10000,
-        dig: 12000,
-        craft: 20000,
-        sell: 5000,
-        donate: 15000,
-        reset: 30000,
-        givemoney: 30000,
-        giveitem: 30000,
-        work: 1800000,
-        give_experience: 30000,
-        take_money: 30000,
+// --- Cooldown System ---
+const cooldowns = new Map(); // Map<userId, Map<commandName, expiresAt>>
 
-        // default fallback
-        default: 5000
-    };
-    return cooldowns[commandName] || cooldowns.default;
+function isOnCooldown(userId, commandName) {
+  const now = Date.now();
+  if (!cooldowns.has(userId)) return false;
+  const userCooldowns = cooldowns.get(userId);
+  if (!userCooldowns.has(commandName)) return false;
+  const expiresAt = userCooldowns.get(commandName);
+  return now < expiresAt;
 }
 
-// Command data, this is where you add more else if imports for more commands, handled in a try catch block.
-client.on('interactionCreate', async interaction => {
-    try {
-        if (!interaction.isChatInputCommand()) return;
+function getCooldownTime(commandName) {
+  // Customize per command, or use a default (in ms)
+  const defaultCooldown = 5000;
+  const cooldowns = {
+    help: 5000,
+    cat: 3000,
+    beg: 5000,
+    profile: 5000,
+    dig: 10000,
+    craft: 15000,
+    sell: 7500,
+    donate: 15000,
+    reset: 30000,
+    givemoney: 30000,
+    giveitem: 30000,
+    work: 1800000,
+    take_money: 30000,
+    // ...add more as needed
+  };
+  return cooldowns[commandName] ?? defaultCooldown;
+}
 
-        await database.ensureUser(interaction.user.id);
+function setCooldown(userId, commandName, cooldownTime) {
+  const now = Date.now();
+  if (!cooldowns.has(userId)) {
+    cooldowns.set(userId, new Map());
+  }
+  const userCooldowns = cooldowns.get(userId);
+  userCooldowns.set(commandName, now + cooldownTime);
 
-        // ✅ Cooldown logic
-        const commandName = interaction.commandName;
-        const cooldownTime = getCooldownTime(commandName); // in ms
-        const now = Date.now();
-
-        if (!cooldowns.has(commandName)) {
-            cooldowns.set(commandName, new Map());
-        }
-
-        const timestamps = cooldowns.get(commandName);
-        const userCooldown = timestamps.get(interaction.user.id);
-
-        if (userCooldown && now < userCooldown + cooldownTime) {
-            const timeLeft = ((userCooldown + cooldownTime - now) / 1000).toFixed(1);
-            return interaction.reply({
-                content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
-                ephemeral: true,
-            });
-        }
-
-        timestamps.set(interaction.user.id, now);
-        setTimeout(() => timestamps.delete(interaction.user.id), cooldownTime);
-
-        // Gwen: Updated to be a switch casement for faster, more reliable and efficient code. Better than if else statements.
-        // ✅ Command execution
-
-
-        switch (commandName) {
-            case 'help':
-                await handleHelpCommand(interaction);
-                break;
-            case 'cat':
-                await handleCatCommand(interaction);
-                break;
-            case 'beg':
-                await handleBegCommand(interaction);
-                break;
-            case 'profile':
-                await handleProfileCommand(interaction);
-                break;
-            case 'gamble':
-                await handleGambleCommand(interaction);
-                break;
-            case 'dig':
-                await handleDigCommand(interaction);
-                break;
-            case 'craft':
-                await handleCraftCommand(interaction);
-                break;
-            case 'sell':
-                await handleSellCommand(interaction);
-                break;
-            case 'donate':
-                await handleDonateCommand(interaction);
-                break;
-            case 'reset':
-                await handleResetCommand(interaction);
-                break;
-            case 'givemoney':
-                await handleGiveMoneyCommand(interaction);
-                break;
-            case 'giveitem':
-                await handleGiveItemCommand(interaction);
-                break;
-            case 'work':
-                await handleWorkCommand(interaction);
-                break;
-            case 'give_experience':
-                await handleGiveEXPCommand(interaction);
-                break;
-            case 'take_money':
-                await handleTakeMoneyCommand(interaction);
-                break;
-        }
-
-    } catch (error) {
-        console.error('Error when executing command', error);
+  // Cleanup after cooldown expires
+  setTimeout(() => {
+    userCooldowns.delete(commandName);
+    if (userCooldowns.size === 0) {
+      cooldowns.delete(userId);
     }
-});
+  }, cooldownTime);
+}
+
+// --- Interaction Handler ---
+client.on('interactionCreate', async interaction => {
+  try {
+    if (!interaction.isChatInputCommand()) return;
+
+    await database.ensureUser(interaction.user.id);
+
+    const commandName = interaction.commandName;
+    const cooldownTime = getCooldownTime(commandName);
+
+    if (isOnCooldown(interaction.user.id, commandName)) {
+      const expiresAt = cooldowns.get(interaction.user.id).get(commandName);
+      const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
+      return interaction.reply({
+        content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
+        ephemeral: true,
+      });
+    }
+
+    setCooldown(interaction.user.id, commandName, cooldownTime);
+
+    // --- Command Execution ---
+    switch (commandName) {
+      case 'help':
+        await handleHelpCommand(interaction);
+        break;
+      case 'cat':
+        await handleCatCommand(interaction);
+        break;
+      case 'beg':
+        await handleBegCommand(interaction);
+        break;
+      case 'profile':
+        await handleProfileCommand(interaction);
+        break;
+      case 'gamble':
+        await handleGambleCommand(interaction);
+        break;
+      case 'dig':
+        await handleDigCommand(interaction);
+        break;
+      case 'craft':
+        await handleCraftCommand(interaction);
+        break;
+      case 'sell':
+        await handleSellCommand(interaction);
+        break;
+      case 'donate':
+        await handleDonateCommand(interaction);
+        break;
+      case 'reset':
+        await handleResetCommand(interaction);
+        break;
+      case 'givemoney':
+        await handleGiveMoneyCommand(interaction);
+        break;
+      case 'giveitem':
+        await handleGiveItemCommand(interaction);
+        break;
+      case 'work':
+        await handleWorkCommand(interaction);
+        break;
+      case 'give_experience':
+        await handleGiveEXPCommand(interaction);
+        break;
+      case 'take_money':
+        await handleTakeMoneyCommand(interaction);
+        break;
+    }
+  } catch (error) {
+    console.error('Error when executing command', error);
+  }
+}
+);
 
 initializeBot();
 
