@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, handleTakeMoneyCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -147,6 +147,18 @@ const commands = [
         )
         .setRequired(true)
     ),
+    new SlashCommandBuilder()
+    .setName('take_money')
+    .setDescription('Takes a specific amount of money from a user (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('target')
+        .setDescription('The user you wish to take the money from')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount you wish to take from that user')
+    ),
 
 ].map(command => command.toJSON());
 
@@ -182,6 +194,7 @@ function getCooldownTime(commandName) {
         giveitem: 30000,
         work: 300000,
         give_experience: 30000,
+        take_money: 30000,
 
         // default fallback
         default: 5000
@@ -265,6 +278,9 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'give_experience':
                 await handleGiveEXPCommand(interaction);
+                break;
+            case 'take_money':
+                await handleTakeMoneyCommand(interaction);
                 break;
         }
 

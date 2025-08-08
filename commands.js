@@ -57,7 +57,7 @@ async function handleBegCommand(interaction) {
     )
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true, });
+  await interaction.reply({ embeds: [embed], ephemeral: false, });
 }
 
 async function handleProfileCommand(interaction) {
@@ -86,7 +86,7 @@ async function handleProfileCommand(interaction) {
 
   await interaction.reply({
     embeds: [embed],
-    ephemeral: true,
+    ephemeral: false,
   });
 }
 
@@ -250,7 +250,7 @@ async function handleHelpCommand(interaction) {
   await interaction.reply({
     embeds: [DiscordEmbed],
     components: [mainButtonRow, mainselectmenu],
-    ephemeral: true,
+    ephemeral: false,
   });
 
   const collector = interaction.channel.createMessageComponentCollector({
@@ -453,7 +453,7 @@ async function handleCraftCommand(interaction) {
   await interaction.reply({
     embeds: [craftingEmbed],
     components: [craftingselectmenu],
-    ephemeral: true,
+    ephemeral: false,
   });
 
   const craftingCollector = interaction.channel.createMessageComponentCollector({
@@ -859,6 +859,40 @@ async function handleGiveEXPCommand(interaction) {
 
 }
 
+async function handleTakeMoneyCommand(interaction) {
+  const userId = interaction.options.getUser('target').id;
+  await database.ensureUser(userId);
+  const takeAmount = interaction.options.getInteger('amount');
+  const userData = await database.getUserData(userId);
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.balance -= takeAmount;
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You took away **¥${takeAmount}** from <@${userId}>, their new balance is ${userData.balance}`,
+    ephemeral: true
+  });
+}
+
 // Add more functions here
 
 module.exports = {
@@ -876,5 +910,6 @@ module.exports = {
   handleGiveItemCommand,
   handleWorkCommand,
   handleGiveEXPCommand,
+  handleTakeMoneyCommand,
   // Add more functions to export here
 };
