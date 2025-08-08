@@ -1,10 +1,32 @@
 // REQUIREMENTS
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, handleTakeMoneyCommand, handleTakeEXPCommand, } = require("./commands.js");
-const dotenv = require('dotenv');
-const database = require('./database.js');
-require('dotenv').config();
-
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  REST,
+  Routes,
+} = require("discord.js");
+const {
+  handleHelpCommand,
+  handleBegCommand,
+  handleCatCommand,
+  handleProfileCommand,
+  handleGambleCommand,
+  handleDigCommand,
+  handleCraftCommand,
+  handleSellCommand,
+  handleDonateCommand,
+  handleResetCommand,
+  handleGiveMoneyCommand,
+  handleGiveItemCommand,
+  handleWorkCommand,
+  handleGiveEXPCommand,
+  handleTakeMoneyCommand,
+  handleTakeEXPCommand,
+} = require("./commands.js");
+const dotenv = require("dotenv");
+const database = require("./database.js");
+require("dotenv").config();
 
 // LOAD SECRETS HERE
 dotenv.config();
@@ -40,6 +62,7 @@ async function initializeBot() {
     console.log("LOWDB started successfully");
 
     console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`Brina bot, are you out there! Hello!!!`);
   } catch (error) {
     console.error("Error during initialization:", error);
     process.exit(1);
@@ -47,22 +70,27 @@ async function initializeBot() {
 }
 
 const commands = [
-
-    new SlashCommandBuilder().setName('help').setDescription('general support'),
-    new SlashCommandBuilder().setName('cat').setDescription('Sends a pic of kitty!!'),
-    new SlashCommandBuilder().setName('beg').setDescription('You beg for money!'),
-    new SlashCommandBuilder().setName('profile').setDescription('shows you your balance and item inventory')
-    .addUserOption(option =>
-        option.setName('user')
-        .setDescription('the user you want to look into.')
+  new SlashCommandBuilder().setName("help").setDescription("general support"),
+  new SlashCommandBuilder()
+    .setName("cat")
+    .setDescription("Sends a pic of kitty!!"),
+  new SlashCommandBuilder().setName("beg").setDescription("You beg for money!"),
+  new SlashCommandBuilder()
+    .setName("profile")
+    .setDescription("shows you your balance and item inventory")
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("the user you want to look into.")
         .setRequired(false)
     ),
-    new SlashCommandBuilder()
-    .setName('gamble')
-    .setDescription('Gamble away all of your life savings')
-    .addIntegerOption(option =>
-        option.setName('amount')
-        .setDescription('the amount you wish to bet')
+  new SlashCommandBuilder()
+    .setName("gamble")
+    .setDescription("Gamble away all of your life savings")
+    .addIntegerOption((option) =>
+      option
+        .setName("amount")
+        .setDescription("the amount you wish to bet")
         .setRequired(true)
     ),
   new SlashCommandBuilder().setName("dig").setDescription("Dig for items!"),
@@ -144,49 +172,54 @@ const commands = [
         .setDescription("The amount of the item you want to give")
         .setRequired(true)
     ),
-    new SlashCommandBuilder()
-    .setName('work')
-    .setDescription('Lets you work'),
-    new SlashCommandBuilder()
-    .setName('give_experience')
-    .setDescription('Gives a user an amount of EXP (only for bot owner)')
-    .addUserOption(option =>
-        option.setName('user')
-        .setDescription(
-            'The user you want to give the EXP to'
-        )
+  new SlashCommandBuilder().setName("work").setDescription("Lets you work"),
+  new SlashCommandBuilder()
+    .setName("give_experience")
+    .setDescription("Gives a user an amount of EXP (only for bot owner)")
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("The user you want to give the EXP to")
         .setRequired(true)
     )
-    .addIntegerOption(option =>
-        option.setName('amount')
-        .setDescription(
-            'The amount you want to give to this user'
-        )
+    .addIntegerOption((option) =>
+      option
+        .setName("amount")
+        .setDescription("The amount you want to give to this user")
         .setRequired(true)
     ),
-    new SlashCommandBuilder()
-    .setName('take_money')
-    .setDescription('Takes a specific amount of money from a user (only for bot owner)')
-    .addUserOption(option =>
-        option.setName('target')
-        .setDescription('The user you wish to take the money from')
+  new SlashCommandBuilder()
+    .setName("take_money")
+    .setDescription(
+      "Takes a specific amount of money from a user (only for bot owner)"
+    )
+    .addUserOption((option) =>
+      option
+        .setName("target")
+        .setDescription("The user you wish to take the money from")
         .setRequired(true)
     )
-    .addIntegerOption(option =>
-        option.setName('amount')
-        .setDescription('The amount you wish to take from that user')
+    .addIntegerOption((option) =>
+      option
+        .setName("amount")
+        .setDescription("The amount you wish to take from that user")
     ),
-    new SlashCommandBuilder()
-    .setName('take_exp')
-    .setDescription('Takes a sepcific amount of exp from a user (only for bot owner)')
-    .addUserOption(option =>
-        option.setName('target')
-        .setDescription('the user you wish to take the EXP from')
+  new SlashCommandBuilder()
+    .setName("take_exp")
+    .setDescription(
+      "Takes a sepcific amount of exp from a user (only for bot owner)"
     )
-    .addIntegerOption(option =>
-        option.setName('amount')
-        .setDescription('The amount you wish to take from this user')
+    .addUserOption((option) =>
+      option
+        .setName("target")
+        .setDescription("the user you wish to take the EXP from")
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("amount")
+        .setDescription("The amount you wish to take from this user")
     ),
+].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
 
@@ -255,7 +288,7 @@ function setCooldown(userId, commandName, cooldownTime) {
 }
 
 // --- Interaction Handler ---
-client.on('interactionCreate', async interaction => {
+client.on("interactionCreate", async (interaction) => {
   try {
     if (!interaction.isChatInputCommand()) return;
 
@@ -277,60 +310,59 @@ client.on('interactionCreate', async interaction => {
 
     // --- Command Execution ---
     switch (commandName) {
-      case 'help':
+      case "help":
         await handleHelpCommand(interaction);
         break;
-      case 'cat':
+      case "cat":
         await handleCatCommand(interaction);
         break;
-      case 'beg':
+      case "beg":
         await handleBegCommand(interaction);
         break;
-      case 'profile':
+      case "profile":
         await handleProfileCommand(interaction);
         break;
-      case 'gamble':
+      case "gamble":
         await handleGambleCommand(interaction);
         break;
-      case 'dig':
+      case "dig":
         await handleDigCommand(interaction);
         break;
-      case 'craft':
+      case "craft":
         await handleCraftCommand(interaction);
         break;
-      case 'sell':
+      case "sell":
         await handleSellCommand(interaction);
         break;
-      case 'donate':
+      case "donate":
         await handleDonateCommand(interaction);
         break;
-      case 'reset':
+      case "reset":
         await handleResetCommand(interaction);
         break;
-      case 'givemoney':
+      case "givemoney":
         await handleGiveMoneyCommand(interaction);
         break;
-      case 'giveitem':
+      case "giveitem":
         await handleGiveItemCommand(interaction);
         break;
-      case 'work':
+      case "work":
         await handleWorkCommand(interaction);
         break;
-      case 'give_experience':
+      case "give_experience":
         await handleGiveEXPCommand(interaction);
         break;
-      case 'take_money':
+      case "take_money":
         await handleTakeMoneyCommand(interaction);
         break;
-      case 'take_exp':
+      case "take_exp":
         await handleTakeEXPCommand(interaction);
         break;
     }
   } catch (error) {
-    console.error('Error when executing command', error);
+    console.error("Error when executing command", error);
   }
-}
-);
+});
 
 initializeBot();
 
