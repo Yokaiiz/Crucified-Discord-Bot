@@ -1040,6 +1040,41 @@ async function handleTakeMoneyCommand(interaction) {
   });
 }
 
+async function handleTakeEXPCommand(interaction) {
+  const targetID = interaction.options.getUser('target').id;
+  await database.ensureUser(targetID);
+  const userData = await database.getUserData(targetID);
+  const TakeAwayAmount = interaction.options.getInteger('amount');
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.experience -= TakeAwayAmount;
+  await database.saveUserData(targetID, userData);
+
+  await interaction.reply({
+    content: `You have taken away **${TakeAwayAmount}** from <@${targetID}>, their new experience count is **${userData.experience}**`,
+    ephemeral: true
+  });
+
+}
+
 // Add more functions here
 
 module.exports = {
@@ -1058,5 +1093,6 @@ module.exports = {
   handleWorkCommand,
   handleGiveEXPCommand,
   handleTakeMoneyCommand,
+  handleTakeEXPCommand,
   // Add more functions to export here
 };

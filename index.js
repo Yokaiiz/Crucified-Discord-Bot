@@ -162,6 +162,17 @@ const commands = [
         option.setName('amount')
         .setDescription('The amount you wish to take from that user')
     ),
+    new SlashCommandBuilder()
+    .setName('take_exp')
+    .setDescription('Takes a sepcific amount of exp from a user (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('target')
+        .setDescription('the user you wish to take the EXP from')
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount you wish to take from this user')
+    ),
 
 ].map(command => command.toJSON());
 
@@ -204,11 +215,11 @@ function getCooldownTime(commandName) {
     craft: 15000,
     sell: 7500,
     donate: 15000,
-    reset: 30000,
-    givemoney: 30000,
-    giveitem: 30000,
+    reset: 15000,
+    givemoney: 15000,
+    giveitem: 15000,
     work: 1800000,
-    take_money: 30000,
+    take_money: 15000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
