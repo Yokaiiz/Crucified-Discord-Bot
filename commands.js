@@ -739,31 +739,35 @@ async function handleWorkCommand(interaction) {
     .addFields(
       {
         name: 'Janitor',
-        value: '`Experience required: 150`\n`Wage: 1,000`\n`Experience gain: 250`'
+        value: '`Experience required: 150`\n`Wage: ¥1,000`\n`Experience gain: 250`'
       },
       {
         name: 'Waitress',
-        value: '`Experience required: 500`\n`Wage: 2,000`\n`Experience gain: 500`'
+        value: '`Experience required: 500`\n`Wage: ¥2,000`\n`Experience gain: 500`'
       },
       {
         name: 'Cashier',
-        value: '`Experience required: 1,000`\n`Wage: 3,000`\n`Experience gain: 750`'
+        value: '`Experience required: 1,000`\n`Wage: ¥3,000`\n`Experience gain: 750`'
       },
       {
         name: 'Teacher',
-        value: '`Experience required: 2,000`\n`Wage: 10,000`\n`Experience gain: 1,000`'
+        value: '`Experience required: 2,000`\n`Wage: ¥10,000`\n`Experience gain: 1,000`'
       },
       {
         name: 'Care-taker',
-        value: '`Experience required: 5,000`\n`Wage: 50,000`\n`Experience gain: 1,250`'
+        value: '`Experience required: 5,000`\n`Wage: ¥50,000`\n`Experience gain: 1,250`'
       },
       {
         name: 'Police officer',
-        value: '`Experience required: 10,000`\n`Wage: 100,000`\n`Experience gain: 1,500`'
+        value: '`Experience required: 10,000`\n`Wage: ¥100,000`\n`Experience gain: 1,500`'
       },
       {
         name: 'Bank Employee',
-        value: '`Experience required: 50,000`\n`Wage: 500,000`\n`Experience gain: 1,750`'
+        value: '`Experience required: 50,000`\n`Wage: ¥500,000`\n`Experience gain: 1,750`'
+      },
+      {
+        name: 'Engineer',
+        value: '`Experience required: 100,000`\n`Wage: ¥1,000,000`\n`Experience gain: 2,000`'
       }
     )
     .setFooter({
@@ -803,6 +807,10 @@ async function handleWorkCommand(interaction) {
         .setLabel('Bank Employee 🏦💴')
         .setValue('bank_employee')
         .setDescription('You work as a bank employee in your local bank'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Engineer 🛠️')
+        .setValue('engineer')
+        .setDescription('You work as an engineer at your local engineering company'),
     ]);
 
   const selectWorkMenuRow = new ActionRowBuilder().addComponents(selectWorkMenu);
@@ -938,6 +946,24 @@ async function handleWorkCommand(interaction) {
 
         await i.update({
           content: `You earned **¥500,000** alongside **1750** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'engineer') {
+      if (userData.experience < 100000) {
+        return i.update({
+          content: 'You do not have **experience** to work as an engineer',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 100000) {
+        userData.balance += 1000000;
+        userData.experience += 2000;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥1,000,000** alongise **2,000** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
           ephemeral: true
         });
       }
