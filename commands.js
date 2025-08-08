@@ -740,6 +740,10 @@ async function handleWorkCommand(interaction) {
     .setThumbnail(`${avatar}`)
     .addFields(
       {
+        name: 'Exotic dancer',
+        value: '`Experience required: 0`\n`Wage: ¥750`\n`Experience gain: 100`'
+      },
+      {
         name: 'Janitor',
         value: '`Experience required: 150`\n`Wage: ¥1,000`\n`Experience gain: 250`'
       },
@@ -781,6 +785,10 @@ async function handleWorkCommand(interaction) {
     .setCustomId('select-work-menu')
     .setPlaceholder('Choice of work')
     .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Exotic dancer 👯‍♀️')
+        .setValue('exotic_dancer')
+        .setDescription('You work as an exotic dancer in your local gentlemens club'),
       new StringSelectMenuOptionBuilder()
         .setLabel('Janitor 🧹')
         .setValue('janitor')
@@ -830,6 +838,17 @@ async function handleWorkCommand(interaction) {
 
   workSelectionCollector.on('collect', async (i) => {
     if (i.customId !== 'select-work-menu') return;
+
+    if (i.values[0] === 'exotic_dancer') {
+      userData.balance += 750;
+      userData.experience += 100;
+      await database.saveUserData(userId, userData);
+
+      await i.update({
+        content: `You received **¥750** and **100** EXP, your new balance is **¥${userData.balance.toLocaleString("en-US")}** and your new EXP is **${userData.experience.toLocaleString("en-US")}**`,
+        ephemeral: true,
+      });
+    }
 
     if (i.values[0] === 'janitor') {
       if (userData.experience < 150) {
