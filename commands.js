@@ -53,7 +53,7 @@ async function handleBegCommand(interaction) {
     .setColor("Green")
     .setTitle("You begged!")
     .setDescription(
-      `You begged and received **¥${amount}** along with **${item}** and **${experiencegain} experience**!`
+      `You begged and received **¥${amount.toLocaleString("en-US")}** along with **${item}** and **${experiencegain.toLocaleString("en-US")} experience**!`
     )
     .setTimestamp();
 
@@ -170,11 +170,11 @@ async function handleGambleCommand(interaction) {
     userData.balance += winnings;
     messageEmbed = new EmbedBuilder()
       .setTitle(`🎉 You hit a **${selected.name}**!`)
-      .setDescription(`You won **¥${winnings}**!`)
+      .setDescription(`You won **¥${winnings.toLocaleString("en-US")}**!`)
       .addFields(
         {
           name: 'Your new balance',
-          value: `${subtext(`¥${userData.balance}`)}`,
+          value: `${subtext(`¥${userData.balance.toLocaleString("en-US")}`)}`,
         }
       )
       .setColor("Green")
@@ -184,7 +184,7 @@ async function handleGambleCommand(interaction) {
     messageEmbed = new EmbedBuilder()
       .setTitle("💸 You lost...")
       .setDescription(
-        `You lost ¥${amount}, but nothing is stopping you from trying again!`
+        `You lost ¥${amount.toLocaleString("en-US")}, but nothing is stopping you from trying again!`
       )
       .setColor("Red")
       .setTimestamp();
@@ -577,7 +577,7 @@ async function handleSellCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You sold  **${ItemQuantity}** of **${ItemToSell}** for **¥${TotalItemPrice.toLocaleString("en-US")}**!`,
+    content: `You sold  **${ItemQuantity.toLocaleString("en-US")}** of **${ItemToSell}** for **¥${TotalItemPrice.toLocaleString("en-US")}**!`,
     ephemeral: true,
   });
 }
@@ -613,11 +613,11 @@ async function handleDonateCommand(interaction) {
   await database.saveUserData(userId, userData);
   await database.saveUserData(targetUserId, targetUserData);
   await interaction.reply({
-    content: `You donated **¥${amount}** to <@${targetUserId}>!`,
+    content: `You donated **¥${amount.toLocaleString("en-US")}** to <@${targetUserId}>!`,
     ephemeral: true,
   });
   await interaction.client.users.send(targetUserId, {
-    content: `You received a donation of **¥${amount}** from <@${userId}>!`,
+    content: `You received a donation of **¥${amount.toLocaleString("en-US")}** from <@${userId}>!`,
   });
 }
 
@@ -684,7 +684,7 @@ async function handleGiveMoneyCommand(interaction) {
   userData.balance += amount;
   await database.saveUserData(userId, userData);
   await interaction.reply({
-    content: `You gave **¥${amount}** to <@${userId}>!`,
+    content: `You gave **¥${amount.toLocaleString("en-US")}** to <@${userId}>!`,
     ephemeral: true,
   });
 }
@@ -747,7 +747,23 @@ async function handleWorkCommand(interaction) {
       },
       {
         name: 'Cashier',
-        value: '`Experience required: 1000`\n`Wage: 3,000`'
+        value: '`Experience required: 1,000`\n`Wage: 3,000`'
+      },
+      {
+        name: 'Teacher',
+        value: '`Experience required: 2,000`\n`Wage: 10,000`'
+      },
+      {
+        name: 'Care-taker',
+        value: '`Experience required: 5,000`\n`Wage: 50,000`'
+      },
+      {
+        name: 'Police officer',
+        value: '`Experience required: 10,000`\n`Wage: 100,000`'
+      },
+      {
+        name: 'Bank Employee',
+        value: '`Experience required: 50,000`\n`Wage: 500,000`'
       }
     )
     .setFooter({
@@ -760,17 +776,33 @@ async function handleWorkCommand(interaction) {
     .setPlaceholder('Choice of work')
     .addOptions([
       new StringSelectMenuOptionBuilder()
-        .setLabel('Janitor')
+        .setLabel('Janitor 🧹')
         .setValue('janitor')
         .setDescription('You work as a janitor in your local school.'),
       new StringSelectMenuOptionBuilder()
-        .setLabel('Waitress')
+        .setLabel('Waitress 🥐🍵')
         .setValue('waitress')
         .setDescription('You work as a waitress in your local café.'),
       new StringSelectMenuOptionBuilder()
-        .setLabel('Cashier')
+        .setLabel('Cashier 💵')
         .setValue('cashier')
-        .setDescription('You work as a cashier at your local supermarket.')
+        .setDescription('You work as a cashier at your local supermarket.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Teacher 🏫')
+        .setValue('teacher')
+        .setDescription('You work as a teacher in your local high-school.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Care-taker 👩‍⚕️')
+        .setValue('care_taker')
+        .setDescription('You work as a care-taker for a person in need.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Police Officer 👮🚨')
+        .setValue('police_officer')
+        .setDescription('You work as a police officer for your local county'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Bank Employee 🏦💴')
+        .setValue('bank_employee')
+        .setDescription('You work as a bank employee in your local bank'),
     ]);
 
   const selectWorkMenuRow = new ActionRowBuilder().addComponents(selectWorkMenu);
@@ -800,7 +832,7 @@ async function handleWorkCommand(interaction) {
         userData.experience += 250;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥1,000** alongside **250** EXP, now your balance is: **¥${userData.balance}** and your EXP is **${userData.experience}**`,
+          content: `You earned **¥1,000** alongside **250** EXP, now your balance is: **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
           ephemeral: true,
         });
       }
@@ -817,7 +849,7 @@ async function handleWorkCommand(interaction) {
         userData.experience += 500;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥2,000** alongside **500** EXP, now your balance is **¥${userData.balance}** and your EXP is **${userData.experience}**`,
+          content: `You earned **¥2,000** alongside **500** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
           ephemeral: true,
         });
       }
@@ -834,8 +866,79 @@ async function handleWorkCommand(interaction) {
         userData.experience += 750;
         await database.saveUserData(userId, userData);
         await i.update({
-          content: `You earned **¥3,000** alongside **750** EXP, now your balance is **¥${userData.balance}** and your EXP is **${userData.experience}**`,
+          content: `You earned **¥3,000** alongside **750** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
           ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'teacher') {
+      if (userData.experience < 2000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a teacher',
+          ephemeral: true
+        });
+      } else if (userData.experience > 2000) {
+        userData.balance += 10000;
+        userData.experience += 1000;
+        await database.saveUserData(userId, userData);
+        await i.update({
+          content: `You earned **¥10,000** alongside **1,000** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'care_taker') {
+      if (userData.experience < 5000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a care taker',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 5000) {
+        userData.balance += 50000;
+        userData.experience += 1250;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥50,000** alongside **1250** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'police_officer') {
+      if (userData.experience < 10000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a police officer',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 10000) {
+        userData.balance += 100000;
+        userData.experience += 1500;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥100,000** alongside **1500** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'bank_employee') {
+      if (userData.experience < 50000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a bank employee',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 50000) {
+        userData.balance += 500000;
+        userData.experience += 1750;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥500,000** alongside **1750** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
         });
       }
     }
@@ -871,7 +974,7 @@ async function handleGiveEXPCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You have given <@${userId}> **${amount}** EXP, their total EXP is now **${userData.experience}**`,
+    content: `You have given <@${userId}> **${amount.toLocaleString("en-US")}** EXP, their total EXP is now **${userData.experience.toLocaleString("en-US")}**`,
     ephemeral: true
   });
 
@@ -906,7 +1009,7 @@ async function handleTakeMoneyCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You took away **¥${takeAmount}** from <@${userId}>, their new balance is **¥${userData.balance.toLocaleString("en-US")}**`,
+    content: `You took away **¥${takeAmount.toLocaleString("en-US")}** from <@${userId}>, their new balance is **¥${userData.balance.toLocaleString("en-US")}**`,
     ephemeral: true
   });
 }
