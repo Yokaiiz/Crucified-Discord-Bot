@@ -197,7 +197,7 @@ function getCooldownTime(commandName) {
         reset: 30000,
         givemoney: 30000,
         giveitem: 30000,
-        work: 300000,
+        work: 1800000,
         give_experience: 30000,
         take_money: 30000,
 
