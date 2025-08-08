@@ -51,7 +51,12 @@ const commands = [
     new SlashCommandBuilder().setName('help').setDescription('general support'),
     new SlashCommandBuilder().setName('cat').setDescription('Sends a pic of kitty!!'),
     new SlashCommandBuilder().setName('beg').setDescription('You beg for money!'),
-    new SlashCommandBuilder().setName('profile').setDescription('shows you your balance and item inventory'),
+    new SlashCommandBuilder().setName('profile').setDescription('shows you your balance and item inventory')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('the user you want to look into.')
+        .setRequired(false)
+    ),
     new SlashCommandBuilder()
     .setName('gamble')
     .setDescription('Gamble away all of your life savings')

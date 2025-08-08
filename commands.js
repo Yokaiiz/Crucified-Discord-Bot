@@ -62,31 +62,49 @@ async function handleBegCommand(interaction) {
 
 async function handleProfileCommand(interaction) {
   const userId = interaction.user.id;
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
-  const balance = userData.balance;
-  const inventory = userData.inventory;
-  const experience = userData.experience;
-  const profile = interaction.user.displayAvatarURL();
-  const inventoryText = Object.entries(inventory)
-    .map(([item, qty]) => `${item} x${qty}`)
-    .join("\n");
-  const username = interaction.user.username;
+  const targetUserObj = interaction.options.getUser('user');
+  let profileEmbed;
 
-  const embed = new EmbedBuilder()
-    .setColor("Default")
-    .setTitle(`${username}'s inventory and balance!`)
-    .setThumbnail(profile)
-    .addFields(
-      { name: "**Balance**", value: `**¥${balance.toLocaleString("en-US")}**`},
-      { name: "**Experience**", value: `**${experience.toLocaleString("en-US")}**`},
-      { name: "**Inventory**", value: `**${inventoryText}**` }
-    )
-    .setTimestamp();
+  if (targetUserObj) {
+    const targetUserId = targetUserObj.id;
+    await database.ensureUser(targetUserId);
+    const targetUserData = await database.getUserData(targetUserId);
+    const targetInventoryText = Object.entries(targetUserData.inventory)
+      .map(([item, qty]) => `${item} x${qty}`)
+      .join("\n");
+
+    profileEmbed = new EmbedBuilder()
+      .setColor('Default')
+      .setTitle(`${targetUserObj.username}'s inventory, balance and experience`)
+      .setThumbnail(targetUserObj.displayAvatarURL())
+      .addFields(
+        { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
+        { name: "**Experience**", value: `**${targetUserData.experience.toLocaleString("en-US")}**` },
+        { name: "**Inventory**", value: `**${targetInventoryText}**` }
+      )
+      .setTimestamp();
+  } else {
+    await database.ensureUser(userId);
+    const userData = await database.getUserData(userId);
+    const inventoryText = Object.entries(userData.inventory)
+      .map(([item, qty]) => `${item} x${qty}`)
+      .join("\n");
+
+    profileEmbed = new EmbedBuilder()
+      .setColor("Default")
+      .setTitle(`${interaction.user.username}'s inventory, balance and experience!`)
+      .setThumbnail(interaction.user.displayAvatarURL())
+      .addFields(
+        { name: "**Balance**", value: `**¥${userData.balance.toLocaleString("en-US")}**` },
+        { name: "**Experience**", value: `**${userData.experience.toLocaleString("en-US")}**` },
+        { name: "**Inventory**", value: `**${inventoryText}**` }
+      )
+      .setTimestamp();
+  }
 
   await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
+    embeds: [profileEmbed],
+    ephemeral: false
   });
 }
 
@@ -862,8 +880,8 @@ async function handleGiveEXPCommand(interaction) {
 async function handleTakeMoneyCommand(interaction) {
   const userId = interaction.options.getUser('target').id;
   await database.ensureUser(userId);
-  const takeAmount = interaction.options.getInteger('amount');
   const userData = await database.getUserData(userId);
+  const takeAmount = interaction.options.getInteger('amount');
 
   if (!interaction.client.application.owner) {
     await interaction.client.application.fetch();
@@ -888,7 +906,7 @@ async function handleTakeMoneyCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You took away **¥${takeAmount}** from <@${userId}>, their new balance is ${userData.balance}`,
+    content: `You took away **¥${takeAmount}** from <@${userId}>, their new balance is **¥${userData.balance.toLocaleString("en-US")}**`,
     ephemeral: true
   });
 }
