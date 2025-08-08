@@ -16,6 +16,7 @@ async function handleBegCommand(interaction) {
 
   // Generate random amount
   const amount = Math.floor(Math.random() * 300) + 50;
+  const experiencegain = Math.floor(Math.random() * 100) + 50;
   const itempool = [
     { item: "Sword", chance: 0.4 },
     { item: "Shovel", chance: 0.4 },
@@ -37,6 +38,7 @@ async function handleBegCommand(interaction) {
 
   // Update balance
   userData.balance += amount;
+  userData.experience += experiencegain
   if (userData.inventory[item]) {
     userData.inventory[item] += 1;
   } else {
@@ -51,38 +53,58 @@ async function handleBegCommand(interaction) {
     .setColor("Green")
     .setTitle("You begged!")
     .setDescription(
-      `You begged and received **¥${amount}** along with **${item}**!`
+      `You begged and received **¥${amount.toLocaleString("en-US")}** along with **${item}** and **${experiencegain.toLocaleString("en-US")} experience**!`
     )
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true, });
+  await interaction.reply({ embeds: [embed], ephemeral: false, });
 }
 
 async function handleProfileCommand(interaction) {
   const userId = interaction.user.id;
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
-  const balance = userData.balance;
-  const inventory = userData.inventory;
-  const profile = interaction.user.displayAvatarURL();
-  const inventoryText = Object.entries(inventory)
-    .map(([item, qty]) => `${item} x${qty}`)
-    .join("\n");
-  const username = interaction.user.username;
+  const targetUserObj = interaction.options.getUser('user');
+  let profileEmbed;
 
-  const embed = new EmbedBuilder()
-    .setColor("Default")
-    .setTitle(`${username}'s inventory and balance!`)
-    .setThumbnail(profile)
-    .addFields(
-      { name: "**Balance**", value: `**¥${balance.toLocaleString("en-US")}**` },
-      { name: "**Inventory**", value: `**${inventoryText}**` }
-    )
-    .setTimestamp();
+  if (targetUserObj) {
+    const targetUserId = targetUserObj.id;
+    await database.ensureUser(targetUserId);
+    const targetUserData = await database.getUserData(targetUserId);
+    const targetInventoryText = Object.entries(targetUserData.inventory)
+      .map(([item, qty]) => `${item} x${qty}`)
+      .join("\n");
+
+    profileEmbed = new EmbedBuilder()
+      .setColor('Default')
+      .setTitle(`${targetUserObj.username}'s inventory, balance and experience`)
+      .setThumbnail(targetUserObj.displayAvatarURL())
+      .addFields(
+        { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
+        { name: "**Experience**", value: `**${targetUserData.experience.toLocaleString("en-US")}**` },
+        { name: "**Inventory**", value: `**${targetInventoryText}**` }
+      )
+      .setTimestamp();
+  } else {
+    await database.ensureUser(userId);
+    const userData = await database.getUserData(userId);
+    const inventoryText = Object.entries(userData.inventory)
+      .map(([item, qty]) => `${item} x${qty}`)
+      .join("\n");
+
+    profileEmbed = new EmbedBuilder()
+      .setColor("Default")
+      .setTitle(`${interaction.user.username}'s inventory, balance and experience!`)
+      .setThumbnail(interaction.user.displayAvatarURL())
+      .addFields(
+        { name: "**Balance**", value: `**¥${userData.balance.toLocaleString("en-US")}**` },
+        { name: "**Experience**", value: `**${userData.experience.toLocaleString("en-US")}**` },
+        { name: "**Inventory**", value: `**${inventoryText}**` }
+      )
+      .setTimestamp();
+  }
 
   await interaction.reply({
-    embeds: [embed],
-    ephemeral: true,
+    embeds: [profileEmbed],
+    ephemeral: false
   });
 }
 
@@ -148,11 +170,11 @@ async function handleGambleCommand(interaction) {
     userData.balance += winnings;
     messageEmbed = new EmbedBuilder()
       .setTitle(`🎉 You hit a **${selected.name}**!`)
-      .setDescription(`You won **¥${winnings}**!`)
+      .setDescription(`You won **¥${winnings.toLocaleString("en-US")}**!`)
       .addFields(
         {
           name: 'Your new balance',
-          value: `${subtext(`¥${userData.balance}`)}`,
+          value: `${subtext(`¥${userData.balance.toLocaleString("en-US")}`)}`,
         }
       )
       .setColor("Green")
@@ -162,7 +184,7 @@ async function handleGambleCommand(interaction) {
     messageEmbed = new EmbedBuilder()
       .setTitle("💸 You lost...")
       .setDescription(
-        `You lost ¥${amount}, but nothing is stopping you from trying again!`
+        `You lost ¥${amount.toLocaleString("en-US")}, but nothing is stopping you from trying again!`
       )
       .setColor("Red")
       .setTimestamp();
@@ -246,7 +268,7 @@ async function handleHelpCommand(interaction) {
   await interaction.reply({
     embeds: [DiscordEmbed],
     components: [mainButtonRow, mainselectmenu],
-    ephemeral: true,
+    ephemeral: false,
   });
 
   const collector = interaction.channel.createMessageComponentCollector({
@@ -331,7 +353,7 @@ async function handleHelpCommand(interaction) {
           {
             name: "Commands",
             value:
-              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials",
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials\n`/Sell` - Sell different items at different quantities\n`/Donate` - Donate money to others that are in need (brokies)\n`/Reset` - Full wipe of the target's data and only the bot team members can utilise this.\n`/Give Money` - Allows the bot team members to give anyone money by adding an amount to their overall balance without requiring to be on the PC where the bot is ran.\n`/Give Item` - Allows the bot team members to different items at different quantities\n`/Work` - Let's you work for money",
           },
           {
             name: "Support",
@@ -449,7 +471,7 @@ async function handleCraftCommand(interaction) {
   await interaction.reply({
     embeds: [craftingEmbed],
     components: [craftingselectmenu],
-    ephemeral: true,
+    ephemeral: false,
   });
 
   const craftingCollector = interaction.channel.createMessageComponentCollector({
@@ -463,6 +485,7 @@ async function handleCraftCommand(interaction) {
     let requiredItem = '';
     let requiredAmount = 0;
     let requiredMoney = 0;
+    const expGain = Math.floor(Math.random() * 100) + 50
 
     if (i.values[0] === 'gold_bar') {
       itemName = 'Gold bar';
@@ -497,11 +520,12 @@ async function handleCraftCommand(interaction) {
     }
     userData.balance -= requiredMoney;
     userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
+    userData.experience += expGain;
 
     await database.saveUserData(userId, userData);
 
     await i.reply({
-      content: `You crafted a **${itemName}**!`,
+      content: `You crafted a **${itemName}** and also acquired **${expGain}** EXP from crafting!`,
       ephemeral: true
     });
   });
@@ -519,7 +543,7 @@ async function handleSellCommand(interaction) {
     { name: 'Raw diamond', price: 1000 },
     { name: 'Raw iron', price: 100 },
     { name: 'Raw copper', price: 50 },
-    { name: 'gold bar', price: 5000 },
+    { name: 'Gold bar', price: 5000 },
     { name: 'Iron bar', price: 1000 },
     { name: 'Copper bar', price: 500 },
     { name: 'Sword', price: 5000 },
@@ -536,6 +560,8 @@ async function handleSellCommand(interaction) {
     });
   }
 
+  const TotalItemPrice = priceObj.price * ItemQuantity;
+
   if (!userData.inventory[ItemToSell] || userData.inventory[ItemToSell] <= 0) {
     return interaction.reply({
       content: `You do not have any of **${ItemToSell}** to sell.`,
@@ -548,11 +574,11 @@ async function handleSellCommand(interaction) {
     delete userData.inventory[ItemToSell];
   }
 
-  userData.balance += priceObj.price * ItemQuantity;
+  userData.balance += TotalItemPrice
   await database.saveUserData(userId, userData);
 
   await interaction.reply({
-    content: `You sold  **${ItemQuantity}** **${ItemToSell}** for **¥${priceObj.price}**!`,
+    content: `You sold  **${ItemQuantity.toLocaleString("en-US")}** of **${ItemToSell}** for **¥${TotalItemPrice.toLocaleString("en-US")}**!`,
     ephemeral: true,
   });
 }
@@ -588,11 +614,11 @@ async function handleDonateCommand(interaction) {
   await database.saveUserData(userId, userData);
   await database.saveUserData(targetUserId, targetUserData);
   await interaction.reply({
-    content: `You donated **¥${amount}** to <@${targetUserId}>!`,
+    content: `You donated **¥${amount.toLocaleString("en-US")}** to <@${targetUserId}>!`,
     ephemeral: true,
   });
   await interaction.client.users.send(targetUserId, {
-    content: `You received a donation of **¥${amount}** from <@${userId}>!`,
+    content: `You received a donation of **¥${amount.toLocaleString("en-US")}** from <@${userId}>!`,
   });
 }
 
@@ -659,7 +685,7 @@ async function handleGiveMoneyCommand(interaction) {
   userData.balance += amount;
   await database.saveUserData(userId, userData);
   await interaction.reply({
-    content: `You gave **¥${amount}** to <@${userId}>!`,
+    content: `You gave **¥${amount.toLocaleString("en-US")}** to <@${userId}>!`,
     ephemeral: true,
   });
 }
@@ -700,6 +726,375 @@ async function handleGiveItemCommand(interaction) {
   });
 }
 
+async function handleWorkCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId); // <-- await added!
+  const avatar = interaction.user.displayAvatarURL();
+
+  const workEmbed = new EmbedBuilder()
+    .setColor('Default')
+    .setTitle(`Hello, ${interaction.user.username}`)
+    .setDescription('Here are your work options!')
+    .setThumbnail(`${avatar}`)
+    .addFields(
+      {
+        name: 'Exotic dancer',
+        value: '`Experience required: 0`\n`Wage: ¥750`\n`Experience gain: 100`'
+      },
+      {
+        name: 'Janitor',
+        value: '`Experience required: 150`\n`Wage: ¥1,000`\n`Experience gain: 250`'
+      },
+      {
+        name: 'Waitress',
+        value: '`Experience required: 500`\n`Wage: ¥2,000`\n`Experience gain: 500`'
+      },
+      {
+        name: 'Cashier',
+        value: '`Experience required: 1,000`\n`Wage: ¥3,000`\n`Experience gain: 750`'
+      },
+      {
+        name: 'Teacher',
+        value: '`Experience required: 2,000`\n`Wage: ¥10,000`\n`Experience gain: 1,000`'
+      },
+      {
+        name: 'Care-taker',
+        value: '`Experience required: 5,000`\n`Wage: ¥50,000`\n`Experience gain: 1,250`'
+      },
+      {
+        name: 'Police officer',
+        value: '`Experience required: 10,000`\n`Wage: ¥100,000`\n`Experience gain: 1,500`'
+      },
+      {
+        name: 'Bank Employee',
+        value: '`Experience required: 50,000`\n`Wage: ¥500,000`\n`Experience gain: 1,750`'
+      },
+      {
+        name: 'Engineer',
+        value: '`Experience required: 100,000`\n`Wage: ¥1,000,000`\n`Experience gain: 2,000`'
+      }
+    )
+    .setFooter({
+      text: 'Thank you for using the crucified bot! || Developed by crucifiedxx'
+    })
+    .setTimestamp();
+
+  const selectWorkMenu = new StringSelectMenuBuilder()
+    .setCustomId('select-work-menu')
+    .setPlaceholder('Choice of work')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Exotic dancer 👯‍♀️')
+        .setValue('exotic_dancer')
+        .setDescription('You work as an exotic dancer in your local gentlemens club'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Janitor 🧹')
+        .setValue('janitor')
+        .setDescription('You work as a janitor in your local school.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Waitress 🥐🍵')
+        .setValue('waitress')
+        .setDescription('You work as a waitress in your local café.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Cashier 💵')
+        .setValue('cashier')
+        .setDescription('You work as a cashier at your local supermarket.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Teacher 🏫')
+        .setValue('teacher')
+        .setDescription('You work as a teacher in your local high-school.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Care-taker 👩‍⚕️')
+        .setValue('care_taker')
+        .setDescription('You work as a care-taker for a person in need.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Police Officer 👮🚨')
+        .setValue('police_officer')
+        .setDescription('You work as a police officer for your local county'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Bank Employee 🏦💴')
+        .setValue('bank_employee')
+        .setDescription('You work as a bank employee in your local bank'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Engineer 🛠️')
+        .setValue('engineer')
+        .setDescription('You work as an engineer at your local engineering company'),
+    ]);
+
+  const selectWorkMenuRow = new ActionRowBuilder().addComponents(selectWorkMenu);
+
+  await interaction.reply({
+    embeds: [workEmbed],
+    components: [selectWorkMenuRow]
+  });
+
+  const workSelectionCollector = interaction.channel.createMessageComponentCollector({
+    ComponentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  workSelectionCollector.on('collect', async (i) => {
+    if (i.customId !== 'select-work-menu') return;
+
+    if (i.values[0] === 'exotic_dancer') {
+      userData.balance += 750;
+      userData.experience += 100;
+      await database.saveUserData(userId, userData);
+
+      await i.update({
+        content: `You received **¥750** and **100** EXP, your new balance is **¥${userData.balance.toLocaleString("en-US")}** and your new EXP is **${userData.experience.toLocaleString("en-US")}**`,
+        ephemeral: true,
+      });
+    }
+
+    if (i.values[0] === 'janitor') {
+      if (userData.experience < 150) {
+        return i.update({
+          content: 'You do not have enough experience required.',
+          ephemeral: true,
+        });
+      } else {
+        userData.balance += 1000;
+        userData.experience += 250;
+        await database.saveUserData(userId, userData);
+        await i.update({
+          content: `You earned **¥1,000** alongside **250** EXP, now your balance is: **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'waitress') {
+      if (userData.experience < 500) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a waitress.',
+          ephemeral: true,
+        });
+      } else {
+        userData.balance += 2000;
+        userData.experience += 500;
+        await database.saveUserData(userId, userData);
+        await i.update({
+          content: `You earned **¥2,000** alongside **500** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'cashier') {
+      if (userData.experience < 1000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a cashier.',
+          ephemeral: true,
+        });
+      } else {
+        userData.balance += 3000;
+        userData.experience += 750;
+        await database.saveUserData(userId, userData);
+        await i.update({
+          content: `You earned **¥3,000** alongside **750** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'teacher') {
+      if (userData.experience < 2000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a teacher',
+          ephemeral: true
+        });
+      } else if (userData.experience > 2000) {
+        userData.balance += 10000;
+        userData.experience += 1000;
+        await database.saveUserData(userId, userData);
+        await i.update({
+          content: `You earned **¥10,000** alongside **1,000** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'care_taker') {
+      if (userData.experience < 5000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a care taker',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 5000) {
+        userData.balance += 50000;
+        userData.experience += 1250;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥50,000** alongside **1250** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true,
+        });
+      }
+    }
+
+    if (i.values[0] === 'police_officer') {
+      if (userData.experience < 10000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a police officer',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 10000) {
+        userData.balance += 100000;
+        userData.experience += 1500;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥100,000** alongside **1500** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'bank_employee') {
+      if (userData.experience < 50000) {
+        return i.update({
+          content: 'You do not have enough **experience** to work as a bank employee',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 50000) {
+        userData.balance += 500000;
+        userData.experience += 1750;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥500,000** alongside **1750** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+
+    if (i.values[0] === 'engineer') {
+      if (userData.experience < 100000) {
+        return i.update({
+          content: 'You do not have **experience** to work as an engineer',
+          ephemeral: true
+        });
+      } else if (userData.experience >= 100000) {
+        userData.balance += 1000000;
+        userData.experience += 2000;
+        await database.saveUserData(userId, userData);
+
+        await i.update({
+          content: `You earned **¥1,000,000** alongise **2,000** EXP, now your balance is **¥${userData.balance.toLocaleString("en-US")}** and your EXP is **${userData.experience.toLocaleString("en-US")}**`,
+          ephemeral: true
+        });
+      }
+    }
+  });
+}
+
+async function handleGiveEXPCommand(interaction) {
+  const userId = interaction.options.getUser('user').id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const amount = interaction.options.getInteger('amount');
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.experience += amount
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You have given <@${userId}> **${amount.toLocaleString("en-US")}** EXP, their total EXP is now **${userData.experience.toLocaleString("en-US")}**`,
+    ephemeral: true
+  });
+
+}
+
+async function handleTakeMoneyCommand(interaction) {
+  const userId = interaction.options.getUser('target').id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const takeAmount = interaction.options.getInteger('amount');
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.balance -= takeAmount;
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You took away **¥${takeAmount.toLocaleString("en-US")}** from <@${userId}>, their new balance is **¥${userData.balance.toLocaleString("en-US")}**`,
+    ephemeral: true
+  });
+}
+
+async function handleTakeEXPCommand(interaction) {
+  const targetID = interaction.options.getUser('target').id;
+  await database.ensureUser(targetID);
+  const userData = await database.getUserData(targetID);
+  const TakeAwayAmount = interaction.options.getInteger('amount');
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  userData.experience -= TakeAwayAmount;
+  await database.saveUserData(targetID, userData);
+
+  await interaction.reply({
+    content: `You have taken away **${TakeAwayAmount}** from <@${targetID}>, their new experience count is **${userData.experience}**`,
+    ephemeral: true
+  });
+
+}
+
 // Add more functions here
 
 module.exports = {
@@ -715,5 +1110,9 @@ module.exports = {
   handleResetCommand,
   handleGiveMoneyCommand,
   handleGiveItemCommand,
+  handleWorkCommand,
+  handleGiveEXPCommand,
+  handleTakeMoneyCommand,
+  handleTakeEXPCommand,
   // Add more functions to export here
 };

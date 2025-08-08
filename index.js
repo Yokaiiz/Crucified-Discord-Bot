@@ -1,28 +1,10 @@
 // REQUIREMENTS
-const {
-  Client,
-  GatewayIntentBits,
-  SlashCommandBuilder,
-  REST,
-  Routes,
-} = require("discord.js");
-const {
-  handleHelpCommand,
-  handleBegCommand,
-  handleCatCommand,
-  handleProfileCommand,
-  handleGambleCommand,
-  handleDigCommand,
-  handleCraftCommand,
-  handleSellCommand,
-  handleDonateCommand,
-  handleResetCommand,
-  handleGiveMoneyCommand,
-  handleGiveItemCommand,
-} = require("./commands.js");
-const dotenv = require("dotenv");
-const database = require("./database.js");
-require("dotenv").config();
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, handleTakeMoneyCommand, handleTakeEXPCommand, } = require("./commands.js");
+const dotenv = require('dotenv');
+const database = require('./database.js');
+require('dotenv').config();
+
 
 // LOAD SECRETS HERE
 dotenv.config();
@@ -64,24 +46,23 @@ async function initializeBot() {
   }
 }
 
-const cooldowns = new Map();
-
 const commands = [
-  new SlashCommandBuilder().setName("help").setDescription("general support"),
-  new SlashCommandBuilder()
-    .setName("cat")
-    .setDescription("Sends a pic of kitty!!"),
-  new SlashCommandBuilder().setName("beg").setDescription("You beg for money!"),
-  new SlashCommandBuilder()
-    .setName("profile")
-    .setDescription("shows you your balance and item inventory"),
-  new SlashCommandBuilder()
-    .setName("gamble")
-    .setDescription("Gamble away all of your life savings")
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("the amount you wish to bet")
+
+    new SlashCommandBuilder().setName('help').setDescription('general support'),
+    new SlashCommandBuilder().setName('cat').setDescription('Sends a pic of kitty!!'),
+    new SlashCommandBuilder().setName('beg').setDescription('You beg for money!'),
+    new SlashCommandBuilder().setName('profile').setDescription('shows you your balance and item inventory')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('the user you want to look into.')
+        .setRequired(false)
+    ),
+    new SlashCommandBuilder()
+    .setName('gamble')
+    .setDescription('Gamble away all of your life savings')
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('the amount you wish to bet')
         .setRequired(true)
     ),
   new SlashCommandBuilder().setName("dig").setDescription("Dig for items!"),
@@ -163,7 +144,49 @@ const commands = [
         .setDescription("The amount of the item you want to give")
         .setRequired(true)
     ),
-].map((command) => command.toJSON());
+    new SlashCommandBuilder()
+    .setName('work')
+    .setDescription('Lets you work'),
+    new SlashCommandBuilder()
+    .setName('give_experience')
+    .setDescription('Gives a user an amount of EXP (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription(
+            'The user you want to give the EXP to'
+        )
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription(
+            'The amount you want to give to this user'
+        )
+        .setRequired(true)
+    ),
+    new SlashCommandBuilder()
+    .setName('take_money')
+    .setDescription('Takes a specific amount of money from a user (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('target')
+        .setDescription('The user you wish to take the money from')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount you wish to take from that user')
+    ),
+    new SlashCommandBuilder()
+    .setName('take_exp')
+    .setDescription('Takes a sepcific amount of exp from a user (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('target')
+        .setDescription('the user you wish to take the EXP from')
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount you wish to take from this user')
+    ),
 
 const rest = new REST({ version: "10" }).setToken(token);
 
@@ -179,103 +202,135 @@ async function deployCommands(client) {
   }
 }
 
-function getCooldownTime(commandName) {
-  // Define cooldowns per command (in milliseconds)
-  const cooldowns = {
-    help: 5000,
-    cat: 5000,
-    beg: 8500,
-    profile: 9000,
-    gamble: 10000,
-    dig: 12000,
-    craft: 20000,
-    sell: 5000,
-    donate: 15000,
-    reset: 30000,
-    givemoney: 30000,
-    giveitem: 30000,
+// --- Cooldown System ---
+const cooldowns = new Map(); // Map<userId, Map<commandName, expiresAt>>
 
-    // default fallback
-    default: 5000,
-  };
-  return cooldowns[commandName] || cooldowns.default;
+function isOnCooldown(userId, commandName) {
+  const now = Date.now();
+  if (!cooldowns.has(userId)) return false;
+  const userCooldowns = cooldowns.get(userId);
+  if (!userCooldowns.has(commandName)) return false;
+  const expiresAt = userCooldowns.get(commandName);
+  return now < expiresAt;
 }
 
-// Command data, this is where you add more else if imports for more commands, handled in a try catch block.
-client.on("interactionCreate", async (interaction) => {
+function getCooldownTime(commandName) {
+  // Customize per command, or use a default (in ms)
+  const defaultCooldown = 5000;
+  const cooldowns = {
+    help: 5000,
+    cat: 3000,
+    beg: 5000,
+    profile: 5000,
+    dig: 10000,
+    craft: 15000,
+    sell: 7500,
+    donate: 15000,
+    reset: 15000,
+    givemoney: 15000,
+    giveitem: 15000,
+    work: 1800000,
+    take_money: 15000,
+    take_exp: 15000,
+    // ...add more as needed
+  };
+  return cooldowns[commandName] ?? defaultCooldown;
+}
+
+function setCooldown(userId, commandName, cooldownTime) {
+  const now = Date.now();
+  if (!cooldowns.has(userId)) {
+    cooldowns.set(userId, new Map());
+  }
+  const userCooldowns = cooldowns.get(userId);
+  userCooldowns.set(commandName, now + cooldownTime);
+
+  // Cleanup after cooldown expires
+  setTimeout(() => {
+    userCooldowns.delete(commandName);
+    if (userCooldowns.size === 0) {
+      cooldowns.delete(userId);
+    }
+  }, cooldownTime);
+}
+
+// --- Interaction Handler ---
+client.on('interactionCreate', async interaction => {
   try {
     if (!interaction.isChatInputCommand()) return;
 
     await database.ensureUser(interaction.user.id);
 
-    // ✅ Cooldown logic
     const commandName = interaction.commandName;
-    const cooldownTime = getCooldownTime(commandName); // in ms
-    const now = Date.now();
+    const cooldownTime = getCooldownTime(commandName);
 
-    if (!cooldowns.has(commandName)) {
-      cooldowns.set(commandName, new Map());
-    }
-
-    const timestamps = cooldowns.get(commandName);
-    const userCooldown = timestamps.get(interaction.user.id);
-
-    if (userCooldown && now < userCooldown + cooldownTime) {
-      const timeLeft = ((userCooldown + cooldownTime - now) / 1000).toFixed(1);
+    if (isOnCooldown(interaction.user.id, commandName)) {
+      const expiresAt = cooldowns.get(interaction.user.id).get(commandName);
+      const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
       return interaction.reply({
         content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
         ephemeral: true,
       });
     }
 
-    timestamps.set(interaction.user.id, now);
-    setTimeout(() => timestamps.delete(interaction.user.id), cooldownTime);
+    setCooldown(interaction.user.id, commandName, cooldownTime);
 
-    // Gwen: Updated to be a switch casement for faster, more reliable and efficient code. Better than if else statements.
-    // ✅ Command execution
-
+    // --- Command Execution ---
     switch (commandName) {
-      case "help":
+      case 'help':
         await handleHelpCommand(interaction);
         break;
-      case "cat":
+      case 'cat':
         await handleCatCommand(interaction);
         break;
-      case "beg":
+      case 'beg':
         await handleBegCommand(interaction);
         break;
-      case "profile":
+      case 'profile':
         await handleProfileCommand(interaction);
         break;
-      case "gamble":
+      case 'gamble':
         await handleGambleCommand(interaction);
         break;
-      case "dig":
+      case 'dig':
         await handleDigCommand(interaction);
         break;
-      case "craft":
+      case 'craft':
         await handleCraftCommand(interaction);
         break;
-      case "sell":
+      case 'sell':
         await handleSellCommand(interaction);
         break;
-      case "donate":
+      case 'donate':
         await handleDonateCommand(interaction);
         break;
-      case "reset":
+      case 'reset':
         await handleResetCommand(interaction);
         break;
-      case "givemoney":
+      case 'givemoney':
         await handleGiveMoneyCommand(interaction);
         break;
-      case "giveitem":
+      case 'giveitem':
         await handleGiveItemCommand(interaction);
+        break;
+      case 'work':
+        await handleWorkCommand(interaction);
+        break;
+      case 'give_experience':
+        await handleGiveEXPCommand(interaction);
+        break;
+      case 'take_money':
+        await handleTakeMoneyCommand(interaction);
+        break;
+      case 'take_exp':
+        await handleTakeEXPCommand(interaction);
         break;
     }
   } catch (error) {
-    console.error("Error when executing command", error);
+    console.error('Error when executing command', error);
   }
-});
+}
+);
 
 initializeBot();
 
