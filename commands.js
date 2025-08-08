@@ -739,31 +739,31 @@ async function handleWorkCommand(interaction) {
     .addFields(
       {
         name: 'Janitor',
-        value: '`Experience required: 150`\n`Wage: 1,000`'
+        value: '`Experience required: 150`\n`Wage: 1,000`\n`Experience gain: 250`'
       },
       {
         name: 'Waitress',
-        value: '`Experience required: 500`\n`Wage: 2,000`'
+        value: '`Experience required: 500`\n`Wage: 2,000`\n`Experience gain: 500`'
       },
       {
         name: 'Cashier',
-        value: '`Experience required: 1,000`\n`Wage: 3,000`'
+        value: '`Experience required: 1,000`\n`Wage: 3,000`\n`Experience gain: 750`'
       },
       {
         name: 'Teacher',
-        value: '`Experience required: 2,000`\n`Wage: 10,000`'
+        value: '`Experience required: 2,000`\n`Wage: 10,000`\n`Experience gain: 1,000`'
       },
       {
         name: 'Care-taker',
-        value: '`Experience required: 5,000`\n`Wage: 50,000`'
+        value: '`Experience required: 5,000`\n`Wage: 50,000`\n`Experience gain: 1,250`'
       },
       {
         name: 'Police officer',
-        value: '`Experience required: 10,000`\n`Wage: 100,000`'
+        value: '`Experience required: 10,000`\n`Wage: 100,000`\n`Experience gain: 1,500`'
       },
       {
         name: 'Bank Employee',
-        value: '`Experience required: 50,000`\n`Wage: 500,000`'
+        value: '`Experience required: 50,000`\n`Wage: 500,000`\n`Experience gain: 1,750`'
       }
     )
     .setFooter({
