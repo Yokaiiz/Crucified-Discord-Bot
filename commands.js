@@ -486,6 +486,7 @@ async function handleCraftCommand(interaction) {
     let requiredItem = '';
     let requiredAmount = 0;
     let requiredMoney = 0;
+    const expGain = Math.floor(Math.random() * 100) + 50
 
     if (i.values[0] === 'gold_bar') {
       itemName = 'Gold bar';
@@ -520,11 +521,12 @@ async function handleCraftCommand(interaction) {
     }
     userData.balance -= requiredMoney;
     userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
+    userData.experience += expGain;
 
     await database.saveUserData(userId, userData);
 
     await i.reply({
-      content: `You crafted a **${itemName}**!`,
+      content: `You crafted a **${itemName}** and also acquired **${expGain}** EXP from crafting!`,
       ephemeral: true
     });
   });
