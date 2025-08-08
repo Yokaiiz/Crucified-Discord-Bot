@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -61,6 +61,72 @@ const commands = [
         .setRequired(true)
     ),
     new SlashCommandBuilder().setName('dig').setDescription('Dig for items!'),
+    new SlashCommandBuilder().setName('craft').setDescription('Craft items using raw materials'),
+    new SlashCommandBuilder()
+    .setName('sell')
+    .setDescription('Sell items from your inventory')
+    .addStringOption(option =>
+        option.setName('item')
+        .setDescription('The item you want to sell')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('Amount of the item that you wish to sell')
+        .setRequired(true)
+    ),
+    new SlashCommandBuilder()
+    .setName('donate')
+    .setDescription('Donate money to another user')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user you want to donate money to')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount of money you want to donate')
+        .setRequired(true)
+    ),
+    new SlashCommandBuilder()
+    .setName('reset')
+    .setDescription('Allows the bot owner to reset your data!')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user they want to reset')
+        .setRequired(true)
+    ),
+    new SlashCommandBuilder()
+    .setName('givemoney')
+    .setDescription('Gives a user money (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user you want to give money to')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount of money you want to give')
+        .setRequired(true)
+    ),
+    new SlashCommandBuilder()
+    .setName('giveitem')
+    .setDescription('Gives a user an item (only for bot owner)')
+    .addUserOption(option =>
+        option.setName('user')
+        .setDescription('The user you want to give an item to')
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+        option.setName('item')
+        .setDescription('The item you want to give')
+        .setRequired(true)
+    )
+    .addIntegerOption(option =>
+        option.setName('amount')
+        .setDescription('The amount of the item you want to give')
+        .setRequired(true)
+    ),
 
 ].map(command => command.toJSON());
 
@@ -88,6 +154,12 @@ function getCooldownTime(commandName) {
         profile: 9000,
         gamble: 10000,
         dig: 12000,
+        craft: 20000,
+        sell: 5000,
+        donate: 15000,
+        reset: 30000,
+        givemoney: 30000,
+        giveitem: 30000,
 
         // default fallback
         default: 5000
@@ -118,6 +190,7 @@ client.on('interactionCreate', async interaction => {
             const timeLeft = ((userCooldown + cooldownTime - now) / 1000).toFixed(1);
             return interaction.reply({
                 content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
+                ephemeral: true,
             });
         }
 
@@ -146,6 +219,24 @@ client.on('interactionCreate', async interaction => {
                 break;
             case 'dig':
                 await handleDigCommand(interaction);
+                break;
+            case 'craft':
+                await handleCraftCommand(interaction);
+                break;
+            case 'sell':
+                await handleSellCommand(interaction);
+                break;
+            case 'donate':
+                await handleDonateCommand(interaction);
+                break;
+            case 'reset':
+                await handleResetCommand(interaction);
+                break;
+            case 'givemoney':
+                await handleGiveMoneyCommand(interaction);
+                break;
+            case 'giveitem':
+                await handleGiveItemCommand(interaction);
                 break;
         }
 

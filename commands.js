@@ -1,4 +1,4 @@
-const { ButtonBuilder, ActionRowBuilder } = require("@discordjs/builders");
+const { ButtonBuilder, ActionRowBuilder, subtext } = require("@discordjs/builders");
 const { EmbedBuilder, ButtonStyle } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder } = require("@discordjs/builders");
@@ -55,7 +55,7 @@ async function handleBegCommand(interaction) {
     )
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [embed], ephemeral: true, });
 }
 
 async function handleProfileCommand(interaction) {
@@ -82,6 +82,7 @@ async function handleProfileCommand(interaction) {
 
   await interaction.reply({
     embeds: [embed],
+    ephemeral: true,
   });
 }
 
@@ -148,6 +149,12 @@ async function handleGambleCommand(interaction) {
     messageEmbed = new EmbedBuilder()
       .setTitle(`🎉 You hit a **${selected.name}**!`)
       .setDescription(`You won **¥${winnings}**!`)
+      .addFields(
+        {
+          name: 'Your new balance',
+          value: `${subtext(`¥${userData.balance}`)}`,
+        }
+      )
       .setColor("Green")
       .setTimestamp();
   } else {
@@ -163,7 +170,8 @@ async function handleGambleCommand(interaction) {
 
   await database.saveUserData(userId, userData);
 
-  return interaction.reply({ embeds: [messageEmbed] });
+  return interaction.reply({ embeds: [messageEmbed], ephemeral: true,
+   });
 }
 
 async function handleHelpCommand(interaction) {
@@ -238,6 +246,7 @@ async function handleHelpCommand(interaction) {
   await interaction.reply({
     embeds: [DiscordEmbed],
     components: [mainButtonRow, mainselectmenu],
+    ephemeral: true,
   });
 
   const collector = interaction.channel.createMessageComponentCollector({
@@ -305,6 +314,7 @@ async function handleHelpCommand(interaction) {
       await i.update({
         embeds: [discordserverEmbed],
         components: [mainButtonRow, mainselectmenu],
+        ephemeral: true,
       });
     } else if (i.values[0] === "crucified-bot") {
       const botEmbed = new EmbedBuilder()
@@ -321,7 +331,7 @@ async function handleHelpCommand(interaction) {
           {
             name: "Commands",
             value:
-              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away",
+              "`/help` - Shows this message\n`/cat` - Sends a random cat image\n`/beg` - Begs for money\n`/profile` - Shows your profile and balance\n`/gamble <amount>` - Gamble your money away\n`/dig` - Dig for items\n`/crafting` - Craft items using raw materials",
           },
           {
             name: "Support",
@@ -337,6 +347,7 @@ async function handleHelpCommand(interaction) {
       await i.update({
         embeds: [botEmbed],
         components: [mainButtonRow, mainselectmenu],
+        ephemeral: true,
       });
     }
   });
@@ -364,11 +375,11 @@ async function handleDigCommand(interaction) {
   await database.saveUserData(userId, userData);
 
   const digItemPool = [
-    { item: "raw gold", chance: 0.05 },
-    { item: "raw diamond", chance: 0.05 },
-    { item: "raw iron", chance: 0.3 },
-    { item: "raw copper", chance: 0.2 },
-    { item: "nothing", chance: 0.4 },
+    { item: 'Raw gold', chance: 0.05 },
+    { item: 'Raw diamond', chance: 0.05 },
+    { item: 'Raw iron', chance: 0.30 },
+    { item: 'Raw copper', chance: 0.20 },
+    { item: 'nothing', chance: 0.40 }
   ];
 
   const random = Math.random();
@@ -392,8 +403,302 @@ async function handleDigCommand(interaction) {
     await database.saveUserData(userId, userData);
     return interaction.reply({
       content: `You dug and found **${item}**!`,
+      ephemeral: true
     });
   }
+}
+
+async function handleCraftCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const avatar = interaction.user.displayAvatarURL();
+
+  const craftingEmbed = new EmbedBuilder()
+    .setColor('Default')
+    .setTitle('Crafting Menu')
+    .setDescription('Select an item to craft from the dropdown menu below.')
+    .setThumbnail(`${avatar}`)
+    .setFooter({
+      text: 'Thank you for using the crucified bot! || Developed by crucifiedxx',
+    })
+    .setTimestamp();
+
+  const craftingOptions = new StringSelectMenuBuilder()
+    .setCustomId('crafting-select-menu')
+    .setPlaceholder('Choose an item to craft')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setValue('gold_bar')
+        .setLabel('gold bar')
+        .setDescription('Craft a gold bar using 5 raw gold and 1000 yen.'),
+      new StringSelectMenuOptionBuilder()
+        .setValue('iron_bar')
+        .setLabel('iron bar')
+        .setDescription('Craft an iron bar using 5 raw iron and 500 yen.'),
+      new StringSelectMenuOptionBuilder()
+        .setValue('copper_bar')
+        .setLabel('copper bar')
+        .setDescription('Craft a copper bar using 5 raw copper and 250 yen.')
+    ]);
+
+  const craftingselectmenu = new ActionRowBuilder().addComponents(
+    craftingOptions,
+  );
+
+  await interaction.reply({
+    embeds: [craftingEmbed],
+    components: [craftingselectmenu],
+    ephemeral: true,
+  });
+
+  const craftingCollector = interaction.channel.createMessageComponentCollector({
+    ComponentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  craftingCollector.on('collect', async (i) => {
+    let crafted = false;
+    let itemName = '';
+    let requiredItem = '';
+    let requiredAmount = 0;
+    let requiredMoney = 0;
+
+    if (i.values[0] === 'gold_bar') {
+      itemName = 'Gold bar';
+      requiredItem = 'Raw gold';
+      requiredAmount = 5;
+      requiredMoney = 1000;
+    } else if (i.values[0] === 'iron_bar') {
+      itemName = 'Iron bar';
+      requiredItem = 'Raw iron';
+      requiredAmount = 5;
+      requiredMoney = 500;
+    } else if (i.values[0] === 'copper_bar') {
+      itemName = 'Copper bar';
+      requiredItem = 'Raw copper';
+      requiredAmount = 5;
+      requiredMoney = 250;
+    } else {
+      return i.reply({ content: 'Invalid crafting option.', ephemeral: true });
+    }
+
+    if ((userData.inventory[requiredItem] || 0) < requiredAmount || userData.balance < requiredMoney) {
+      return i.reply({
+        content: `You do not have enough resources to craft a ${itemName}.`,
+        ephemeral: true
+      });
+    }
+
+    // Deduct resources and add crafted item
+    userData.inventory[requiredItem] -= requiredAmount;
+    if (userData.inventory[requiredItem] === 0) {
+      delete userData.inventory[requiredItem];
+    }
+    userData.balance -= requiredMoney;
+    userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
+
+    await database.saveUserData(userId, userData);
+
+    await i.reply({
+      content: `You crafted a **${itemName}**!`,
+      ephemeral: true
+    });
+  });
+}
+
+async function handleSellCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const ItemToSell = interaction.options.getString('item');
+  const ItemQuantity = interaction.options.getInteger('amount')
+
+  const itemPrice = [
+    { name: 'Raw gold', price: 500 },
+    { name: 'Raw diamond', price: 1000 },
+    { name: 'Raw iron', price: 100 },
+    { name: 'Raw copper', price: 50 },
+    { name: 'gold bar', price: 5000 },
+    { name: 'Iron bar', price: 1000 },
+    { name: 'Copper bar', price: 500 },
+    { name: 'Sword', price: 5000 },
+    { name: 'Shield', price: 3000 },
+    { name: 'Pickaxe', price: 500 },
+    { name: 'Shovel', price: 500 },
+  ];
+
+  const priceObj = itemPrice.find(item => item.name === ItemToSell);
+  if (!priceObj) {
+    return interaction.reply({
+      content: `**${ItemToSell}** cannot be sold.`,
+      ephemeral: true,
+    });
+  }
+
+  if (!userData.inventory[ItemToSell] || userData.inventory[ItemToSell] <= 0) {
+    return interaction.reply({
+      content: `You do not have any of **${ItemToSell}** to sell.`,
+      ephemeral: true,
+    });
+  }
+
+  userData.inventory[ItemToSell] -= ItemQuantity;
+  if (userData.inventory[ItemToSell] === 0) {
+    delete userData.inventory[ItemToSell];
+  }
+
+  userData.balance += priceObj.price * ItemQuantity;
+  await database.saveUserData(userId, userData);
+
+  await interaction.reply({
+    content: `You sold  **${ItemQuantity}** **${ItemToSell}** for **¥${priceObj.price}**!`,
+    ephemeral: true,
+  });
+}
+
+async function handleDonateCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const amount = interaction.options.getInteger('amount');
+  const targetUserId = interaction.options.getUser('user').id;
+
+  if (!amount || amount <= 0 || userData.balance < amount) {
+    return interaction.reply({
+      content: `You do not have enough balance to donate ¥${amount}.`,
+      ephemeral: true,
+    });
+  } else if (targetUserId === userId) {
+    return interaction.reply({
+      content: "You can't donate to yourself, brokie.",
+      ephemeral: true,
+    });
+  }
+  const targetUserData = await database.getUserData(targetUserId);
+  if (!targetUserData) {
+    return interaction.reply({
+      content: "The user you are trying to donate to does not exist.",
+      ephemeral: true,
+    });
+  }
+
+  userData.balance -= amount;
+  targetUserData.balance += amount;
+  await database.saveUserData(userId, userData);
+  await database.saveUserData(targetUserId, targetUserData);
+  await interaction.reply({
+    content: `You donated **¥${amount}** to <@${targetUserId}>!`,
+    ephemeral: true,
+  });
+  await interaction.client.users.send(targetUserId, {
+    content: `You received a donation of **¥${amount}** from <@${userId}>!`,
+  });
+}
+
+async function handleResetCommand(interaction) {
+  try {
+    const targetUserId = interaction.options.getUser('user').id;
+    // Ensure application owner is fetched
+    if (!interaction.client.application.owner) {
+      await interaction.client.application.fetch();
+    }
+    const owner = interaction.client.application.owner;
+    let isOwner = false;
+    if (owner.members) {
+      // Team ownership: check if user is in the team
+      isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+    } else {
+      // Single user owner
+      isOwner = owner.id === interaction.user.id;
+    }
+    if (!isOwner) {
+      return interaction.reply({
+        content: "You do not have permission to use this command.",
+        ephemeral: true,
+      });
+    }
+    await database.resetUserData(targetUserId);
+    await interaction.reply({
+      content: `Successfully reset data for <@${targetUserId}>`,
+      ephemeral: true,
+    });
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({
+      content: "An error occurred while resetting user data.",
+      ephemeral: true,
+    });
+  }
+}
+
+async function handleGiveMoneyCommand(interaction) {
+  const userId = interaction.options.getUser('user').id;
+  const amount = interaction.options.getInteger('amount');
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+  userData.balance += amount;
+  await database.saveUserData(userId, userData);
+  await interaction.reply({
+    content: `You gave **¥${amount}** to <@${userId}>!`,
+    ephemeral: true,
+  });
+}
+
+async function handleGiveItemCommand(interaction) {
+  const userId = interaction.options.getUser('user').id;
+  const item = interaction.options.getString('item');
+  const quantity = interaction.options.getInteger('amount');
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  if (!interaction.client.application.owner) {
+    await interaction.client.application.fetch();
+  }
+  const owner = interaction.client.application.owner;
+  let isOwner = false;
+  if (owner.members) {
+    // Team ownership: check if user is in the team
+    isOwner = Array.from(owner.members.values()).some(member => member.id === interaction.user.id);
+  } else {
+    // Single user owner
+    isOwner = owner.id === interaction.user.id;
+  }
+  if (!isOwner) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  if (!userData.inventory[item]) {
+    userData.inventory[item] = 0;
+  }
+  userData.inventory[item] += quantity;
+  await database.saveUserData(userId, userData);
+  await interaction.reply({
+    content: `You gave **${quantity}** of **${item}** to <@${userId}>!`,
+    ephemeral: true,
+  });
 }
 
 // Add more functions here
@@ -405,5 +710,11 @@ module.exports = {
   handleGambleCommand,
   handleHelpCommand,
   handleDigCommand,
+  handleCraftCommand,
+  handleSellCommand,
+  handleDonateCommand,
+  handleResetCommand,
+  handleGiveMoneyCommand,
+  handleGiveItemCommand,
   // Add more functions to export here
 };
