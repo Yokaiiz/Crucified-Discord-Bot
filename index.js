@@ -1,6 +1,6 @@
 // REQUIREMENTS
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, } = require("discord.js");
-const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, handleTakeMoneyCommand, } = require("./commands.js");
+const { handleHelpCommand, handleBegCommand, handleCatCommand, handleProfileCommand, handleGambleCommand, handleDigCommand, handleCraftCommand, handleSellCommand, handleDonateCommand, handleResetCommand, handleGiveMoneyCommand, handleGiveItemCommand, handleWorkCommand, handleGiveEXPCommand, handleTakeMoneyCommand, handleTakeEXPCommand, } = require("./commands.js");
 const dotenv = require('dotenv');
 const database = require('./database.js');
 require('dotenv').config();
@@ -220,6 +220,7 @@ function getCooldownTime(commandName) {
     giveitem: 15000,
     work: 1800000,
     take_money: 15000,
+    take_exp: 15000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -309,6 +310,9 @@ client.on('interactionCreate', async interaction => {
         break;
       case 'take_money':
         await handleTakeMoneyCommand(interaction);
+        break;
+      case 'take_exp':
+        await handleTakeEXPCommand(interaction);
         break;
     }
   } catch (error) {
