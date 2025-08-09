@@ -65,6 +65,13 @@ const job = {
     experience_gain: 2000,
     description: "You work as an engineer at your local engineering company",
   },
+  business_ceo: {
+    name: "Business CEO",
+    experience_required: 120000,
+    wage: 1200000,
+    experience_gain: 2250,
+    description: "You work as a business CEO of your own financials-based company",
+  },
 };
 
 async function createDynamicColour() {
