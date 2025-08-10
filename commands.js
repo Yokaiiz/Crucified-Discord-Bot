@@ -802,9 +802,9 @@ async function handleWorkCommand(interaction) {
           name: name || value,
           value: [
             subtext(description || "N/A"),
-            subtext(`Experience required: **${experience_required ?? 0}**`),
-            subtext(`Wage: **¥${wage ?? 0}**`),
-            subtext(`EXP Gain: **${experience_gain ?? 0}**`),
+            subtext(`Experience required: **${experience_required.toLocaleString("en-US") ?? 0}**`),
+            subtext(`Wage: **¥${wage.toLocaleString("en-US") ?? 0}**`),
+            subtext(`EXP Gain: **${experience_gain.toLocaleString("en-US") ?? 0}**`),
           ].join("\n"),
         };
       })

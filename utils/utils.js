@@ -72,6 +72,13 @@ const job = {
     experience_gain: 2250,
     description: "You work as a business CEO of your own financials-based company",
   },
+  tech_ceo: {
+    name: "Tech CEO (Tony Stark)",
+    experience_required: 150000,
+    wage: 1500000,
+    experience_gain: 2500,
+    description: "You work as a tech CEO of your own technology-based company (as Tony Stark idea was by MrBoby)",
+  },
 };
 
 async function createDynamicColour() {
