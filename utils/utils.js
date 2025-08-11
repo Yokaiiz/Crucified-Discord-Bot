@@ -77,7 +77,14 @@ const job = {
     experience_required: 150000,
     wage: 1500000,
     experience_gain: 2500,
-    description: "You work as a tech CEO of your own technology-based company (as Tony Stark idea was by MrBoby)",
+    description: "You work as a tech CEO of your own technology-based company (as Tony Stark, idea was by MrBoby)",
+  },
+  scuba_diver: {
+    name: "Scuba Diver",
+    experience_required: 200000,
+    wage: 3000000,
+    experience_gain: 2500,
+    description: "You work as a scuba diver",
   },
 };
 
