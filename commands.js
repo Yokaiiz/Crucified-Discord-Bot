@@ -866,7 +866,7 @@ async function handleWorkCommand(interaction) {
         " "
       )}** and earned **¥${selectedJob.wage.toLocaleString(
         "en-US"
-      )}**!\n-# You also gained **${selectedJob.experience_gain}** EXP.`,
+      )}**!\n-# You also gained **${selectedJob.experience_gain.toLocaleString("en-US")}** EXP.`,
     });
 
     // Disable the menu after the user has selected a job, remove this if you want users to be able to work again after already working
