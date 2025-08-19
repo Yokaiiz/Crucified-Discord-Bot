@@ -3,8 +3,9 @@ const {
   ActionRowBuilder,
   subtext,
   italic,
+  bold,
 } = require("@discordjs/builders");
-const { EmbedBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder, ButtonStyle, GuildMember, GuildManager, PermissionFlagsBits } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder } = require("@discordjs/builders");
 const { StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -216,7 +217,7 @@ async function handleGambleCommand(interaction) {
 
   await database.saveUserData(userId, userData);
 
-  return interaction.reply({ embeds: [messageEmbed], ephemeral: true });
+  return interaction.reply({ embeds: [messageEmbed], ephemeral: false });
 }
 
 async function handleHelpCommand(interaction) {
@@ -1001,6 +1002,62 @@ async function handleTakeEXPCommand(interaction) {
   });
 }
 
+async function handleTimeoutCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const time = interaction.options.getInteger('time'); // in ms
+
+  // Validate time
+  const MAX_TIMEOUT = 2419200000; // 28 days in ms
+  if (!time || time < 1000 || time > MAX_TIMEOUT) {
+    return interaction.reply({
+      content: "Please provide a valid timeout duration (1s to 28d in ms).",
+      ephemeral: true,
+    });
+  }
+
+  // Fetch the GuildMember object
+  let member;
+  try {
+    member = await interaction.guild.members.fetch(targetUser.id);
+  } catch {
+    return interaction.reply({
+      content: "That user is not in this server.",
+      ephemeral: true,
+    });
+  }
+
+  // Check if the command user has permission to timeout
+  if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: "You do not have permission to timeout members.",
+      ephemeral: true,
+    });
+  }
+
+  // Check if the bot has permission
+  if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: "I do not have permission to timeout members.",
+      ephemeral: true,
+    });
+  }
+
+  // Timeout the member
+  try {
+    await member.timeout(time, `Timed out by ${interaction.user.username}`);
+    await interaction.reply({
+      content: `<@${targetUser.id}> has been timed out for ${(time / 1000).toLocaleString("en-US")} seconds by ${interaction.user.username}`,
+      ephemeral: false,
+    });
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({
+      content: "Failed to timeout the member. Do I have the right permissions and is the target below me in the role list?",
+      ephemeral: true,
+    });
+  }
+}
+
 // Add more functions here
 
 module.exports = {
@@ -1020,5 +1077,6 @@ module.exports = {
   handleGiveEXPCommand,
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
+  handleTimeoutCommand,
   // Add more functions to export here
 };

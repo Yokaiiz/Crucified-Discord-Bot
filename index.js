@@ -23,6 +23,7 @@ const {
   handleGiveEXPCommand,
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
+  handleTimeoutCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -219,6 +220,19 @@ const commands = [
         .setName("amount")
         .setDescription("The amount you wish to take from this user")
     ),
+  new SlashCommandBuilder()
+  .setName('timeout')
+  .setDescription('timeout a member! (EXCLUSIVE TO ADMINS!!)')
+  .addUserOption(option =>
+    option.setName('target')
+    .setDescription('the person which you wish to mute')
+    .setRequired(true)
+  )
+  .addIntegerOption(option =>
+    option.setName('time')
+    .setDescription('the amount of time you wish to time them out for (in milliseconds btw)')
+    .setRequired(true)
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -358,6 +372,8 @@ client.on("interactionCreate", async (interaction) => {
       case "take_exp":
         await handleTakeEXPCommand(interaction);
         break;
+      case "timeout":
+        await handleTimeoutCommand(interaction);
     }
   } catch (error) {
     console.error("Error when executing command", error);
