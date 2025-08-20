@@ -5,6 +5,7 @@ const {
   SlashCommandBuilder,
   REST,
   Routes,
+  SlashCommandAssertions,
 } = require("discord.js");
 const {
   handleHelpCommand,
@@ -24,6 +25,7 @@ const {
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
   handleTimeoutCommand,
+  handleBanCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -233,6 +235,19 @@ const commands = [
     .setDescription('the amount of time you wish to time them out for (in milliseconds btw)')
     .setRequired(true)
   ),
+  new SlashCommandBuilder()
+  .setName('ban')
+  .setDescription('Ban a member! (EXCLUSIVE TO ADMINS!!)')
+  .addUserOption(option =>
+    option.setName('target')
+    .setDescription('The person which you wish to ban')
+    .setRequired(true)
+  )
+  .addStringOption(option =>
+    option.setName('reason')
+    .setDescription('the reason why you wish to mute this member')
+    .setRequired(true)
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -279,6 +294,8 @@ function getCooldownTime(commandName) {
     work: 1800000,
     take_money: 15000,
     take_exp: 15000,
+    timeout: 0,
+    ban: 0,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -374,6 +391,8 @@ client.on("interactionCreate", async (interaction) => {
         break;
       case "timeout":
         await handleTimeoutCommand(interaction);
+      case "ban":
+        await handleBanCommand(interaction);
     }
   } catch (error) {
     console.error("Error when executing command", error);
