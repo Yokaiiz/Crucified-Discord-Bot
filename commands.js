@@ -301,6 +301,10 @@ async function handleHelpCommand(interaction) {
             {
               name: '`Events`',
               value: 'Every saturday there will be a movie night hosted by Eto/Kitty or the moderator for the events. Please drop your suggestions in the suggestions channel, and for the game-nights it has not been decided yet.'
+            },
+            {
+              name: '`Partnerships`',
+              value: 'We at `Whimsyx` value actual and properly done partnerships between servers, so if you have any sort of plans to be partnering with us please be aware we demand you are active in our server as much as we are in yours.'
             }
           )
           .setFooter({ text: 'Thank you for using the Crucified Bot || Catawampus' })
@@ -389,6 +393,14 @@ async function handleHelpCommand(interaction) {
           {
             name: '`/work`',
             value: 'lets you work to gain exp and money faster, of course though there is a 30 minute cooldown to this command.'
+          },
+          {
+            name: '`/timeout <user> <time>`',
+            value: 'Allows the admins within the server to timeout a member, the maximum time someone can be timed out is 28 days.'
+          },
+          {
+            name: '`/ban <user> <reason>`',
+            value: 'Allows the admins within the server to ban a member, of course with a reason as well as it is required.'
           }
         )
         .setFooter({text: `thank you for using the Crucified bot || Catawampus`})
@@ -414,10 +426,20 @@ async function handleHelpCommand(interaction) {
       } else if (i.values[0] === 'updates') {
         const updatesEmbed = new EmbedBuilder()
         .setColor('Grey')
-        .setTitle('Update 0')
-        .setDescription('There is no noted updates yet... Please look back on this section some other time!')
+        .setTitle('Update 1')
+        .setDescription('Here is our very first update, small but impactful nonetheless.')
         .setImage('https://i.pinimg.com/736x/b7/31/31/b73131e43d1b84ef9c4935827511485f.jpg')
         .setThumbnail(`${avatar}`)
+        .addFields(
+          {
+            name: 'New commands!',
+            value: 'The following commands were added in update 1:\n`/timeout`\n`/ban`'
+          },
+          {
+            name: 'Nerfs, Buffs and Changes!',
+            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.'
+          }
+        )
         .setFooter({text: 'Thank you for using Crucified bot || Catawampus'})
         .setTimestamp();
 
@@ -972,6 +994,64 @@ async function handleTimeoutCommand(interaction) {
   }
 }
 
+async function handleBanCommand(interaction) {
+  const targetUser = interaction.options.getUser('user');
+  const reason = interaction.options.getString('reason') || 'No reason provided';
+  const admin = interaction.user.id;
+
+  // Ensure target exists
+  if (!targetUser) {
+    return interaction.reply({
+      content: 'You must specify a user to ban!',
+      ephemeral: true,
+    });
+  }
+
+  // Permission checks
+  if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
+    console.log(`${interaction.user.username} tried to use /ban but lacked permissions.`);
+    return interaction.reply({
+      content: 'You do not have permission to use this command.',
+      ephemeral: true,
+    });
+  }
+
+  if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers)) {
+    console.log(`Bot does not have permission to ban members.`);
+    return interaction.reply({
+      content: 'I do not have permission to ban members.',
+      ephemeral: true,
+    });
+  }
+
+  // Try to fetch the member
+  let member;
+  try {
+    member = await interaction.guild.members.fetch(targetUser.id);
+  } catch (error) {
+    console.error(error);
+    return interaction.reply({
+      content: 'Could not find this member in the server.',
+      ephemeral: true,
+    });
+  }
+
+  // Ban user
+  try {
+    await member.ban({ reason: `Banned by ${interaction.user.username}: ${reason}` });
+    return interaction.reply({
+      content: `<@${targetUser.id}> has been banned by <@${admin}> for: **${reason}**`,
+    });
+  } catch (error) {
+    console.error(error);
+    return interaction.reply({
+      content: 'Sorry, something went wrong while trying to ban this user.',
+      ephemeral: true,
+    });
+  }
+}
+
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -991,4 +1071,5 @@ module.exports = {
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
   handleTimeoutCommand,
+  handleBanCommand
 };

@@ -235,6 +235,19 @@ const commands = [
     .setDescription('the amount of time you wish to time them out for (in milliseconds btw)')
     .setRequired(true)
   ),
+  new SlashCommandBuilder()
+  .setName('ban')
+  .setDescription('Ban a member! (EXCLUSIVE TO ADMINS!!)')
+  .addUserOption(option =>
+    option.setName('user')
+    .setDescription('The person you wish to ban.')
+    .setRequired(true)
+  )
+  .addStringOption(option =>
+    option.setName('reason')
+    .setDescription('The reason why you wish to ban that user.')
+    .setRequired(true)
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -282,6 +295,7 @@ function getCooldownTime(commandName) {
     take_money: 15000,
     take_exp: 15000,
     timeout: 5000,
+    ban: 5000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -377,6 +391,8 @@ client.on("interactionCreate", async (interaction) => {
         break;
       case "timeout":
         await handleTimeoutCommand(interaction);
+      case "ban":
+        await handleBanCommand(interaction);
     }
   } catch (error) {
     console.error("Error when executing command", error);
