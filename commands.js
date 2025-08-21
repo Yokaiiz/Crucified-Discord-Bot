@@ -972,49 +972,6 @@ async function handleTimeoutCommand(interaction) {
   }
 }
 
-async function handleBanCommand(interaction) {
-  const target = interaction.options.getUser('target');
-  const reason = interaction.options.getString('reason') || 'No reason provided';
-
-  let member;
-  try {
-    member = await interaction.guild.members.fetch(target.id);
-  } catch {
-    return interaction.reply({
-      content: bold('The user is not in this server.'),
-      ephemeral: true,
-    });
-  }
-
-  if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
-    return interaction.reply({
-      content: bold('You do not have permission to use this command.'),
-      ephemeral: true,
-    });
-  }
-
-  if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.BanMembers)) {
-    return interaction.reply({
-      content: bold('I do not have permission to ban members.'),
-      ephemeral: true,
-    });
-  }
-
-  try {
-    await member.ban({ reason: `${reason}, banned by ${interaction.user.username}` });
-    await interaction.reply({
-      content: `<@${target.id}> has been banned indefinitely by ${interaction.user.username}.`,
-      ephemeral: false,
-    });
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({
-      content: bold('Failed to ban the user. Do I have permission to do this?'),
-      ephemeral: true,
-    });
-  }
-}
-
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -1034,5 +991,4 @@ module.exports = {
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
   handleTimeoutCommand,
-  handleBanCommand,
 };
