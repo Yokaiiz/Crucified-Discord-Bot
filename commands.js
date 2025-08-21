@@ -292,7 +292,7 @@ async function handleHelpCommand(interaction) {
           .addFields({ name: 'About `Whimsyx`', value: 'We are quite the inclusive server that aims to make an environment where people can enjoy themselves, make new friends, find potential partners and also feel like theyre welcome into our server!'},
             {
               name: '`Server Hierarchy`',
-              value: 'Owner: Kitty\nCo-owner: Eto/Crucified\nHead-mod: Rosie\nMod: Gaelle\nTrial-mod: Twenty\nGamenight Mod/Movienight Mod: Char'
+              value: 'Owner: Kitty\nCo-owner: Eto/Crucified\nHead-mod: Rosie\nMod: Gaelle, Twenty\nTrial-mod: N/A\nGamenight Mod/Movienight Mod: Char'
             },
             {
               name: '`Rules`',
