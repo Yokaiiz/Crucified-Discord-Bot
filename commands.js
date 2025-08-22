@@ -433,11 +433,11 @@ async function handleHelpCommand(interaction) {
         .addFields(
           {
             name: 'New commands!',
-            value: 'The following commands were added in update 1:\n`/timeout`\n`/ban`'
+            value: 'The following commands were added in update 1:\n`/timeout`\n`/ban`\n`/rob`'
           },
           {
             name: 'Nerfs, Buffs and Changes!',
-            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.'
+            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships.\n I also updated it so it is up to date with the newest information regarding Eto Bot.\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.\n5. Increased the cooldowns on some commands to make up for the increased usage of gambling and so it is not over-used'
           }
         )
         .setFooter({text: 'Thank you for using Crucified bot || Catawampus'})
