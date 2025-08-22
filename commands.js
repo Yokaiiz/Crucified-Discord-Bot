@@ -1051,6 +1051,62 @@ async function handleBanCommand(interaction) {
   }
 }
 
+async function handleRobCommand(interaction) {
+  const target = interaction.options.getUser('target');
+  const robber = interaction.user.id;
+
+  // Ensure both users exist in the DB
+  await database.ensureUser(robber);
+  await database.ensureUser(target.id);
+
+  const robberData = await database.getUserData(robber);
+  const targetData = await database.getUserData(target.id);
+
+  // Decide outcome (50/50 chance)
+  const outcome = Math.random() < 0.5 ? "Success" : "Failure";
+  const robAmount = Math.floor(Math.random() * 5000) + 100;
+
+  if (outcome === "Success") {
+    // Update balances
+    robberData.balance += robAmount;
+    targetData.balance = Math.max(0, targetData.balance - robAmount);
+
+    // Save both users
+    await database.saveUserData(robber, robberData);
+    await database.saveUserData(target.id, targetData);
+
+    // Reply in channel
+    await interaction.reply({
+      content: `<@${robber}> stole **¥${robAmount.toLocaleString("en-US")}** from <@${target.id}>`,
+      ephemeral: false,
+    });
+
+    // DM the target
+    try {
+      const targetUser = await interaction.client.users.fetch(target.id);
+      await targetUser.send(
+        `<@${robber}> stole **¥${robAmount.toLocaleString("en-US")}** from you! Your new balance is **¥${targetData.balance.toLocaleString("en-US")}**.`
+      );
+    } catch (err) {
+      console.log("Could not DM target user:", err);
+    }
+  } else {
+    // Failure outcome
+    await interaction.reply({
+      content: `You tried to steal **¥${robAmount.toLocaleString("en-US")}** from <@${target.id}> but failed!`,
+      ephemeral: true,
+    });
+
+    try {
+      const targetUser = await interaction.client.users.fetch(target.id);
+      await targetUser.send(
+        `<@${robber}> tried to steal **¥${robAmount.toLocaleString("en-US")}** from you but failed.`
+      );
+    } catch (err) {
+      console.log("Could not DM target user:", err);
+    }
+  }
+}
 
 // --- Exports ---
 module.exports = {
@@ -1071,5 +1127,6 @@ module.exports = {
   handleTakeMoneyCommand,
   handleTakeEXPCommand,
   handleTimeoutCommand,
-  handleBanCommand
+  handleBanCommand,
+  handleRobCommand,
 };

@@ -26,6 +26,7 @@ const {
   handleTakeEXPCommand,
   handleTimeoutCommand,
   handleBanCommand,
+  handleRobCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -248,6 +249,14 @@ const commands = [
     .setDescription('The reason why you wish to ban that user.')
     .setRequired(true)
   ),
+  new SlashCommandBuilder()
+  .setName('rob')
+  .setDescription('Rob a player!')
+  .addUserOption(option =>
+    option.setName('target')
+    .setDescription('the player you wish to rob')
+    .setRequired(true)
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -296,6 +305,8 @@ function getCooldownTime(commandName) {
     take_exp: 15000,
     timeout: 5000,
     ban: 5000,
+    gamble: 35000,
+    rob: 15000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -393,6 +404,8 @@ client.on("interactionCreate", async (interaction) => {
         await handleTimeoutCommand(interaction);
       case "ban":
         await handleBanCommand(interaction);
+      case "rob":
+        await handleRobCommand(interaction);
     }
   } catch (error) {
     console.error("Error when executing command", error);
