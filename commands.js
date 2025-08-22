@@ -1091,9 +1091,9 @@ async function handleRobCommand(interaction) {
   const outcome = Math.random() < 0.5 ? "Success" : "Failure";
   const robAmount = Math.floor(Math.random() * 5000) + 100;
 
-  if (robber === interaction.user.id) {
-    await interaction.reply({
-      content: 'You cannot rob yourself dummy.'
+  if (target.id === interaction.user.id) {
+    return interaction.reply({
+      content: 'You cannot rob yourself dummy'
     });
   }
 
