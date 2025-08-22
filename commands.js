@@ -15,6 +15,21 @@ const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
 const { job, createDynamicColour } = require("./utils/utils.js");
 
+const Tester = [
+  {
+    name: 'Anon',
+    ID: '1222889346747859036'
+  },
+  {
+    name: 'Derrick',
+    ID: '1053281458602655816'
+  },
+  {
+    name: 'Eto',
+    ID: '961370035555811388'
+  }
+]
+
 // --- Helper: Owner Check ---
 async function isBotOwner(interaction) {
   if (!interaction.client.application.owner) {
@@ -55,6 +70,16 @@ async function handleBegCommand(interaction) {
       item = obj.item;
       break;
     }
+  }
+
+  const isTester = Tester.some(t => t.ID === userId);
+
+  let finalAmount = amount;
+  let finalExperience = experiencegain;
+
+  if (isTester) {
+    finalAmount *= 2;       // Double rewards for testers
+    finalExperience *= 2;
   }
 
   userData.balance += amount;
@@ -437,7 +462,7 @@ async function handleHelpCommand(interaction) {
           },
           {
             name: 'Nerfs, Buffs and Changes!',
-            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships.\n I also updated it so it is up to date with the newest information regarding Eto Bot.\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.\n5. Increased the cooldowns on some commands to make up for the increased usage of gambling and so it is not over-used'
+            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships.\n I also updated it so it is up to date with the newest information regarding Eto Bot.\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.\n5. Increased the cooldowns on some commands to make up for the increased usage of gambling and so it is not over-used\n5. Made it so you cannot rob yourself using the `/rob` command.'
           }
         )
         .setFooter({text: 'Thank you for using Crucified bot || Catawampus'})
@@ -1065,6 +1090,12 @@ async function handleRobCommand(interaction) {
   // Decide outcome (50/50 chance)
   const outcome = Math.random() < 0.5 ? "Success" : "Failure";
   const robAmount = Math.floor(Math.random() * 5000) + 100;
+
+  if (robber === interaction.user.id) {
+    await interaction.reply({
+      content: 'You cannot rob yourself dummy.'
+    });
+  }
 
   if (outcome === "Success") {
     // Update balances
