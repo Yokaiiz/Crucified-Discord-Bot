@@ -27,6 +27,10 @@ const Tester = [
   {
     name: 'Eto',
     ID: '961370035555811388'
+  },
+  {
+    name: 'Exact.Pressure',
+    value: '1222050305743523932'
   }
 ]
 
