@@ -10,6 +10,8 @@ const {
   ButtonStyle,
   PermissionFlagsBits,
   ComponentType,
+  User,
+  RoleFlags,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -430,6 +432,10 @@ async function handleHelpCommand(interaction) {
           {
             name: '`/ban <user> <reason>`',
             value: 'Allows the admins within the server to ban a member, of course with a reason as well as it is required.'
+          },
+          {
+            name: '`/rob <user>`',
+            value: 'Lets you rob a specific user for an amount of money (max is 5K) with the 50% chance of failing and succeeding.'
           }
         )
         .setFooter({text: `thank you for using the Crucified bot || Catawampus`})
