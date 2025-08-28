@@ -27,6 +27,7 @@ const {
   handleTimeoutCommand,
   handleBanCommand,
   handleRobCommand,
+  handleTypeSoulEncyclopaediaCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -257,6 +258,13 @@ const commands = [
     .setDescription('the player you wish to rob')
     .setRequired(true)
   ),
+  new SlashCommandBuilder()
+  .setName('encyclopaedia')
+  .setDescription('An encyclopaedia for you to use incase you want to find out something.')
+  .addSubcommand(command =>
+    command.setName('type_soul')
+    .setDescription('Shows you information regarding the game Type Soul')
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -402,10 +410,16 @@ client.on("interactionCreate", async (interaction) => {
         break;
       case "timeout":
         await handleTimeoutCommand(interaction);
+        break;
       case "ban":
         await handleBanCommand(interaction);
+        break;
       case "rob":
         await handleRobCommand(interaction);
+        break;
+      case "type_soul":
+        await handleTypeSoulEncyclopaediaCommand(interaction);
+        break;
     }
   } catch (error) {
     console.error("Error when executing command", error);

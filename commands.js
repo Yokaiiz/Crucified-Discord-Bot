@@ -4,6 +4,7 @@ const {
   subtext,
   italic,
   bold,
+  UserSelectMenuBuilder,
 } = require("@discordjs/builders");
 const {
   EmbedBuilder,
@@ -1149,6 +1150,48 @@ async function handleRobCommand(interaction) {
   }
 }
 
+async function handleTypeSoulEncyclopaediaCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  await database.saveUserData(userId, userData);
+
+  const mainEmbed = EmbedBuilder()
+  .setColor('Random')
+  .setTitle(`Hello, ${interaction.user.username}! What can I help you with?`)
+  .setDescription('Here are the options below')
+  .addFields(
+    {
+      name: 'Weapons ⚔️',
+      value: 'This will show you information regarding any of the potential weapons that you want to learn about.'
+    },
+    {
+      name: 'Zanpakuto 🤺',
+      value: 'This will show you information regarding any of the shikais you might be interested in, alongside the bankai and true bankai process.'
+    },
+    {
+      name: 'Ressurecion 💀',
+      value: 'This will show you information regarding any of the ressurecions you might be interested in, alongside the full res, segunda and tercera segunda process.'
+    },
+    {
+      name: 'Schrifts 🏹',
+      value: 'This will show you information regarding any of the schrifts you might be interested in, alongside the voltstandig and true sklaverei process.'
+    },
+    {
+      name: 'Sub-modes',
+      value: 'This will show you information regarding any of the sub-modes you might be interested in, alongside how to acquire them.'
+    }
+  )
+  .setImage('https://i.pinimg.com/originals/83/1e/51/831e51bd38c6fb2e852da586085b8806.gif')
+  .setThumbnail(`${interaction.user.displayAvatarURL()}`)
+  .setFooter({text: 'Thank you for using the encyclopaedia || Catawampus'})
+  .setTimestamp();
+
+  return interaction.reply({
+    embeds: [mainEmbed],
+  });
+
+}
 
 // --- Exports ---
 module.exports = {
@@ -1171,4 +1214,5 @@ module.exports = {
   handleTimeoutCommand,
   handleBanCommand,
   handleRobCommand,
+  handleTypeSoulEncyclopaediaCommand,
 };
