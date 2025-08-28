@@ -185,11 +185,11 @@ async function handleGambleCommand(interaction) {
   }
 
   const outcomes = [
-    { name: "Jackpot", multiplier: 30, chance: 0.025 },
-    { name: "High Win", multiplier: 5, chance: 0.085 },
-    { name: "Mid Win", multiplier: 3, chance: 0.1 },
-    { name: "Low Win", multiplier: 1, chance: 0.3 },
-    { name: "Loss", multiplier: 0, chance: 0.50 },
+    { name: "Jackpot", multiplier: 30, chance: 0.0025 },
+    { name: "High Win", multiplier: 5, chance: 0.0075 },
+    { name: "Mid Win", multiplier: 3, chance: 0.10 },
+    { name: "Low Win", multiplier: 1, chance: 0.29 },
+    { name: "Loss", multiplier: 0, chance: 0.60 },
   ];
 
   let totalChance = 0;
