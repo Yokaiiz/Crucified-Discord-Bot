@@ -1193,6 +1193,68 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
 
 }
 
+async function handleFightCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  // Base fight chances
+  let successChance = 0.5; // 50%
+  let failureChance = 0.5; // 50%
+
+  // --- ITEM EFFECTS ---
+  const inventory = userData.inventory || {};
+
+  if (inventory["Sword"] && inventory["Sword"] > 0) {
+    successChance += 0.2; // Sword gives +20% success chance
+    failureChance -= 0.2;
+  }
+
+  if (inventory["Shield"] && inventory["Shield"] > 0) {
+    // Shield reduces penalty later (handled below)
+  }
+
+  // Roll outcome
+  const roll = Math.random();
+  const result = roll <= successChance ? "success" : "failure";
+
+  let description = "";
+  if (result === "success") {
+    const moneyReward = Math.floor(Math.random() * 4000) + 1000; // ¥1,000 - ¥5,000
+    const expReward = Math.floor(Math.random() * 600) + 200; // 200 - 800 EXP
+
+    userData.balance += moneyReward;
+    userData.experience += expReward;
+    await database.saveUserData(userId, userData);
+
+    description = `⚔️ You fought bravely and **won**!\n\nYou earned **¥${moneyReward.toLocaleString()}** and **${expReward} EXP**.`;
+  } else {
+    let moneyLoss = Math.min(userData.balance, Math.floor(Math.random() * 2000) + 500); // 500 - 2500
+    let expLoss = Math.min(userData.experience, Math.floor(Math.random() * 300) + 100); // 100 - 400
+
+    // Shield effect → halves losses
+    if (inventory["Shield"] && inventory["Shield"] > 0) {
+      moneyLoss = Math.floor(moneyLoss / 2);
+      expLoss = Math.floor(expLoss / 2);
+    }
+
+    userData.balance -= moneyLoss;
+    userData.experience -= expLoss;
+    await database.saveUserData(userId, userData);
+
+    description = `💀 You fought... and **lost**.\n\nYou dropped **¥${moneyLoss.toLocaleString()}** and lost **${expLoss} EXP**.`;
+  }
+
+  const embed = new EmbedBuilder()
+    .setColor(result === "success" ? "Green" : "Red")
+    .setTitle("⚔️ Fight Results")
+    .setDescription(description)
+    .setFooter({ text: result === "success" ? "Victory!" : "Defeat..." })
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed] });
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -1215,4 +1277,5 @@ module.exports = {
   handleBanCommand,
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
+  handleFightCommand,
 };

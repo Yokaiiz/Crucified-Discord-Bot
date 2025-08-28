@@ -28,6 +28,7 @@ const {
   handleBanCommand,
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
+  handleFightCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -265,6 +266,9 @@ const commands = [
     command.setName('type_soul')
     .setDescription('Shows you information regarding the game Type Soul')
   ),
+  new SlashCommandBuilder()
+  .setName('fight')
+  .setDescription('You fight monsters for money and EXP'),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -315,6 +319,7 @@ function getCooldownTime(commandName) {
     ban: 5000,
     gamble: 35000,
     rob: 15000,
+    fight: 10000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -417,8 +422,15 @@ client.on("interactionCreate", async (interaction) => {
       case "rob":
         await handleRobCommand(interaction);
         break;
-      case "type_soul":
-        await handleTypeSoulEncyclopaediaCommand(interaction);
+      case "encyclopaedia":
+        const sub = interaction.options.getSubcommand();
+
+        if (sub === "type_soul") {
+          await handleTypeSoulEncyclopaediaCommand(interaction);
+        }
+        break;
+      case "fight":
+        await handleFightCommand(interaction);
         break;
     }
   } catch (error) {
