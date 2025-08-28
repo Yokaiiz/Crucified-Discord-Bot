@@ -1155,7 +1155,7 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
   await database.ensureUser(userId);
 
   const mainEmbed = new EmbedBuilder()
-    .setColor('Random')
+    .setColor('#48a58c')
     .setTitle(`Hello, ${interaction.user.username}! What can I help you with?`)
     .setDescription('Here are the options below:')
     .addFields(
