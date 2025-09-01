@@ -437,7 +437,11 @@ async function handleHelpCommand(interaction) {
           {
             name: '`/rob <user>`',
             value: 'Lets you rob a specific user for an amount of money (max is 5K) with the 50% chance of failing and succeeding.'
-          }
+          },
+          {
+            name: '`/encyclopaedia <subcommand>``,
+            value: 'Gives you information regarding a specific game, please check the sub commands though as there will be different ones under the encyclopaedia command.'
+          },
         )
         .setFooter({text: `thank you for using the Crucified bot || Catawampus`})
         .setTimestamp();
