@@ -1397,6 +1397,48 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
         });
         break;
       }
+      case 'weight': {
+        const weightshikaiEmbed = new EmbedBuilder()
+        .setColor('DarkPurple')
+        .setTitle('Weight shikai')
+        .setDescription('Information regarding the weight shikai and all the processes as a shinigami')
+        .setThumbnail(`${interaction.user.displayAvatarURL()}`)
+        .addFields(
+          {
+            name: '`Rarity:`',
+            value: '`Common`'
+          },
+          {
+            name: 'Passives:',
+            value: 'Each hit increases the weight of the enemy, eventually stunning them due to too much weight.'
+          },
+          {
+            name: 'Moves:',
+            value: '`Z: Twin helf`\nIt infuses wabisuke (weight) with weight and slashes the opponent twice across the chest\n`X: Reapers  hook`\nRush forward, if anyone is within your range you stab them with Wabisuke and you kick them away\n`C: Massbreaker`\nConjure Weight into your Wabisuke as you split Gravity, sending a slash projectile forward.'
+          },
+          {
+            name: 'Bankai:',
+            value: '`T: Mass Pressure`\nSummons an immense gravity field as you pull anyone within its range back to the centre\n`G: Crushing Waves`\nCreate a field of gravity as you pull anyone towards you before exploding.'
+          },
+          {
+            name: 'How do I achieve bankai?',
+            value: '`Stage 1:` Win 13 raids / 26 ranked matches\n`Stage 2:` Kill Bawabawa/Jidanbo, kill 50 hollows and 10 elite players of opposite factions(e.g, fullbringer)\n`Stage 2.5:` Go to Kisuke in KT (not boss raid kisuke), talk to him and find 3 correct swords.\n`Stage 3:` Fight your bankai boss and win.'
+          },
+          {
+            name: 'How do I achieve true?',
+            value: 'Look it up on TikTok or ask in the server, the full guide is too big to be put on the encyclopaedia.'
+          }
+        )
+        .setImage('https://trello.com/1/cards/66d3e4894a5fbb53105acf3a/attachments/671c8b15b1b42eb26108a8f7/download/image_2024-10-26_022419358.png')
+        .setFooter({text: 'Thank you for using the encyclopaedia || Catawampus'})
+        .setTimestamp();
+
+        await i.update({
+          embeds: [weightshikaiEmbed],
+          components: [selectmenurow, shikairarityselectmenu]
+        });
+        break;
+      }
     }
   });
 }
