@@ -13,6 +13,7 @@ const {
   ComponentType,
   User,
   RoleFlags,
+  ActionRow,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -1154,38 +1155,246 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
   const userId = interaction.user.id;
   await database.ensureUser(userId);
 
+  // ===== Select Menus =====
+  const mainstringselectmenu = new StringSelectMenuBuilder()
+    .setPlaceholder('Choose an option')
+    .setCustomId('selectmenu')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel('⚔️ Weapons')
+        .setDescription('Information about weapons you might want to learn about.')
+        .setValue('weapons'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('🤺 Zanpakuto')
+        .setDescription('Details about shikais, plus the bankai and true bankai process.')
+        .setValue('zanpakuto'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('💀 Resurrección')
+        .setDescription('Details about resurreccións, full res, segunda and tercera segunda process.')
+        .setValue('ressurecion'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('🏹 Schrifts')
+        .setDescription('Covers all information about schrifts including vollständig and true sklaverei.')
+        .setValue('schrift'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('📜 Sub-modes')
+        .setDescription('Covers all information about sub-modes, their obtainment methods and buffs.')
+        .setValue('sub-modes'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('☕ Items')
+        .setDescription('Details about items, how to obtain them, and how to use them.')
+        .setValue('items'),
+    ]);
+
+  const weaponEmbedSelectMenu = new StringSelectMenuBuilder()
+    .setPlaceholder('⚔️ Weapons')
+    .setCustomId('weapon_stringselect')
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Soul Reaper weapons')
+        .setValue('sr_weapons')
+        .setDescription('Soul reaper weapons, how to use them and how to obtain them.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Arrancar weapons')
+        .setValue('arrancar_weapons')
+        .setDescription('Arrancar weapons, how to use them and how to obtain them.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Quincy weapons')
+        .setValue('quincy_weapons')
+        .setDescription('Quincy weapons, how to use them and how to obtain them.'),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Fullbringer weapons')
+        .setValue('fullbringer_weapons')
+        .setDescription('Fullbringer weapons, how to use them and how to obtain them.'),
+    ]);
+
+  const zanpakutostringselectmenu = new StringSelectMenuBuilder()
+    .setPlaceholder('Choose a zanpakuto rarity')
+    .setCustomId('zanpakuto_stringselect')
+    .addOptions([
+      new StringSelectMenuOptionBuilder().setLabel('Common').setValue('common').setDescription('Common zanpakutos.'),
+      new StringSelectMenuOptionBuilder().setLabel('Rare').setValue('rare').setDescription('Rare zanpakutos.'),
+      new StringSelectMenuOptionBuilder().setLabel('Legendary').setValue('legendary').setDescription('Legendary zanpakutos.'),
+      new StringSelectMenuOptionBuilder().setLabel('Mythic').setValue('mythic').setDescription('Mythic zanpakutos.'),
+    ]);
+
+  const commonzanpakutoselectmenu = new StringSelectMenuBuilder()
+  .setPlaceholder('Choose a common zanpakuto')
+  .setCustomId('common_zanpakuto_select')
+  .addOptions([
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Weight')
+    .setValue('weight')
+    .setDescription(
+      'Information regarding the Weight shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Lighting')
+    .setValue('lighting')
+    .setDescription(
+      'Information regarding the Lighting shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Creation')
+    .setValue('creation')
+    .setDescription(
+      'Information regarding the Creation shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Shadow')
+    .setValue('shadow')
+    .setDescription(
+      'Information regarding the Shadow shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Poison')
+    .setValue('poison')
+    .setDescription(
+      'Information regarding the Poison shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Wind')
+    .setValue('wind')
+    .setDescription(
+      'Information regarding the Wind shikai'
+    )
+  ]);
+
+  const rarezanpakutoselectmenu = new StringSelectMenuBuilder()
+  .setPlaceholder('Choose a rare zanpakuto')
+  .setCustomId('rare_zanpakuto_select')
+  .addOptions([
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Berserk')
+    .setValue('berserk')
+    .setDescription(
+      'Information regarding the Berserk shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Water')
+    .setValue('water')
+    .setDescription(
+      'Information regarding the Water shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Fire')
+    .setValue('fire')
+    .setDescription(
+      'Information regarding the Fire shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Judgement')
+    .setValue('judgement')
+    .setDescription(
+      'Information regarding the Judgement shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Zangetsu')
+    .setValue('zangetsu')
+    .setDescription(
+      'Information regarding the Zangetsu shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Shinso')
+    .setValue('shinso')
+    .setDescription(
+      'Information regarding the Shinso shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Confusion')
+    .setValue('confusion')
+    .setDescription(
+      'Information regarding the Confusion shikai'
+    ),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Ash')
+    .setValue('ash')
+    .setDescription(
+      'Information regarding the Ash shikai'
+    )
+  ])
+
+  // ===== Action Rows =====
+  const selectmenurow = new ActionRowBuilder().addComponents(mainstringselectmenu);
+  const weaponstringselectmenu = new ActionRowBuilder().addComponents(weaponEmbedSelectMenu);
+  const shikairarityselectmenu = new ActionRowBuilder().addComponents(zanpakutostringselectmenu);
+  const commonrarityselectmenu = new ActionRowBuilder().addComponents(commonzanpakutoselectmenu);
+
+  // ===== Main Embed =====
   const mainEmbed = new EmbedBuilder()
     .setColor('#48a58c')
     .setTitle(`Hello, ${interaction.user.username}! What can I help you with?`)
     .setDescription('Here are the options below:')
     .addFields(
-      {
-        name: '⚔️ Weapons',
-        value: 'Information about weapons you might want to learn about.'
-      },
-      {
-        name: '🤺 Zanpakuto',
-        value: 'Details about shikais, plus the bankai and true bankai process.'
-      },
-      {
-        name: '💀 Ressurecion',
-        value: 'Info on ressurecions, full res, segunda and tercera segunda process.'
-      },
-      {
-        name: '🏹 Schrifts',
-        value: 'Covers schrifts, voltstandig and true sklaverei process.'
-      },
-      {
-        name: '📜 Sub-modes',
-        value: 'Explains sub-modes and how to acquire them.'
-      }
+      { name: '⚔️ Weapons', value: 'Information about weapons you might want to learn about.' },
+      { name: '🤺 Zanpakuto', value: 'Details about shikais, plus the bankai and true bankai process.' },
+      { name: '💀 Resurrección', value: 'Info on resurreccións, full res, segunda and tercera segunda process.' },
+      { name: '🏹 Schrifts', value: 'Covers schrifts, voltständig and true sklaverei process.' },
+      { name: '📜 Sub-modes', value: 'Explains sub-modes and how to acquire them.' },
+      { name: '☕ Items', value: 'Details about items, how to obtain them and how to use them.' }
     )
     .setImage('https://i.pinimg.com/originals/83/1e/51/831e51bd38c6fb2e852da586085b8806.gif')
     .setThumbnail(interaction.user.displayAvatarURL())
     .setFooter({ text: 'Thank you for using the encyclopaedia || Catawampus' })
     .setTimestamp();
 
-  return interaction.reply({ embeds: [mainEmbed] });
+  await interaction.reply({ embeds: [mainEmbed], components: [selectmenurow] });
+
+  // ===== Collector =====
+  const collector = interaction.channel.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  collector.on('collect', async (i) => {
+    const selected = i.values[0];
+
+    switch (selected) {
+      case 'weapons': {
+        const mainweaponembed = new EmbedBuilder()
+          .setColor('DarkGrey')
+          .setTitle('⚔️ Weapons')
+          .setDescription('Which weapon are you interested in learning about?')
+          .setImage('https://i.pinimg.com/1200x/6b/5f/1f/6b5f1f830b1650cd2da94072735f5e9d.jpg')
+          .setThumbnail(interaction.user.displayAvatarURL())
+          .setFooter({ text: 'Thank you for using the encyclopaedia || Catawampus' })
+          .setTimestamp();
+
+        await i.update({ embeds: [mainweaponembed], components: [selectmenurow, weaponstringselectmenu] });
+        break;
+      }
+      case 'zanpakuto': {
+        const mainzanpakutoembed = new EmbedBuilder()
+          .setColor('Red')
+          .setTitle('🤺 Zanpakuto')
+          .setDescription('Which zanpakuto are you interested in learning about?')
+          .setImage('https://i.pinimg.com/originals/1f/a9/ce/1fa9ce4eaff23f5fbe44d2fbae94f8bd.gif')
+          .setThumbnail(interaction.user.displayAvatarURL())
+          .setFooter({ text: 'Thank you for using the encyclopaedia || Catawampus' })
+          .setTimestamp();
+
+        await i.update({ embeds: [mainzanpakutoembed], components: [selectmenurow, shikairarityselectmenu] });
+        break;
+      }
+      case 'common': {
+        const commonrarityEmbed = new EmbedBuilder()
+        .setColor('Grey')
+        .setTitle('Common shikais')
+        .setDescription('Which common zanpakuto are you interested in learning about?')
+        .setThumbnail(`${interaction.user.displayAvatarURL()}`)
+        .setFooter({text: 'Thank you for using the encyclopaedia || Catawampus'})
+        .setTimestamp()
+
+
+        await i.update({
+          embeds: [commonrarityEmbed],
+          components: [selectmenurow, commonrarityselectmenu]
+        });
+        break;
+      }
+    }
+  });
 }
 
 async function handleFightCommand(interaction) {
