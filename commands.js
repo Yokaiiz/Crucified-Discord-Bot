@@ -1460,7 +1460,7 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
             value: '`Z: Bararaq`\nBriefly enter a pounce-like windup animation before teleporting to your enemy and slamming them into the ground.\n`X: Blitz`\nRaise your weapon into the air before creating a shock that teleports you toward your enemy. This move can hit multiple targets and the range is massively increased in bankai.\n`C: Fulgora`\nTeleport yourself forward at the speed of lighting, any opponent who is caught in-between your starting and ending positions will be temporarily stunned before being struck by a bolt of lighting. The opponent will be guardbroken if they are blocking. This move provides invincibility frames for the user on a successful hit.'
           },
           {
-            name: '`Bankai`:',
+            name: 'Bankai:',
             value: '`T: Grand Current`\nChannel your electro powers to summon a cube on an opponent, bring it to yourself and then slam it back into them. This move is cancelled on parry.\n`G: Grand Relay`\nMake a powerful electric cross-slash similar to vertical down + split gate combined which fires tracking bolts of lighting at your opponent, the initial hit of this move guard breaks.'
           },
           {
@@ -1498,12 +1498,12 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
             value: 'No passives in shikai form, 1 passive in bankai:\nMarking, every move applies a mark which allows you to use Surasshu M1. The marking seems like an eye in the middle of a star.'
           },
           {
-            name: '`Moves:`',
+            name: 'Moves:',
             value: '`Z: Surasshu (M1)`\nLunge at your opponent and slam them down with your swords.\n`Z: Surasshu (M2)`\nFling a set of swords straight forward\n`X: Gyakko`\nCommand your blades to spin forwards, before ordering them back to you.\n`C: Ryusei`\nRyusei plants a zipline on the ground upon initial use, then you can use it as your mouse is hovering over someone to guardbreak them (if they are not blocking)'
           },
           {
             name: '`Bankai:`',
-            value: '`T: Rain`\nSummon a rain of Greatswords around you and creating shockwaves wherever they land, marking your opponent.\n`G: Turmoil`\nYou can use this move up to 3 times in a row, and it changes each time.\nFirst use: Create a large greatsword out of thin air and swing to the left, marking your opponent.\nSecond use: Create a large greatsword out of thin air and swing to the right, marking your opponent.\nThird use: Create a large greatsword out of thin air and perform an overhewad slash, leaving behind a zone of AOE slashes. Also marks your opponent.'
+            value: '`T: Rain`\nSummon a rain of Greatswords around you and creating shockwaves wherever they land, marking your opponent.\n`G: Turmoil`\nYou can use this move up to 3 times in a row, and it changes each time.\n`First use:` Create a large greatsword out of thin air and swing to the left, marking your opponent.\n`Second use:` Create a large greatsword out of thin air and swing to the right, marking your opponent.\n`Third use:` Create a large greatsword out of thin air and perform an overhewad slash, leaving behind a zone of AOE slashes. Also marks your opponent.'
           },
           {
             name: 'How do I achieve bankai?',
