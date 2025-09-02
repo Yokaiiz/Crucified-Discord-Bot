@@ -1406,7 +1406,7 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
         .addFields(
           {
             name: '`Rarity:`',
-            value: '`Common`'
+            value: 'Common'
           },
           {
             name: 'Passives:',
@@ -1435,6 +1435,90 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
 
         await i.update({
           embeds: [weightshikaiEmbed],
+          components: [selectmenurow, shikairarityselectmenu]
+        });
+        break;
+      }
+      case 'lighting': {
+        const lightingshikaiEmbed = new EmbedBuilder()
+        .setColor('Blue')
+        .setTitle('Lighting shikai')
+        .setDescription('Information regarding the lighting shikai and all the processes as a shinigami')
+        .setThumbnail(`${interaction.user.displayAvatarURL()}`)
+        .setImage('https://trello.com/1/cards/6614f7a705bf051f2d934d55/attachments/66bf282fe781f41f4d83f8e7/download/lighting_bankai.png')
+        .addFields(
+          {
+            name: '`Rarity:`',
+            value: 'Common'
+          },
+          {
+            name: '`Passives`',
+            value: 'You only receive passives upon activating bankai.\n`Bankai passive:`\nYour weapon is covered in lighting, making you stun for longer. Additionally, you move slightly faster while being in bankai. Upon landing m1/crit or any Lighting move, you apply a lighting stack to the target. For each stack, the targets overall movement speed and swing speed are decreased.'
+          },
+          {
+            name: '`Moves:`',
+            value: '`Z: Bararaq`\nBriefly enter a pounce-like windup animation before teleporting to your enemy and slamming them into the ground.\n`X: Blitz`\nRaise your weapon into the air before creating a shock that teleports you toward your enemy. This move can hit multiple targets and the range is massively increased in bankai.\n`C: Fulgora`\nTeleport yourself forward at the speed of lighting, any opponent who is caught in-between your starting and ending positions will be temporarily stunned before being struck by a bolt of lighting. The opponent will be guardbroken if they are blocking. This move provides invincibility frames for the user on a successful hit.'
+          },
+          {
+            name: '`Bankai`:',
+            value: '`T: Grand Current`\nChannel your electro powers to summon a cube on an opponent, bring it to yourself and then slam it back into them. This move is cancelled on parry.\n`G: Grand Relay`\nMake a powerful electric cross-slash similar to vertical down + split gate combined which fires tracking bolts of lighting at your opponent, the initial hit of this move guard breaks.'
+          },
+          {
+            name: 'How do I achieve bankai?',
+            value: '`Stage 1:`\nWin 13 raids or 26 ranked 1v1 fights\n`Stage 2:`\nKill Bawabawa/Jidanbo, 10 elite grade kills from opposite factions and 50 hollow npc kills (this can be done in any order)\n`Stage 2.5:`\nTalk to Kisuke in KT (not the one for boss raids) and get 3 swords right\n`Stage 3:`\nKill your bankai.'
+          },
+          {
+            name: 'How do I achieve true mode?',
+            value: 'Either ask any of the clan members from Sunken or look up tutorials.'
+          }
+        )
+        .setFooter({text: 'Thank you for using the encyclopaedia || Catawampus'})
+        .setTimestamp();
+
+        await i.update({
+          embeds: [lightingshikaiEmbed],
+          components: [selectmenurow, shikairarityselectmenu]
+        });
+        break;
+      }
+      case 'creation': {
+        const creationshikaiEmbed = new EmbedBuilder()
+        .setColor('DarkButNotBlack')
+        .setTitle('Creation shikai')
+        .setDescription('Information regarding the Creation shikai including the processes as a shinigami.')
+        .setImage('https://trello.com/1/cards/6633d781241e666832c4f634/attachments/673fb17db59fe83e2bf5a82d/download/G_3.gif')
+        .setThumbnail(`${interaction.user.displayAvatarURL()}`)
+        .addFields(
+          {
+            name: '`Rarity:`',
+            value: 'Common'
+          },
+          {
+            name: '`Passives:`',
+            value: 'No passives in shikai form, 1 passive in bankai:\nMarking, every move applies a mark which allows you to use Surasshu M1. The marking seems like an eye in the middle of a star.'
+          },
+          {
+            name: '`Moves:`',
+            value: '`Z: Surasshu (M1)`\nLunge at your opponent and slam them down with your swords.\n`Z: Surasshu (M2)`\nFling a set of swords straight forward\n`X: Gyakko`\nCommand your blades to spin forwards, before ordering them back to you.\n`C: Ryusei`\nRyusei plants a zipline on the ground upon initial use, then you can use it as your mouse is hovering over someone to guardbreak them (if they are not blocking)'
+          },
+          {
+            name: '`Bankai:`',
+            value: '`T: Rain`\nSummon a rain of Greatswords around you and creating shockwaves wherever they land, marking your opponent.\n`G: Turmoil`\nYou can use this move up to 3 times in a row, and it changes each time.\nFirst use: Create a large greatsword out of thin air and swing to the left, marking your opponent.\nSecond use: Create a large greatsword out of thin air and swing to the right, marking your opponent.\nThird use: Create a large greatsword out of thin air and perform an overhewad slash, leaving behind a zone of AOE slashes. Also marks your opponent.'
+          },
+          {
+            name: 'How do I achieve bankai?',
+            value: '`Stage 1:`\nWin 13 raids (in ss/hueco/wanden) or win 26 ranked 1v1 matches.\n`Stage 2:`\nKill Bawabawa/Jidanbo, 50 hollows (friskers) and 10 elite grade players from opposite factions.\n`Stage 2.5:`\nGo to Kisuke in Karakura (not the boss kisuke) and find 3 correct swords.\n`Stage 3:`\nMeditate and kill your bankai.'
+          },
+          {
+            name: 'How can I get true mode?',
+            value: 'Figure it out.'
+          }
+        )
+        .setFooter({text: 'Thank you for using the encyclopaedia || Catawampus'})
+        .setTimestamp();
+
+        await i.update({
+          embeds: [creationshikaiEmbed],
           components: [selectmenurow, shikairarityselectmenu]
         });
         break;
