@@ -1502,7 +1502,7 @@ async function handleTypeSoulEncyclopaediaCommand(interaction) {
             value: '`Z: Surasshu (M1)`\nLunge at your opponent and slam them down with your swords.\n`Z: Surasshu (M2)`\nFling a set of swords straight forward\n`X: Gyakko`\nCommand your blades to spin forwards, before ordering them back to you.\n`C: Ryusei`\nRyusei plants a zipline on the ground upon initial use, then you can use it as your mouse is hovering over someone to guardbreak them (if they are not blocking)'
           },
           {
-            name: '`Bankai:`',
+            name: 'Bankai:',
             value: '`T: Rain`\nSummon a rain of Greatswords around you and creating shockwaves wherever they land, marking your opponent.\n`G: Turmoil`\nYou can use this move up to 3 times in a row, and it changes each time.\n`First use:` Create a large greatsword out of thin air and swing to the left, marking your opponent.\n`Second use:` Create a large greatsword out of thin air and swing to the right, marking your opponent.\n`Third use:` Create a large greatsword out of thin air and perform an overhewad slash, leaving behind a zone of AOE slashes. Also marks your opponent.'
           },
           {
