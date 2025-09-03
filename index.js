@@ -31,6 +31,7 @@ const {
   handleFightCommand,
   handleShopWeaponsCommand,
   handleShopItemsCommand,
+  handleUseItemCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -508,6 +509,9 @@ client.on("interactionCreate", async (interaction) => {
         }
         break;
       }
+      case 'use':
+        await handleUseItemCommand(interaction);
+        break;
     }
   } catch (error) {
     console.error("Error when executing command", error);

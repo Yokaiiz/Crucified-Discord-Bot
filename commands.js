@@ -1254,7 +1254,7 @@ async function handleShopWeaponsCommand(interaction) {
 
   collector.on("end", () => {
     interaction
-      .editReply({
+      .update({
         components: [],
       })
       .catch(() => {});
@@ -1269,49 +1269,60 @@ async function handleUseItemCommand(interaction) {
   const userId = interaction.user.id;
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
-  const item = interaction.options.getString('item')
+  const item = interaction.options.getString('item');
 
   // Usable items
   const zanpakutoKey = 'Zanpakuto';
 
   if (item === zanpakutoKey) {
-    if (!userData.inventory[zanpakutoKey]) return;
-
-    if (userData.inventory[zanpakutoKey] >= 1) {
-      userData.inventory[zanpakutoKey] - 1;
-
-      const randomshikai = [
-        {name: 'Snow', chance: 0.01},
-        {name: 'Benihime', chance: 0.01},
-        {name: 'Zangetsu', chance: 0.01},
-        {name: 'Fire', chance: 0.01},
-        {name: 'Kyoka Suigetsu', chance: 0.01},
-        {name: 'Zabimaru', chance: 0.05},
-        {name: 'Shinso', chance: 0.10},
-        {name: 'Hyorinmaru', chance: 0.10},
-        {name: 'Wabisuke', chance: 0.20},
-        {name: 'Senbonzakura', chance: 0.5}
-      ];
-
-      let cumulative = 0;
-      const roll = Math.random()
-      let selectedShikai = randomshikai[randomshikai.length - 1].name;
-      for (const s of randomshikai) {
-        cumulative += s.chance;
-        if (roll <= cumulative) {
-          selectedShikai = s.name;
-          break;
-        }
-      }
-
-      userData.power = selectedShikai;
-      await database.saveUserData(userId, userData);
-
+    if (!userData.inventory[zanpakutoKey] || userData.inventory[zanpakutoKey] < 1) {
       return interaction.reply({
-        content: `You used a zanpakuto and awakened the **${selectedShikai}** shikai!`,
-        ephemeral: false,
+        content: "You don't have a Zanpakuto to use.",
+        ephemeral: true,
       });
     }
+
+    userData.inventory[zanpakutoKey] -= 1;
+    if (userData.inventory[zanpakutoKey] === 0) {
+      delete userData.inventory[zanpakutoKey];
+    }
+
+    const randomshikai = [
+      {name: 'Snow', chance: 0.01},
+      {name: 'Benihime', chance: 0.01},
+      {name: 'Zangetsu', chance: 0.01},
+      {name: 'Fire', chance: 0.01},
+      {name: 'Kyoka Suigetsu', chance: 0.01},
+      {name: 'Zabimaru', chance: 0.05},
+      {name: 'Shinso', chance: 0.10},
+      {name: 'Hyorinmaru', chance: 0.10},
+      {name: 'Wabisuke', chance: 0.20},
+      {name: 'Senbonzakura', chance: 0.5}
+    ];
+
+    let cumulative = 0;
+    const roll = Math.random();
+    let selectedShikai = randomshikai[randomshikai.length - 1].name;
+    for (const s of randomshikai) {
+      cumulative += s.chance;
+      if (roll <= cumulative) {
+        selectedShikai = s.name;
+        break;
+      }
+    }
+
+    userData.power = selectedShikai;
+    await database.saveUserData(userId, userData);
+
+    return interaction.reply({
+      content: `You used a Zanpakuto and awakened the **${selectedShikai}** shikai!`,
+      ephemeral: false,
+    });
+  } else {
+    return interaction.reply({
+      content: "That item cannot be used.",
+      ephemeral: true,
+    });
   }
 }
 
