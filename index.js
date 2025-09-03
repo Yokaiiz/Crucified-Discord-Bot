@@ -29,6 +29,8 @@ const {
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
   handleFightCommand,
+  handleShopWeaponsCommand,
+  handleShopItemsCommand,
 } = require("./commands.js");
 const dotenv = require("dotenv");
 const database = require("./database.js");
@@ -269,6 +271,15 @@ const commands = [
   new SlashCommandBuilder()
   .setName('fight')
   .setDescription('You fight monsters for money and EXP'),
+  new SlashCommandBuilder()
+  .setName('shop')
+  .setDescription('Lets you shop for a variety of items')
+  .addSubcommand(command =>
+    command.setName('weapons')
+  )
+  .addSubcommand(command =>
+    command.setName('items')
+  )
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -432,6 +443,20 @@ client.on("interactionCreate", async (interaction) => {
       case "fight":
         await handleFightCommand(interaction);
         break;
+      case 'shop':
+        sub = interaction.options.getSubcommand();
+
+        switch (sub) {
+          case 'weapons': {
+            await handleShopWeaponsCommand(interaction);
+            break;
+          }
+
+          case 'items': {
+            await handleShopItemsCommand(interaction);
+            break;
+          }
+        }
     }
   } catch (error) {
     console.error("Error when executing command", error);

@@ -1231,6 +1231,14 @@ async function handleFightCommand(interaction) {
   await interaction.reply({ embeds: [embed] });
 }
 
+async function handleShopWeaponsCommand(interaction) {
+
+}
+
+async function handleShopItemsCommand(interaction) {
+  
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -1254,4 +1262,6 @@ module.exports = {
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
   handleFightCommand,
+  handleShopWeaponsCommand,
+  handleShopItemsCommand,
 };
