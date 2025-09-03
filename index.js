@@ -393,6 +393,8 @@ client.on("interactionCreate", async (interaction) => {
           });
         }
 
+        
+
         const totalCost = selectedItem.price * quantity;
 
         if (freshUserData.balance < totalCost) {

@@ -1259,7 +1259,7 @@ async function handleShopWeaponsCommand(interaction) {
 
   collector.on("end", () => {
     interaction
-      .update({
+      .editReply({
         components: [],
       })
       .catch(() => {});
