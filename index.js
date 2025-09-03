@@ -282,6 +282,14 @@ const commands = [
     command.setName('items')
     .setDescription('Lets you buy items')
   ),
+  new SlashCommandBuilder()
+  .setName('use')
+  .setDescription('lets you use items within your inventory')
+  .addStringOption(option =>
+    option.setName('item')
+    .setDescription('the item you wish to use.')
+    .setRequired(true)
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -333,6 +341,7 @@ function getCooldownTime(commandName) {
     gamble: 35000,
     rob: 15000,
     fight: 10000,
+    use: 5000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
