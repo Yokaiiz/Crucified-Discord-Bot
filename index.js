@@ -391,9 +391,14 @@ client.on("interactionCreate", async (interaction) => {
             content: 'You can only own **1 Zanpakuto**.',
             ephemeral: true
           });
+        } else if (freshUserData.power) {
+          return interaction.reply({
+            content: 'You already awakened your zanpakuto.',
+            ephemeral: true
+          });
         }
 
-        
+
 
         const totalCost = selectedItem.price * quantity;
 
