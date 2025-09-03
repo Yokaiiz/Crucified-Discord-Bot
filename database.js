@@ -63,6 +63,7 @@ class Database {
                 dailyStreak: 0,
                 timezone: 'UTC',
                 gambleHistory: [],
+                power: null,
                 ...userData
             };
             this.db.data.users.push(newUser);
@@ -127,6 +128,7 @@ class Database {
             dailyStreak: 0,
             timezone: 'UTC',
             gambleHistory: [],
+            power: null,
         };
         this.db.data.users.push(user);
         await this.write();
@@ -294,6 +296,7 @@ class Database {
             dailyStreak: 0,
             timezone: 'UTC',
             gambleHistory: [],
+            power: null,
         };
 
         await this.write();
