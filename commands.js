@@ -1182,6 +1182,7 @@ async function handleShopWeaponsCommand(interaction) {
   // Shop items
   const shop = {
     zanpakuto: { name: "Zanpakuto", price: 5000 },
+    reroll: { name: 'Zanpakuto Reroll', price: 10000},
   };
 
   // Select menu
@@ -1193,6 +1194,10 @@ async function handleShopWeaponsCommand(interaction) {
         .setLabel("Zanpakuto")
         .setValue("zanpakuto")
         .setDescription("Lets you buy a Zanpakuto || Cost: 5,000"),
+      new StringSelectMenuOptionBuilder()
+        .setLabel('Zanpakuto Reroll')
+        .setValue('zanpakuto_reroll')
+        .setDescription('Lets you buy a zanpakuto reroll || Cost: 10,000'),
     ]);
 
   const weaponBuyRow = new ActionRowBuilder().addComponents(weaponBuySelectMenu);

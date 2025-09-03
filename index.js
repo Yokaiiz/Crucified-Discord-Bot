@@ -288,6 +288,9 @@ const commands = [
     .setDescription('the item you wish to use.')
     .setRequired(true)
   ),
+  new SlashCommandBuilder()
+  .setName('reroll')
+  .setDescription('Rerolls your shikai.'),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -339,6 +342,7 @@ function getCooldownTime(commandName) {
     gamble: 35000,
     rob: 15000,
     use: 5000,
+    reroll: 5000,
     // ...add more as needed
   };
   return cooldowns[commandName] ?? defaultCooldown;
@@ -410,6 +414,42 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
+      if (interaction.customId.startsWith('buy_zanpakuto_reroll')) {
+        const userId = interaction.user.id;
+        const quantity = parseInt(interaction.fields.getTextInputValue('quantity'));
+        const selectedItem = { name: 'Zanpakuto Reroll', price: 10000};
+
+        if (isNaN(quantity) || quantity <= 0) {
+          return interaction.reply({
+            content: 'Please enter a valid number that is higher than 0',
+            ephemeral: true,
+          });
+        }
+
+        await database.ensureUser(userId);
+        const freshUserData = await database.getUserData(userId);
+
+        const totalCost = selectedItem.price * quantity;
+
+        if (freshUserData.balance < totalCost) {
+          return interaction.reply({
+            content: `You do not have enough money, you need ${totalCost.toLocaleString('en-US')}`,
+            ephemeral: true,
+          });
+        }
+
+        freshUserData.balance -= totalCost;
+        freshUserData.inventory[selectedItem.name] = (
+          freshUserData.inventory[selectedItem.name] || 0
+        ) + quantity;
+
+        await database.saveUserData(userId, freshUserData);
+
+        return interaction.reply({
+          content: `You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString('en-US')}**!`,
+          ephemeral: false,
+        });
+      }
       // Add more modal handlers here as needed
 
       return; // Don't process as a command if it's a modal submit
