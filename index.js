@@ -275,10 +275,6 @@ const commands = [
   .addSubcommand(command =>
     command.setName('weapons')
     .setDescription('Lets you buy weapons!')
-  )
-  .addSubcommand(command =>
-    command.setName('items')
-    .setDescription('Lets you buy items')
   ),
   new SlashCommandBuilder()
   .setName('use')
@@ -368,98 +364,64 @@ function setCooldown(userId, commandName, cooldownTime) {
 // --- Interaction Handler ---
 client.on("interactionCreate", async (interaction) => {
   try {
-    // --- Modal Submit Handling ---
-    if (interaction.isModalSubmit()) {
-      // Zanpakuto weapon shop modal
-      if (interaction.customId.startsWith('buy_zanpakuto_')) {
-        const userId = interaction.user.id;
-        const quantity = parseInt(interaction.fields.getTextInputValue("quantity"));
-        const selectedItem = { name: "Zanpakuto", price: 5000 };
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('buy_')) {
+      const userId = interaction.user.id;
+      const customIdParts = interaction.customId.split('_');
+      const itemKey = customIdParts.slice(1, -1).join('_')
+      const quantity = parseInt(interaction.fields.getTextInputValue('quantity'));
 
-        if (isNaN(quantity) || quantity <= 0) {
-          return interaction.reply({
-            content: "❌ Please enter a valid number greater than 0.",
-            ephemeral: true,
-          });
-        }
+      const shop = {
+        zanpakuto: { name: 'Zanpakuto', price: 5000},
+        zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000}
+      };
+      const selectedItem = shop[itemKey];
 
-        await database.ensureUser(userId);
-        const freshUserData = await database.getUserData(userId);
-
-        if ((freshUserData.inventory['zanpakuto'] || 0) + quantity > 1) {
-          return interaction.reply({
-            content: 'You can only own **1 Zanpakuto**.',
-            ephemeral: true
-          });
-        } else if (freshUserData.power) {
-          return interaction.reply({
-            content: 'You already awakened your zanpakuto.',
-            ephemeral: true
-          });
-        }
-
-
-
-        const totalCost = selectedItem.price * quantity;
-
-        if (freshUserData.balance < totalCost) {
-          return interaction.reply({
-            content: `❌ You don't have enough money! You need **¥${totalCost.toLocaleString()}**.`,
-            ephemeral: true,
-          });
-        }
-
-        freshUserData.balance -= totalCost;
-        freshUserData.inventory[selectedItem.name] =
-          (freshUserData.inventory[selectedItem.name] || 0) + quantity;
-
-        await database.saveUserData(userId, freshUserData);
-
+      if (!selectedItem) {
         return interaction.reply({
-          content: `✅ You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString()}**!`,
-          ephemeral: false,
+          content: 'That item is not available.',
+          ephemeral: true,
         });
       }
 
-      if (interaction.customId.startsWith('buy_zanpakuto_reroll')) {
-        const userId = interaction.user.id;
-        const quantity = parseInt(interaction.fields.getTextInputValue('quantity'));
-        const selectedItem = { name: 'Zanpakuto Reroll', price: 10000};
-
-        if (isNaN(quantity) || quantity <= 0) {
-          return interaction.reply({
-            content: 'Please enter a valid number that is higher than 0',
-            ephemeral: true,
-          });
-        }
-
-        await database.ensureUser(userId);
-        const freshUserData = await database.getUserData(userId);
-
-        const totalCost = selectedItem.price * quantity;
-
-        if (freshUserData.balance < totalCost) {
-          return interaction.reply({
-            content: `You do not have enough money, you need ${totalCost.toLocaleString('en-US')}`,
-            ephemeral: true,
-          });
-        }
-
-        freshUserData.balance -= totalCost;
-        freshUserData.inventory[selectedItem.name] = (
-          freshUserData.inventory[selectedItem.name] || 0
-        ) + quantity;
-
-        await database.saveUserData(userId, freshUserData);
-
+      if (isNaN(quantity) || quantity <= 0) {
         return interaction.reply({
-          content: `You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString('en-US')}**!`,
-          ephemeral: false,
+          content: 'Please enter a valid number greather than 0.',
+          ephemeral: true
         });
       }
-      // Add more modal handlers here as needed
 
-      return; // Don't process as a command if it's a modal submit
+      await database.ensureUser(userId);
+      const freshUserData = await database.getUserData(userId);
+
+      if (
+        selectedItem.name === 'Zanpakuto' &&
+        ((freshUserData.inventory['Zanpakuto'] || 0) + quantity > 1 || freshUserData.power)
+      ) {
+        return interaction.reply({
+          content: 'You can only own **1 Zanpakuto** and cannot buy another if youve already awakened one.',
+          ephemeral: true,
+        });
+      }
+
+      const totalCost = selectedItem.price * quantity;
+
+      if (freshUserData.balance < quantity) {
+        return interaction.reply({
+          content: `You dont have enough money, you need **¥${totalCost.toLocaleString('en-US')}**.`,
+          ephemeral: true,
+        });
+      }
+
+      freshUserData.balance -= totalCost;
+      freshUserData.inventory[selectedItem.name] =
+      (freshUserData.inventory[selectedItem.name] || 0) + quantity;
+
+      await database.saveUserData(userId, freshUserData);
+
+      return interaction.reply({
+        content: `You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString('en-US')}**!`,
+        ephemeral: false
+      });
     }
 
     // --- Command Handling ---
@@ -551,8 +513,6 @@ client.on("interactionCreate", async (interaction) => {
         const sub = interaction.options.getSubcommand();
         if (sub === 'weapons') {
           await handleShopWeaponsCommand(interaction);
-        } else if (sub === 'items') {
-          await handleShopItemsCommand(interaction);
         }
         break;
       }

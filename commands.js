@@ -816,12 +816,13 @@ async function handleWorkCommand(interaction) {
   const userData = await database.getUserData(userId);
   const avatar = interaction.user.displayAvatarURL();
 
-  const jobOptions = Object.entries(job).map(([key, value]) => ({
-    label: key,
-    value: key,
-    name: value.name,
-    description: value.description,
-  }));
+  // Build menu options safely
+  const jobOptions = Object.entries(job).map(([key, value]) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel((value.name || key).toString().slice(0, 100) || "Job")
+      .setValue(key)
+      .setDescription((value.description || "No description").toString().slice(0, 100))
+  );
 
   const workEmbed = new EmbedBuilder()
     .setColor(await createDynamicColour())
@@ -829,21 +830,14 @@ async function handleWorkCommand(interaction) {
     .setDescription("Here are your work options!")
     .setThumbnail(`${avatar}`)
     .addFields(
-      jobOptions.map(({ value }) => {
-        const {
-          name,
-          description,
-          experience_required,
-          wage,
-          experience_gain,
-        } = job[value] || {};
+      Object.entries(job).map(([key, value]) => {
         return {
-          name: name || value,
+          name: value.name?.slice(0, 256) || key,
           value: [
-            subtext(description || "N/A"),
-            subtext(`Experience required: **${experience_required?.toLocaleString("en-US") ?? 0}**`),
-            subtext(`Wage: **¥${wage?.toLocaleString("en-US") ?? 0}**`),
-            subtext(`EXP Gain: **${experience_gain?.toLocaleString("en-US") ?? 0}**`),
+            subtext((value.description || "N/A").toString().slice(0, 1024)),
+            subtext(`Experience required: **${value.experience_required?.toLocaleString("en-US") ?? 0}**`),
+            subtext(`Wage: **¥${value.wage?.toLocaleString("en-US") ?? 0}**`),
+            subtext(`EXP Gain: **${value.experience_gain?.toLocaleString("en-US") ?? 0}**`),
           ].join("\n"),
         };
       })
@@ -880,7 +874,7 @@ async function handleWorkCommand(interaction) {
     if (!selectedJob || userData.experience < selectedJob.experience_required) {
       return i.reply({
         content: `You don't have enough experience to work this job.\n${subtext(
-          `Your experience: ${userData.experience} Needed: ${selectedJob.experience_required}`
+          `Your experience: ${userData.experience} Needed: ${selectedJob?.experience_required ?? 0}`
         )}`,
         ephemeral: true,
       });
@@ -1182,7 +1176,7 @@ async function handleShopWeaponsCommand(interaction) {
   // Shop items
   const shop = {
     zanpakuto: { name: "Zanpakuto", price: 5000 },
-    reroll: { name: 'Zanpakuto Reroll', price: 10000},
+    zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000},
   };
 
   // Select menu
@@ -1246,7 +1240,7 @@ async function handleShopWeaponsCommand(interaction) {
 
     const quantityInput = new TextInputBuilder()
       .setCustomId("quantity")
-      .setLabel(`How many ${selectedItem.name}s do you want to buy?`)
+      .setLabel(`How many ${selectedItem.name}s do you want to buy?`.slice(0, 45))
       .setStyle(TextInputStyle.Short)
       .setPlaceholder("Enter a number (e.g. 2)")
       .setRequired(true);
@@ -1266,23 +1260,26 @@ async function handleShopWeaponsCommand(interaction) {
   });
 }
 
-async function handleShopItemsCommand(interaction) {
-
-}
-
 async function handleUseItemCommand(interaction) {
   const userId = interaction.user.id;
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
   const item = interaction.options.getString('item');
 
-  // Usable items
   const zanpakutoKey = 'Zanpakuto';
+  const rerollKey = 'Zanpakuto Reroll';
 
+  // Zanpakuto use (awaken)
   if (item === zanpakutoKey) {
     if (!userData.inventory[zanpakutoKey] || userData.inventory[zanpakutoKey] < 1) {
       return interaction.reply({
         content: "You don't have a Zanpakuto to use.",
+        ephemeral: true,
+      });
+    }
+    if (userData.power) {
+      return interaction.reply({
+        content: "You have already awakened your Zanpakuto. Use a Zanpakuto Reroll to reroll your shikai.",
         ephemeral: true,
       });
     }
@@ -1299,10 +1296,12 @@ async function handleUseItemCommand(interaction) {
       {name: 'Fire', chance: 0.01},
       {name: 'Kyoka Suigetsu', chance: 0.01},
       {name: 'Zabimaru', chance: 0.05},
-      {name: 'Shinso', chance: 0.10},
-      {name: 'Hyorinmaru', chance: 0.10},
-      {name: 'Wabisuke', chance: 0.20},
-      {name: 'Senbonzakura', chance: 0.5}
+      {name: 'Shinso', chance: 0.05},
+      {name: 'Hyorinmaru', chance: 0.05},
+      {name: 'Wabisuke', chance: 0.5},
+      {name: 'Senbonzakura', chance: 0.1},
+      {name: 'Theatre', chance: 0.1},
+      {name: 'Blood', chance: 0.1},
     ];
 
     let cumulative = 0;
@@ -1323,12 +1322,68 @@ async function handleUseItemCommand(interaction) {
       content: `You used a Zanpakuto and awakened the **${selectedShikai}** shikai!`,
       ephemeral: false,
     });
-  } else {
+  }
+
+  // Zanpakuto Reroll use
+  if (item === rerollKey) {
+    if (!userData.inventory[rerollKey] || userData.inventory[rerollKey] < 1) {
+      return interaction.reply({
+        content: "You don't have a Zanpakuto Reroll to use.",
+        ephemeral: true,
+      });
+    }
+    if (!userData.power) {
+      return interaction.reply({
+        content: "You must awaken a Zanpakuto first before you can reroll your shikai.",
+        ephemeral: true,
+      });
+    }
+
+    userData.inventory[rerollKey] -= 1;
+    if (userData.inventory[rerollKey] === 0) {
+      delete userData.inventory[rerollKey];
+    }
+
+    const randomshikai = [
+      {name: 'Snow', chance: 0.01},
+      {name: 'Benihime', chance: 0.01},
+      {name: 'Zangetsu', chance: 0.01},
+      {name: 'Fire', chance: 0.01},
+      {name: 'Kyoka Suigetsu', chance: 0.01},
+      {name: 'Zabimaru', chance: 0.05},
+      {name: 'Shinso', chance: 0.05},
+      {name: 'Hyorinmaru', chance: 0.05},
+      {name: 'Wabisuke', chance: 0.5},
+      {name: 'Senbonzakura', chance: 0.1},
+      {name: 'Theatre', chance: 0.1},
+      {name: 'Blood', chance: 0.1},
+    ];
+
+    let cumulative = 0;
+    const roll = Math.random();
+    let selectedShikai = randomshikai[randomshikai.length - 1].name;
+    for (const s of randomshikai) {
+      cumulative += s.chance;
+      if (roll <= cumulative) {
+        selectedShikai = s.name;
+        break;
+      }
+    }
+
+    userData.power = selectedShikai;
+    await database.saveUserData(userId, userData);
+
     return interaction.reply({
-      content: "That item cannot be used.",
-      ephemeral: true,
+      content: `You used a Zanpakuto Reroll and rerolled your shikai! Your new shikai is **${selectedShikai}**.`,
+      ephemeral: false,
     });
   }
+
+  // Fallback for unknown items
+  return interaction.reply({
+    content: "That item cannot be used.",
+    ephemeral: true,
+  });
 }
 
 // --- Exports ---
@@ -1354,6 +1409,5 @@ module.exports = {
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
   handleShopWeaponsCommand,
-  handleShopItemsCommand,
   handleUseItemCommand,
 };
