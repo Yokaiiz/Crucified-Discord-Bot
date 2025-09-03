@@ -276,10 +276,12 @@ const commands = [
   .setDescription('Lets you shop for a variety of items')
   .addSubcommand(command =>
     command.setName('weapons')
+    .setDescription('Lets you buy weapons!')
   )
   .addSubcommand(command =>
     command.setName('items')
-  )
+    .setDescription('Lets you buy items')
+  ),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -356,6 +358,58 @@ function setCooldown(userId, commandName, cooldownTime) {
 // --- Interaction Handler ---
 client.on("interactionCreate", async (interaction) => {
   try {
+    // --- Modal Submit Handling ---
+    if (interaction.isModalSubmit()) {
+      // Zanpakuto weapon shop modal
+      if (interaction.customId.startsWith('buy_zanpakuto_')) {
+        const userId = interaction.user.id;
+        const quantity = parseInt(interaction.fields.getTextInputValue("quantity"));
+        const selectedItem = { name: "Zanpakuto", price: 5000 };
+
+        if (isNaN(quantity) || quantity <= 0) {
+          return interaction.reply({
+            content: "❌ Please enter a valid number greater than 0.",
+            ephemeral: true,
+          });
+        }
+
+        await database.ensureUser(userId);
+        const freshUserData = await database.getUserData(userId);
+
+        if ((freshUserData.inventory['zanpakuto'] || 0) + quantity > 1) {
+          return interaction.reply({
+            content: 'You can only own **1 Zanpakuto**.',
+            ephemeral: true
+          });
+        }
+
+        const totalCost = selectedItem.price * quantity;
+
+        if (freshUserData.balance < totalCost) {
+          return interaction.reply({
+            content: `❌ You don't have enough money! You need **¥${totalCost.toLocaleString()}**.`,
+            ephemeral: true,
+          });
+        }
+
+        freshUserData.balance -= totalCost;
+        freshUserData.inventory[selectedItem.name] =
+          (freshUserData.inventory[selectedItem.name] || 0) + quantity;
+
+        await database.saveUserData(userId, freshUserData);
+
+        return interaction.reply({
+          content: `✅ You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString()}**!`,
+          ephemeral: false,
+        });
+      }
+
+      // Add more modal handlers here as needed
+
+      return; // Don't process as a command if it's a modal submit
+    }
+
+    // --- Command Handling ---
     if (!interaction.isChatInputCommand()) return;
 
     await database.ensureUser(interaction.user.id);
@@ -433,30 +487,22 @@ client.on("interactionCreate", async (interaction) => {
       case "rob":
         await handleRobCommand(interaction);
         break;
-      case "encyclopaedia":
+      case `encyclopaedia`: {
         const sub = interaction.options.getSubcommand();
-
-        if (sub === "type_soul") {
+        if (sub === 'type_soul') {
           await handleTypeSoulEncyclopaediaCommand(interaction);
         }
         break;
-      case "fight":
-        await handleFightCommand(interaction);
-        break;
-      case 'shop':
-        sub = interaction.options.getSubcommand();
-
-        switch (sub) {
-          case 'weapons': {
-            await handleShopWeaponsCommand(interaction);
-            break;
-          }
-
-          case 'items': {
-            await handleShopItemsCommand(interaction);
-            break;
-          }
+      }
+      case 'shop': {
+        const sub = interaction.options.getSubcommand();
+        if (sub === 'weapons') {
+          await handleShopWeaponsCommand(interaction);
+        } else if (sub === 'items') {
+          await handleShopItemsCommand(interaction);
         }
+        break;
+      }
     }
   } catch (error) {
     console.error("Error when executing command", error);

@@ -14,6 +14,9 @@ const {
   User,
   RoleFlags,
   ActionRow,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -1232,11 +1235,94 @@ async function handleFightCommand(interaction) {
 }
 
 async function handleShopWeaponsCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
 
+  // Shop items
+  const shop = {
+    zanpakuto: { name: "Zanpakuto", price: 5000 },
+  };
+
+  // Select menu
+  const weaponBuySelectMenu = new StringSelectMenuBuilder()
+    .setPlaceholder("Select a weapon to buy")
+    .setCustomId("weapon_shop")
+    .addOptions([
+      new StringSelectMenuOptionBuilder()
+        .setLabel("Zanpakuto")
+        .setValue("zanpakuto")
+        .setDescription("Lets you buy a Zanpakuto || Cost: 5,000"),
+    ]);
+
+  const weaponBuyRow = new ActionRowBuilder().addComponents(weaponBuySelectMenu);
+
+  // Shop embed
+  const mainShopWeaponEmbed = new EmbedBuilder()
+    .setColor("Grey")
+    .setTitle("Weapon Shop")
+    .setDescription("Welcome to the weapon shop! What would you like to buy?")
+    .setImage(
+      "https://i.pinimg.com/1200x/d5/99/2c/d5992c7c032d63578138dd76abf3a72c.jpg"
+    )
+    .setThumbnail(interaction.user.displayAvatarURL())
+    .setFooter({ text: "Thank you for visiting the weapon shop! || Catawampus" })
+    .setTimestamp();
+
+  await interaction.reply({
+    embeds: [mainShopWeaponEmbed],
+    components: [weaponBuyRow],
+  });
+
+  // Collector for menu
+  const collector = interaction.channel.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 60000,
+    filter: (i) => i.user.id === interaction.user.id,
+  });
+
+  collector.on("collect", async (i) => {
+    if (i.customId !== "weapon_shop") return;
+
+    const choice = i.values[0];
+    const selectedItem = shop[choice];
+
+    if (!selectedItem) {
+      return i.reply({
+        content: "❌ That item is not available!",
+        ephemeral: true,
+      });
+    }
+
+    // Show modal to ask for quantity
+    const modal = new ModalBuilder()
+      .setCustomId(`buy_${choice}_${userId}`) // Make modal ID unique per user
+      .setTitle(`Buy ${selectedItem.name}`);
+
+    const quantityInput = new TextInputBuilder()
+      .setCustomId("quantity")
+      .setLabel(`How many ${selectedItem.name}s do you want to buy?`)
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder("Enter a number (e.g. 2)")
+      .setRequired(true);
+
+    const modalRow = new ActionRowBuilder().addComponents(quantityInput);
+    modal.addComponents(modalRow);
+
+    await i.showModal(modal);
+  });
+
+  collector.on("end", () => {
+    interaction
+      .editReply({
+        components: [],
+      })
+      .catch(() => {});
+  });
 }
 
 async function handleShopItemsCommand(interaction) {
-  
+
 }
 
 // --- Exports ---
