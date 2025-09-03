@@ -269,9 +269,6 @@ const commands = [
     .setDescription('Shows you information regarding the game Type Soul')
   ),
   new SlashCommandBuilder()
-  .setName('fight')
-  .setDescription('You fight monsters for money and EXP'),
-  new SlashCommandBuilder()
   .setName('shop')
   .setDescription('Lets you shop for a variety of items')
   .addSubcommand(command =>
@@ -340,7 +337,6 @@ function getCooldownTime(commandName) {
     ban: 5000,
     gamble: 35000,
     rob: 15000,
-    fight: 10000,
     use: 5000,
     // ...add more as needed
   };

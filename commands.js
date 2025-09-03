@@ -17,6 +17,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  ReactionUserManager,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -1264,6 +1265,38 @@ async function handleShopItemsCommand(interaction) {
 
 }
 
+async function handleUseItemCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const item = interaction.options.getString('item')
+
+  // Usable items
+  const zanpakutoKey = 'Zanpakuto';
+
+  if (item === zanpakutoKey) {
+    if (!userData.inventory[zanpakutoKey]) return;
+
+    if (userData.inventory[zanpakutoKey] >= 1) {
+      userData.inventory[zanpakutoKey] - 1;
+
+      const randomshikai = [
+        {name: 'Snow', chance: 0.01},
+        {name: 'Benihime', chance: 0.01},
+        {name: 'Zangetsu', chance: 0.01},
+        {name: 'Fire', chance: 0.01},
+        {name: 'Kyoka Suigetsu', chance: 0.01},
+        {name: 'Zabimaru', chance: 0.05}
+      ]
+
+      if (userData.inventory[zanpakutoKey >= 0]) {
+        delete userData.inventory[zanpakutoKey];
+        await database.saveUserData(userId, userData);
+      }
+    }
+  }
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -1286,7 +1319,7 @@ module.exports = {
   handleBanCommand,
   handleRobCommand,
   handleTypeSoulEncyclopaediaCommand,
-  handleFightCommand,
   handleShopWeaponsCommand,
   handleShopItemsCommand,
+  handleUseItemCommand,
 };
