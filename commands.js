@@ -148,7 +148,7 @@ async function handleProfileCommand(interaction) {
         { name: "**Balance**", value: `**¥${userData.balance.toLocaleString("en-US")}**` },
         { name: "**Experience**", value: `**${userData.experience.toLocaleString("en-US")}**` },
         { name: "**Inventory**", value: `**${inventoryText}**` },
-        { name: '**Power**', value: `**${userData.power}**`},
+        { name: '**Shikai**', value: `**${userData.power}**`},
       )
       .setTimestamp();
   }
