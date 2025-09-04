@@ -1447,7 +1447,7 @@ async function handleFightCommand(interaction) {
   const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
   let bossHealth = enemy.health;
   let playerDefense = userData.defense || 0;
-  let playerHealth = 200 + (userData.healthBoost || 0); // You can expand this for player stats
+  let playerHealth = 300 + (userData.healthBoost || 0);
   let turn = 1;
   let log = [];
   let fightActive = true;
@@ -1521,8 +1521,10 @@ async function handleFightCommand(interaction) {
         break;
       }
       if (ability.damage && Math.random() < ability.chance) {
-        // Boss attacks player
-        let bossDmg = Math.max(1, ability.damage - playerDefense);
+        // Boss attacks player, partially ignoring defense
+        let effectiveDefense = Math.floor(playerDefense * 0.5); // Boss ignores 50% of defense
+        let bossDmg = ability.damage - effectiveDefense;
+        bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg); // Minimum 30% of base damage
         playerHealth -= bossDmg;
         bossAction = `${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`;
         bossDidAction = true;
@@ -1533,7 +1535,10 @@ async function handleFightCommand(interaction) {
 
     // Boss basic attack if no ability triggered
     if (!bossDidAction && bossHealth > 0) {
-      let bossBasicDmg = Math.max(1, (enemy.abilities?.find(a => a.damage)?.damage || 15) - playerDefense);
+      let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
+      let basicEffectiveDefense = Math.floor(playerDefense * 0.5);
+      let bossBasicDmg = baseAttack - basicEffectiveDefense;
+      bossBasicDmg = Math.max(Math.floor(baseAttack * 0.3), bossBasicDmg);
       playerHealth -= bossBasicDmg;
       turnLog.push(`${enemy.name} attacks and deals **${bossBasicDmg}** damage to you!`);
     }

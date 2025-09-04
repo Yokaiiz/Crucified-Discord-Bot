@@ -522,6 +522,9 @@ client.on("interactionCreate", async (interaction) => {
       case 'use':
         await handleUseItemCommand(interaction);
         break;
+      case 'fight':
+        await handleFightCommand(interaction);
+        break;
     }
   } catch (error) {
     console.error("Error when executing command", error);
