@@ -287,6 +287,9 @@ const commands = [
   new SlashCommandBuilder()
   .setName('reroll')
   .setDescription('Rerolls your shikai.'),
+  new SlashCommandBuilder()
+  .setName('fight')
+  .setDescription('You fight a random boss.'),
 ].map((command) => command.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(token);

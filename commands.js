@@ -42,6 +42,50 @@ const Tester = [
   }
 ]
 
+const powerMovesets = {
+  Snow: [
+    { name: 'Frost slash', damage: 30, description: 'A chilling slash, that may potentially freeze the boss.'},
+    { name: 'Below freezing', damage: 0, description: 'Raises your overall defense by 10 for this fight.', defenseBoost: 10},
+    { name: 'Freezing aurora', damage: 50, description: 'You freeze everything that surrounds you.'},
+  ],
+  Benihime: [
+    { name: 'Fierce slash', damage: 25, description: 'You launch a slash at the boss at fierce speeds.'},
+    { name: 'Immaculate shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15', defenseBoost: 15},
+    { name: 'Unstoppable barrage', damage: 50, description: 'You create an unstoppable barrage.'}
+  ],
+}
+
+const bossPool = [
+  {
+    name:  'Sosuke Aizen',
+    health: 300,
+    defense: 10,
+    abilities: [
+      { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
+      { name: 'Danku', effect: 'block', chance: 0.08 },
+      { name: 'Slash', damage: 20, chance: 0.2 },
+    ]
+  },
+  {
+    name: 'Grimmjow',
+    health: 200,
+    defense: 20,
+    abilities: [
+      { name: 'Claw Slash', damage: 30, chance: 0.05 },
+      { name: 'Roar', damage: 50, chance: 0.1 },
+    ]
+  },
+  {
+    name: 'Yhwach',
+    health: 300,
+    defense: 30,
+    abilities: [
+      { name: 'Almighty', damage: 0, effect: 'dodge', chance: 0.1 },
+      { name: 'Slash', damage: 25, chance: 0.2 },
+    ]
+  },
+]
+
 // --- Helper: Owner Check ---
 async function isBotOwner(interaction) {
   if (!interaction.client.application.owner) {
@@ -1387,6 +1431,157 @@ async function handleUseItemCommand(interaction) {
   });
 }
 
+async function handleFightCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  if (!userData.power || !powerMovesets[userData.power]) {
+    return interaction.reply({
+      content: 'You require a shikai/power to fight or your current shikai is not implemented yet.',
+      ephemeral: true,
+    });
+  }
+
+  // Pick a random boss from bossPool array
+  const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
+  let bossHealth = enemy.health;
+  let playerDefense = userData.defense || 0;
+  let playerHealth = 200 + (userData.healthBoost || 0); // You can expand this for player stats
+  let turn = 1;
+  let log = [];
+  let fightActive = true;
+
+  // Present moveset as a select menu
+  const moveset = powerMovesets[userData.power];
+  const moveOptions = moveset.map((move, idx) =>
+    new StringSelectMenuOptionBuilder()
+      .setLabel(move.name.slice(0, 100))
+      .setValue(idx.toString())
+      .setDescription(move.description.slice(0, 100))
+  );
+  const moveMenu = new StringSelectMenuBuilder()
+    .setCustomId("fight-move-select")
+    .setPlaceholder("Choose your move")
+    .addOptions(moveOptions);
+  const moveRow = new ActionRowBuilder().addComponents(moveMenu);
+
+  // Initial reply
+  await interaction.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setTitle(`Boss Fight: ${enemy.name}`)
+        .setDescription(`Boss HP: **${bossHealth}**\nYour HP: **${playerHealth}**\nYour Defense: **${playerDefense}**`)
+        .setColor("Red")
+    ],
+    components: [moveRow],
+    ephemeral: false,
+  });
+
+  // Multi-turn logic
+  const collector = interaction.channel.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 120000,
+    filter: (i) => i.user.id === userId,
+  });
+
+  collector.on("collect", async (i) => {
+    if (!fightActive || i.customId !== "fight-move-select") return;
+    const moveIdx = parseInt(i.values[0]);
+    const move = moveset[moveIdx];
+    let turnLog = [`**Turn ${turn}:**`];
+
+    // Player move
+    if (move.defenseBoost) {
+      playerDefense += move.defenseBoost;
+      turnLog.push(`You used **${move.name}** and increased your defense by ${move.defenseBoost}!`);
+    } else {
+      // Calculate damage after boss defense
+      const damage = Math.max(1, move.damage - enemy.defense);
+      bossHealth -= damage;
+      turnLog.push(`You used **${move.name}** and dealt **${damage}** damage to ${enemy.name}!`);
+    }
+
+    // Boss ability (can dodge, block, or attack)
+    let bossAction = "";
+    let bossDidAction = false;
+    for (const ability of enemy.abilities || []) {
+      if (ability.effect === "dodge" && Math.random() < ability.chance) {
+        bossAction = `${enemy.name} used **${ability.name}** and dodged your attack!`;
+        bossDidAction = true;
+        // Undo player damage if dodge
+        if (!move.defenseBoost) bossHealth += Math.max(1, move.damage - enemy.defense);
+        break;
+      }
+      if (ability.effect === "block" && Math.random() < ability.chance) {
+        bossAction = `${enemy.name} used **${ability.name}** and blocked your attack, taking no damage!`;
+        bossDidAction = true;
+        // Undo player damage if block
+        if (!move.defenseBoost) bossHealth += Math.max(1, move.damage - enemy.defense);
+        break;
+      }
+      if (ability.damage && Math.random() < ability.chance) {
+        // Boss attacks player
+        let bossDmg = Math.max(1, ability.damage - playerDefense);
+        playerHealth -= bossDmg;
+        bossAction = `${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`;
+        bossDidAction = true;
+        break;
+      }
+    }
+    if (bossDidAction) turnLog.push(bossAction);
+
+    // Boss basic attack if no ability triggered
+    if (!bossDidAction && bossHealth > 0) {
+      let bossBasicDmg = Math.max(1, (enemy.abilities?.find(a => a.damage)?.damage || 15) - playerDefense);
+      playerHealth -= bossBasicDmg;
+      turnLog.push(`${enemy.name} attacks and deals **${bossBasicDmg}** damage to you!`);
+    }
+
+    log.push(turnLog.join('\n'));
+    turn++;
+
+    // Check for win/lose
+    let resultMsg;
+    if (bossHealth <= 0) {
+      fightActive = false;
+      // Rewards
+      const rewardMoney = Math.floor(Math.random() * 3000) + 1000;
+      const rewardExp = Math.floor(Math.random() * 500) + 250;
+      userData.balance += rewardMoney;
+      userData.experience += rewardExp;
+      await database.saveUserData(userId, userData);
+      resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${log.join('\n')}`;
+      collector.stop();
+    } else if (playerHealth <= 0) {
+      fightActive = false;
+      resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${log.join('\n')}`;
+      collector.stop();
+    } else if (turn > 10) { // Optional turn limit
+      fightActive = false;
+      resultMsg = `⏳ The fight ended in a draw after 10 turns!\n\n${log.join('\n')}`;
+      collector.stop();
+    } else {
+      resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${log.join('\n')}\nChoose another move!`;
+    }
+
+    await i.update({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(`Boss Fight: ${enemy.name}`)
+          .setDescription(resultMsg)
+          .setColor("Red")
+      ],
+      components: fightActive ? [moveRow] : [],
+    });
+  });
+
+  collector.on("end", async () => {
+    // Optionally, you can edit the message to remove components when the fight ends
+    // Or send a summary message
+  });
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -1411,4 +1606,5 @@ module.exports = {
   handleTypeSoulEncyclopaediaCommand,
   handleShopWeaponsCommand,
   handleUseItemCommand,
+  handleFightCommand,
 };
