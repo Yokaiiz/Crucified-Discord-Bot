@@ -44,44 +44,44 @@ const Tester = [
 
 const powerMovesets = {
   Snow: [
-    { name: 'Frost slash', damage: 30, description: 'A chilling slash, that may potentially freeze the boss.'},
-    { name: 'Below freezing', damage: 0, description: 'Raises your overall defense by 10 for this fight.', defenseBoost: 10},
-    { name: 'Freezing aurora', damage: 50, description: 'You freeze everything that surrounds you.'},
+    { name: 'Frost slash', damage: 100, description: 'A chilling slash, that may potentially freeze the boss.'},
+    { name: 'Below freezing', damage: 0, description: 'Raises your overall defense by 10 for this fight.', defenseBoost: 20},
+    { name: 'Freezing aurora', damage: 200, description: 'You freeze everything that surrounds you.'},
   ],
   Benihime: [
-    { name: 'Fierce slash', damage: 25, description: 'You launch a slash at the boss at fierce speeds.'},
+    { name: 'Fierce slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.'},
     { name: 'Immaculate shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15', defenseBoost: 15},
-    { name: 'Unstoppable barrage', damage: 50, description: 'You create an unstoppable barrage.'}
+    { name: 'Unstoppable barrage', damage: 150, description: 'You create an unstoppable barrage.'}
   ],
 }
 
 const bossPool = [
   {
     name:  'Sosuke Aizen',
-    health: 300,
-    defense: 10,
+    health: 500,
+    defense: 0,
     abilities: [
       { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
       { name: 'Danku', effect: 'block', chance: 0.08 },
-      { name: 'Slash', damage: 20, chance: 0.2 },
+      { name: 'Slash', damage: 100, chance: 0.2 },
     ]
   },
   {
     name: 'Grimmjow',
-    health: 200,
-    defense: 20,
+    health: 500,
+    defense: 0,
     abilities: [
-      { name: 'Claw Slash', damage: 30, chance: 0.05 },
-      { name: 'Roar', damage: 50, chance: 0.1 },
+      { name: 'Claw Slash', damage: 80, chance: 0.05 },
+      { name: 'Roar', damage: 30, chance: 0.1 },
     ]
   },
   {
     name: 'Yhwach',
-    health: 300,
-    defense: 30,
+    health: 500,
+    defense: 0,
     abilities: [
       { name: 'Almighty', damage: 0, effect: 'dodge', chance: 0.1 },
-      { name: 'Slash', damage: 25, chance: 0.2 },
+      { name: 'Slash', damage: 125, chance: 0.1 },
     ]
   },
 ]
@@ -1335,18 +1335,19 @@ async function handleUseItemCommand(interaction) {
     }
 
     const randomshikai = [
-      {name: 'Snow', chance: 0.01},
+      {name: 'Sode no Shirayuki', chance: 0.01},
       {name: 'Benihime', chance: 0.01},
       {name: 'Zangetsu', chance: 0.01},
-      {name: 'Fire', chance: 0.01},
+      {name: 'Ryujin Jakka', chance: 0.01},
       {name: 'Kyoka Suigetsu', chance: 0.01},
       {name: 'Zabimaru', chance: 0.05},
       {name: 'Shinso', chance: 0.05},
       {name: 'Hyorinmaru', chance: 0.05},
       {name: 'Wabisuke', chance: 0.5},
       {name: 'Senbonzakura', chance: 0.1},
-      {name: 'Theatre', chance: 0.1},
-      {name: 'Blood', chance: 0.1},
+      {name: 'Katen Kyokotsu', chance: 0.1},
+      {name: 'Minazuki', chance: 0.1},
+      {name: 'Suzumebachi', chance: 0.05},
     ];
 
     let cumulative = 0;
@@ -1390,18 +1391,19 @@ async function handleUseItemCommand(interaction) {
     }
 
     const randomshikai = [
-      {name: 'Snow', chance: 0.01},
+      {name: 'Sode no Shirayuki', chance: 0.01},
       {name: 'Benihime', chance: 0.01},
       {name: 'Zangetsu', chance: 0.01},
-      {name: 'Fire', chance: 0.01},
+      {name: 'Ryujin Jakka', chance: 0.01},
       {name: 'Kyoka Suigetsu', chance: 0.01},
       {name: 'Zabimaru', chance: 0.05},
       {name: 'Shinso', chance: 0.05},
       {name: 'Hyorinmaru', chance: 0.05},
       {name: 'Wabisuke', chance: 0.5},
       {name: 'Senbonzakura', chance: 0.1},
-      {name: 'Theatre', chance: 0.1},
-      {name: 'Blood', chance: 0.1},
+      {name: 'Kyoten Kyokotsu', chance: 0.1},
+      {name: 'Minazuki', chance: 0.1},
+      {name: 'Suzumebachi', chance: 0.05},
     ];
 
     let cumulative = 0;
@@ -1447,7 +1449,7 @@ async function handleFightCommand(interaction) {
   const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
   let bossHealth = enemy.health;
   let playerDefense = userData.defense || 0;
-  let playerHealth = 300 + (userData.healthBoost || 0);
+  let playerHealth = 500 + (userData.healthBoost || 0);
   let turn = 1;
   let log = [];
   let fightActive = true;
@@ -1562,9 +1564,9 @@ async function handleFightCommand(interaction) {
       fightActive = false;
       resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${log.join('\n')}`;
       collector.stop();
-    } else if (turn > 10) { // Optional turn limit
+    } else if (turn > 20) { // Optional turn limit
       fightActive = false;
-      resultMsg = `⏳ The fight ended in a draw after 10 turns!\n\n${log.join('\n')}`;
+      resultMsg = `⏳ The fight ended in a draw after 20 turns!\n\n${log.join('\n')}`;
       collector.stop();
     } else {
       resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${log.join('\n')}\nChoose another move!`;
