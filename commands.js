@@ -48,7 +48,8 @@ const powerMovesets = {
     { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
     { name: 'Freezing Aurora', damage: 200, description: 'You freeze everything that surrounds you.' },
     { name: 'Sode no Shirayuki: Hakka no Togame', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
-    { name: 'Ultimate Freeze', damage: 500, description: 'You unleash the ultimate freezing attack at the boss.', ultimate: true }
+    { name: 'Ultimate Freeze', damage: 500, description: 'You unleash the ultimate freezing attack at the boss.', ultimate: true },
+    { name: 'Inescapable Blizzard', damage: 1000, description: 'You freeze everything around you forever, doing 1,000 damage.', ultimate: true}
   ],
   'Benihime': [
     { name: 'Fierce Slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.' },
@@ -56,6 +57,7 @@ const powerMovesets = {
     { name: 'Unstoppable Barrage', damage: 150, description: 'You create an unstoppable barrage.' },
     { name: 'Bankai: Kannonbiraki Benihime Aratame', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
     { name: 'Crimson Destruction', damage: 500, description: 'You unleash the ultimate attack, Crimson Destruction.', ultimate: true },
+    { name: 'Reconstruction', damage: 1000, description: 'You bring yourself back from the dead to unleash the ultimate skill upon your opponent.', ultimate: true },
   ],
   'Zangetsu': [
     { name: 'Getsuga Tenshou', damage: 120, description: 'You launch a powerful slash of energy at the boss.' },
@@ -63,13 +65,21 @@ const powerMovesets = {
     { name: 'Getsuga Barrage', damage: 250, description: 'You build up energy around your blade and slash the boss.' },
     { name: 'Bankai: Tensa Zangetsu', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
     { name: 'Mugetsu', damage: 500, description: 'You unleash the ultimate attack, Mugetsu, sacrificing your power in the process.', ultimate: true, sacrifice: true },
+    { name: 'Blut Vene', description: 'You use Blut vene to boost your defense.', defenseBoost: 50 }
+  ],
+  'Ryujin Jakka': [
+    { name: 'Incinerating Slash', damage: 200, description: 'You incinerate your opponents with a slash almost as hot as the sun, dealing 200 damage.' },
+    { name: 'Devastating Bisection', damage: 150, description: 'You smite your opponent with your fiery sword dealig 150 damage to them.' },
+    { name: 'Fiery Hell', damage: 50, description: 'You heat up your surroundings to dangerous warmth levels.', defenseBoost: 50 },
+    { name: 'Bankai: Zanka no Tachi', damage: 100, description: 'You unleash your bankai onto your opponent.', bankaiActivate: true },
+    { name: 'Undead Army', damage: 500, description: 'You raise your past opponents from the dead as fiery skeletons and make them fight for you.', ultimate: true}
   ]
 };
 
 const bossPool = [
   {
     name:  'Sosuke Aizen',
-    health: 500,
+    health: 700,
     defense: 0,
     abilities: [
       { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
@@ -88,7 +98,7 @@ const bossPool = [
   },
   {
     name: 'Yhwach',
-    health: 500,
+    health: 1000,
     defense: 0,
     abilities: [
       { name: 'Almighty', damage: 0, effect: 'dodge', chance: 0.1 },
