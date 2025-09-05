@@ -43,17 +43,28 @@ const Tester = [
 ]
 
 const powerMovesets = {
-  Snow: [
-    { name: 'Frost slash', damage: 100, description: 'A chilling slash, that may potentially freeze the boss.'},
-    { name: 'Below freezing', damage: 0, description: 'Raises your overall defense by 10 for this fight.', defenseBoost: 20},
-    { name: 'Freezing aurora', damage: 200, description: 'You freeze everything that surrounds you.'},
+  'Sode no Shirayuki': [
+    { name: 'Frost Slash', damage: 100, description: 'A chilling slash that may potentially freeze the boss.' },
+    { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
+    { name: 'Freezing Aurora', damage: 200, description: 'You freeze everything that surrounds you.' },
+    { name: 'Sode no Shirayuki: Hakka no Togame', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
+    { name: 'Ultimate Freeze', damage: 500, description: 'You unleash the ultimate freezing attack at the boss.', ultimate: true }
   ],
-  Benihime: [
-    { name: 'Fierce slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.'},
-    { name: 'Immaculate shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15', defenseBoost: 15},
-    { name: 'Unstoppable barrage', damage: 150, description: 'You create an unstoppable barrage.'}
+  'Benihime': [
+    { name: 'Fierce Slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.' },
+    { name: 'Immaculate Shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15.', defenseBoost: 15 },
+    { name: 'Unstoppable Barrage', damage: 150, description: 'You create an unstoppable barrage.' },
+    { name: 'Bankai: Kannonbiraki Benihime Aratame', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
+    { name: 'Crimson Destruction', damage: 500, description: 'You unleash the ultimate attack, Crimson Destruction.', ultimate: true },
   ],
-}
+  'Zangetsu': [
+    { name: 'Getsuga Tenshou', damage: 120, description: 'You launch a powerful slash of energy at the boss.' },
+    { name: 'Getsuga Jujinshou', damage: 200, description: 'You launch 2 powerful slashes of energy in a cross formation.' },
+    { name: 'Getsuga Barrage', damage: 250, description: 'You build up energy around your blade and slash the boss.' },
+    { name: 'Bankai: Tensa Zangetsu', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
+    { name: 'Mugetsu', damage: 500, description: 'You unleash the ultimate attack, Mugetsu, sacrificing your power in the process.', ultimate: true, sacrifice: true },
+  ]
+};
 
 const bossPool = [
   {
@@ -1401,7 +1412,7 @@ async function handleUseItemCommand(interaction) {
       {name: 'Hyorinmaru', chance: 0.05},
       {name: 'Wabisuke', chance: 0.5},
       {name: 'Senbonzakura', chance: 0.1},
-      {name: 'Kyoten Kyokotsu', chance: 0.1},
+      {name: 'Katen Kyokotsu', chance: 0.1},
       {name: 'Minazuki', chance: 0.1},
       {name: 'Suzumebachi', chance: 0.05},
     ];
@@ -1445,34 +1456,49 @@ async function handleFightCommand(interaction) {
     });
   }
 
-  // Pick a random boss from bossPool array
+  // Pick random boss
   const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
   let bossHealth = enemy.health;
   let playerDefense = userData.defense || 0;
   let playerHealth = 500 + (userData.healthBoost || 0);
   let turn = 1;
-  let log = [];
   let fightActive = true;
+  let bankaiActive = false;
+  let battleLog = [];
 
-  // Present moveset as a select menu
+  // Player moves
   const moveset = powerMovesets[userData.power];
-  const moveOptions = moveset.map((move, idx) =>
-    new StringSelectMenuOptionBuilder()
-      .setLabel(move.name.slice(0, 100))
-      .setValue(idx.toString())
-      .setDescription(move.description.slice(0, 100))
-  );
+  function getAvailableMoves() {
+    return moveset
+      .filter(move => {
+        // Hide ultimates unless Bankai is active
+        if (move.ultimate && !bankaiActive) return false;
+
+        // Hide Mugetsu unless Bankai is active
+        if (move.name.toLowerCase() === "mugetsu" && !bankaiActive) return false;
+
+        return true;
+      })
+      .map((move, idx) =>
+        new StringSelectMenuOptionBuilder()
+          .setLabel(move.name.slice(0, 100))
+          .setValue(idx.toString())
+          .setDescription(move.description.slice(0, 100))
+      );
+  }
+
   const moveMenu = new StringSelectMenuBuilder()
     .setCustomId("fight-move-select")
     .setPlaceholder("Choose your move")
-    .addOptions(moveOptions);
+    .addOptions(getAvailableMoves());
+
   const moveRow = new ActionRowBuilder().addComponents(moveMenu);
 
-  // Initial reply
+  // Initial message
   await interaction.reply({
     embeds: [
       new EmbedBuilder()
-        .setTitle(`Boss Fight: ${enemy.name}`)
+        .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
         .setDescription(`Boss HP: **${bossHealth}**\nYour HP: **${playerHealth}**\nYour Defense: **${playerDefense}**`)
         .setColor("Red")
     ],
@@ -1480,7 +1506,7 @@ async function handleFightCommand(interaction) {
     ephemeral: false,
   });
 
-  // Multi-turn logic
+  // Collector
   const collector = interaction.channel.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
     time: 120000,
@@ -1493,99 +1519,151 @@ async function handleFightCommand(interaction) {
     const move = moveset[moveIdx];
     let turnLog = [`**Turn ${turn}:**`];
 
-    // Player move
-    if (move.defenseBoost) {
+    // === Player move ===
+    if (move.name.toLowerCase() === "mugetsu") {
+      // Instantly defeat the boss and end fight
+      bossHealth = 0;
+      fightActive = false;
+      turnLog.push(`🌑 You unleashed **Mugetsu**! ${enemy.name} was completely obliterated...`);
+      turnLog.push(`⚠️ The cost of this forbidden technique is everything. Your powers have vanished...`);
+
+      // Remove the player's power permanently
+      userData.power = null;
+      await database.saveUserData(userId, userData);
+
+      battleLog.push(turnLog.join('\n'));
+      turn++;
+
+    } else if (move.defenseBoost) {
       playerDefense += move.defenseBoost;
       turnLog.push(`You used **${move.name}** and increased your defense by ${move.defenseBoost}!`);
     } else {
-      // Calculate damage after boss defense
-      const damage = Math.max(1, move.damage - enemy.defense);
-      bossHealth -= damage;
-      turnLog.push(`You used **${move.name}** and dealt **${damage}** damage to ${enemy.name}!`);
+      // Apply Bankai boost dynamically
+      let damage = move.damage;
+      if (bankaiActive) damage = Math.floor(damage * 1.5);
+
+      // Boss dodge/block check before applying
+      let prevented = false;
+      for (const ability of enemy.abilities || []) {
+        if (ability.effect === "dodge" && Math.random() < ability.chance) {
+          turnLog.push(`${enemy.name} used **${ability.name}** and dodged your attack!`);
+          prevented = true;
+          break;
+        }
+        if (ability.effect === "block" && Math.random() < ability.chance) {
+          turnLog.push(`${enemy.name} used **${ability.name}** and blocked your attack!`);
+          prevented = true;
+          break;
+        }
+      }
+
+      if (!prevented) {
+        const dmg = Math.max(1, damage - enemy.defense);
+        bossHealth -= dmg;
+        turnLog.push(`You used **${move.name}** and dealt **${dmg}** damage to ${enemy.name}!`);
+      }
     }
 
-    // Boss ability (can dodge, block, or attack)
-    let bossAction = "";
-    let bossDidAction = false;
-    for (const ability of enemy.abilities || []) {
-      if (ability.effect === "dodge" && Math.random() < ability.chance) {
-        bossAction = `${enemy.name} used **${ability.name}** and dodged your attack!`;
-        bossDidAction = true;
-        // Undo player damage if dodge
-        if (!move.defenseBoost) bossHealth += Math.max(1, move.damage - enemy.defense);
-        break;
+    // Bankai activation
+    if (move.bankaiActivate && !bankaiActive) {
+      bankaiActive = true;
+      playerDefense += 50;
+      playerHealth += 100;
+      turnLog.push(`🔥 You have activated **Bankai**! Gained +50 Defense and +100 HP, and your attacks hit harder!`);
+    }
+
+    // === Boss turn (only if still alive and Mugetsu wasn’t used) ===
+    if (bossHealth > 0 && fightActive) {
+      let bossDidAction = false;
+
+      // Pick random ability
+      if (enemy.abilities?.length) {
+        const ability = enemy.abilities[Math.floor(Math.random() * enemy.abilities.length)];
+        if (ability.damage && Math.random() < ability.chance) {
+          let effectiveDefense = Math.floor(playerDefense * 0.5);
+          let bossDmg = ability.damage - effectiveDefense;
+          bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg); // minimum 30% damage
+          playerHealth -= bossDmg;
+          turnLog.push(`${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`);
+          bossDidAction = true;
+        }
       }
-      if (ability.effect === "block" && Math.random() < ability.chance) {
-        bossAction = `${enemy.name} used **${ability.name}** and blocked your attack, taking no damage!`;
-        bossDidAction = true;
-        // Undo player damage if block
-        if (!move.defenseBoost) bossHealth += Math.max(1, move.damage - enemy.defense);
-        break;
-      }
-      if (ability.damage && Math.random() < ability.chance) {
-        // Boss attacks player, partially ignoring defense
-        let effectiveDefense = Math.floor(playerDefense * 0.5); // Boss ignores 50% of defense
-        let bossDmg = ability.damage - effectiveDefense;
-        bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg); // Minimum 30% of base damage
+
+      // Basic attack fallback
+      if (!bossDidAction) {
+        let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
+        let effectiveDefense = Math.floor(playerDefense * 0.5);
+        let bossDmg = baseAttack - effectiveDefense;
+        bossDmg = Math.max(Math.floor(baseAttack * 0.3), bossDmg);
         playerHealth -= bossDmg;
-        bossAction = `${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`;
-        bossDidAction = true;
-        break;
+        turnLog.push(`${enemy.name} attacks and deals **${bossDmg}** damage to you!`);
       }
     }
-    if (bossDidAction) turnLog.push(bossAction);
 
-    // Boss basic attack if no ability triggered
-    if (!bossDidAction && bossHealth > 0) {
-      let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
-      let basicEffectiveDefense = Math.floor(playerDefense * 0.5);
-      let bossBasicDmg = baseAttack - basicEffectiveDefense;
-      bossBasicDmg = Math.max(Math.floor(baseAttack * 0.3), bossBasicDmg);
-      playerHealth -= bossBasicDmg;
-      turnLog.push(`${enemy.name} attacks and deals **${bossBasicDmg}** damage to you!`);
-    }
+    // Clamp values
+    playerHealth = Math.max(0, playerHealth);
+    bossHealth = Math.max(0, bossHealth);
 
-    log.push(turnLog.join('\n'));
+    battleLog.push(turnLog.join('\n'));
     turn++;
 
-    // Check for win/lose
+    // === End conditions ===
     let resultMsg;
+    let embedColor = "Red"; // default
+
     if (bossHealth <= 0) {
       fightActive = false;
-      // Rewards
       const rewardMoney = Math.floor(Math.random() * 3000) + 1000;
       const rewardExp = Math.floor(Math.random() * 500) + 250;
       userData.balance += rewardMoney;
       userData.experience += rewardExp;
       await database.saveUserData(userId, userData);
-      resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${log.join('\n')}`;
+
+      // Special embed color for Mugetsu
+      if (move.name.toLowerCase() === "mugetsu") {
+        embedColor = "Black";
+      }
+
+      resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${battleLog.join('\n')}`;
       collector.stop();
     } else if (playerHealth <= 0) {
       fightActive = false;
-      resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${log.join('\n')}`;
+      resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${battleLog.join('\n')}`;
       collector.stop();
-    } else if (turn > 20) { // Optional turn limit
+    } else if (turn > 20) {
       fightActive = false;
-      resultMsg = `⏳ The fight ended in a draw after 20 turns!\n\n${log.join('\n')}`;
+      resultMsg = `⏳ The fight ended in a draw after 20 turns!\n\n${battleLog.join('\n')}`;
       collector.stop();
     } else {
-      resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${log.join('\n')}\nChoose another move!`;
+      resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${turnLog.join('\n')}\n\n👉 Choose another move!`;
     }
 
+    // Update message
     await i.update({
       embeds: [
         new EmbedBuilder()
-          .setTitle(`Boss Fight: ${enemy.name}`)
+          .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
           .setDescription(resultMsg)
-          .setColor("Red")
+          .setColor(embedColor)
       ],
-      components: fightActive ? [moveRow] : [],
+      components: fightActive ? [new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId("fight-move-select")
+          .setPlaceholder("Choose your move")
+          .addOptions(getAvailableMoves())
+      )] : [],
     });
   });
 
+  // Timeout handling
   collector.on("end", async () => {
-    // Optionally, you can edit the message to remove components when the fight ends
-    // Or send a summary message
+    if (fightActive) {
+      fightActive = false;
+      await interaction.followUp({
+        content: `⌛ The fight timed out after 2 minutes!`,
+        ephemeral: false,
+      });
+    }
   });
 }
 
