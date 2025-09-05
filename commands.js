@@ -107,6 +107,17 @@ const bossPool = [
   },
 ]
 
+async function antinegativebalance(database) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  if (userData.balance <= 0) {
+    userData.balance = 0;
+    await database.saveUserData(userId, userData);
+  }
+}
+
 // --- Helper: Owner Check ---
 async function isBotOwner(interaction) {
   if (!interaction.client.application.owner) {
