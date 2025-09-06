@@ -1,5 +1,7 @@
+// database.js
 const { Low } = require('lowdb');
 const { JSONFile } = require('lowdb/node');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
 class Database {
     constructor() {
@@ -17,6 +19,7 @@ class Database {
             gambleHistory: [],
             power: "None",
             race: "Human",
+            firstTime: true,   // 👈 NEW FLAG
         };
     }
 

@@ -367,6 +367,7 @@ function setCooldown(userId, commandName, cooldownTime) {
 // --- Interaction Handler ---
 client.on("interactionCreate", async (interaction) => {
   try {
+    // --- Modal Handling (shop purchases) ---
     if (interaction.isModalSubmit() && interaction.customId.startsWith('buy_')) {
       const userId = interaction.user.id;
       const customIdParts = interaction.customId.split('_');
@@ -374,8 +375,8 @@ client.on("interactionCreate", async (interaction) => {
       const quantity = parseInt(interaction.fields.getTextInputValue('quantity'));
 
       const shop = {
-        zanpakuto: { name: 'Zanpakuto', price: 5000},
-        zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000}
+        zanpakuto: { name: 'Zanpakuto', price: 5000 },
+        zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000 }
       };
       const selectedItem = shop[itemKey];
 
@@ -388,7 +389,7 @@ client.on("interactionCreate", async (interaction) => {
 
       if (isNaN(quantity) || quantity <= 0) {
         return interaction.reply({
-          content: 'Please enter a valid number greather than 0.',
+          content: 'Please enter a valid number greater than 0.',
           ephemeral: true
         });
       }
@@ -401,23 +402,23 @@ client.on("interactionCreate", async (interaction) => {
         ((freshUserData.inventory['Zanpakuto'] || 0) + quantity > 1 || freshUserData.power)
       ) {
         return interaction.reply({
-          content: 'You can only own **1 Zanpakuto** and cannot buy another if youve already awakened one.',
+          content: 'You can only own **1 Zanpakuto** and cannot buy another if you have already awakened one.',
           ephemeral: true,
         });
       }
 
       const totalCost = selectedItem.price * quantity;
 
-      if (freshUserData.balance < quantity) {
+      if (freshUserData.balance < totalCost) {
         return interaction.reply({
-          content: `You dont have enough money, you need **¥${totalCost.toLocaleString('en-US')}**.`,
+          content: `You don't have enough money, you need **¥${totalCost.toLocaleString('en-US')}**.`,
           ephemeral: true,
         });
       }
 
       freshUserData.balance -= totalCost;
       freshUserData.inventory[selectedItem.name] =
-      (freshUserData.inventory[selectedItem.name] || 0) + quantity;
+        (freshUserData.inventory[selectedItem.name] || 0) + quantity;
 
       await database.saveUserData(userId, freshUserData);
 
@@ -427,16 +428,23 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // --- Command Handling ---
+    // --- Slash Command Handling ---
     if (!interaction.isChatInputCommand()) return;
 
-    await database.ensureUser(interaction.user.id);
+    const userId = interaction.user.id;
+    const userData = await database.ensureUser(userId);
 
+    // 🚨 Force race selection on first time
+    if (userData.firstTime) {
+      return antinullvalues(database, interaction);
+    }
+
+    // --- Cooldowns ---
     const commandName = interaction.commandName;
     const cooldownTime = getCooldownTime(commandName);
 
-    if (isOnCooldown(interaction.user.id, commandName)) {
-      const expiresAt = cooldowns.get(interaction.user.id).get(commandName);
+    if (isOnCooldown(userId, commandName)) {
+      const expiresAt = cooldowns.get(userId).get(commandName);
       const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
       return interaction.reply({
         content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
@@ -444,7 +452,7 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    setCooldown(interaction.user.id, commandName, cooldownTime);
+    setCooldown(userId, commandName, cooldownTime);
 
     // --- Command Execution ---
     switch (commandName) {
@@ -505,24 +513,24 @@ client.on("interactionCreate", async (interaction) => {
       case "rob":
         await handleRobCommand(interaction);
         break;
-      case `encyclopaedia`: {
+      case "encyclopaedia": {
         const sub = interaction.options.getSubcommand();
         if (sub === 'type_soul') {
           await handleTypeSoulEncyclopaediaCommand(interaction);
         }
         break;
       }
-      case 'shop': {
+      case "shop": {
         const sub = interaction.options.getSubcommand();
         if (sub === 'weapons') {
           await handleShopWeaponsCommand(interaction);
         }
         break;
       }
-      case 'use':
+      case "use":
         await handleUseItemCommand(interaction);
         break;
-      case 'fight':
+      case "fight":
         await handleFightCommand(interaction);
         break;
     }

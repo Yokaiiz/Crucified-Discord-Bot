@@ -110,38 +110,105 @@ const bossPool = [
 async function antinullvalues(database, interaction) {
   const userId = interaction.user.id;
 
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
+  // Ensure user exists
+  const userData = await database.ensureUser(userId);
 
   let updated = false;
 
-  if (userData.balance <= 0 || userData.balance == null) {
+  // ✅ Balance fix
+  if (userData.balance == null || userData.balance <= 0) {
     userData.balance = 0;
     updated = true;
   }
 
-  if (userData.race == null) {
-    userData.race = 'Human';
-    updated = true;
+  // ✅ First-time or no race chosen → force race selection
+  if (userData.firstTime || userData.race == null || userData.race === 'Human') {
+    const arrancarButton = new ButtonBuilder()
+      .setLabel('Arrancar')
+      .setCustomId('arrancar')
+      .setStyle(ButtonStyle.Primary);
+
+    const soulreaperButton = new ButtonBuilder()
+      .setLabel('Soul Reaper')
+      .setCustomId('soul_reaper')
+      .setStyle(ButtonStyle.Secondary);
+
+    const quincyButton = new ButtonBuilder()
+      .setLabel('Quincy')
+      .setCustomId('quincy')
+      .setStyle(ButtonStyle.Secondary);
+
+    const fullbringerButton = new ButtonBuilder()
+      .setLabel('Fullbringer')
+      .setCustomId('fullbringer')
+      .setStyle(ButtonStyle.Secondary);
+
+    const buttonRow = new ActionRowBuilder().addComponents(
+      arrancarButton,
+      soulreaperButton,
+      quincyButton,
+      fullbringerButton
+    );
+
+    await interaction.reply({
+      content: 'Which Race do you wish to be?',
+      components: [buttonRow],
+      ephemeral: true
+    });
+
+    const collector = interaction.channel.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 60000, // 1 minute
+      filter: (i) => i.user.id === userId,
+    });
+
+    collector.on('collect', async (i) => {
+      const races = {
+        soul_reaper: 'Soul Reaper',
+        arrancar: 'Arrancar',
+        quincy: 'Quincy',
+        fullbringer: 'Fullbringer'
+      };
+
+      if (races[i.customId]) {
+        userData.race = races[i.customId];
+        userData.firstTime = false; // ✅ mark as done
+        updated = true;
+
+        await database.saveUserData(userId, userData);
+
+        return i.update({
+          content: `✅ You are now **${userData.race}**!`,
+          components: [],
+          ephemeral: true,
+        });
+      }
+    });
+
+    // Timeout handler
+    collector.on('end', async (collected, reason) => {
+      if (reason === 'time' && collected.size === 0) {
+        try {
+          await interaction.editReply({
+            content: '⏳ You did not choose a race in time. Defaulting to **Human**.',
+            components: [],
+          });
+          userData.race = 'Human';
+          userData.firstTime = false; // ✅ still complete
+          updated = true;
+          await database.saveUserData(userId, userData);
+        } catch (err) {
+          console.error('Failed to edit reply on timeout:', err);
+        }
+      }
+    });
+
+    return; // 🚨 stop execution here so user must pick race first
   }
 
+  // ✅ Save updates
   if (updated) {
     await database.saveUserData(userId, userData);
-  }
-}
-
-// --- Helper: Owner Check ---
-async function isBotOwner(interaction) {
-  if (!interaction.client.application.owner) {
-    await interaction.client.application.fetch();
-  }
-  const owner = interaction.client.application.owner;
-  if (owner.members) {
-    return Array.from(owner.members.values()).some(
-      (member) => member.id === interaction.user.id
-    );
-  } else {
-    return owner.id === interaction.user.id;
   }
 }
 
@@ -331,6 +398,11 @@ async function handleGambleCommand(interaction) {
 }
 
 async function handleHelpCommand(interaction) {
+
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
   const DiscordButton = new ButtonBuilder()
     .setLabel('Discord')
     .setStyle(ButtonStyle.Link)
