@@ -364,6 +364,108 @@ function setCooldown(userId, commandName, cooldownTime) {
   }, cooldownTime);
 }
 
+async function antinullvalues(database, interaction) {
+  const userId = interaction.user.id;
+
+  // Ensure user exists
+  const userData = await database.ensureUser(userId);
+
+  let updated = false;
+
+  // ✅ Balance fix
+  if (userData.balance == null || userData.balance <= 0) {
+    userData.balance = 0;
+    updated = true;
+  }
+
+  // ✅ First-time or no race chosen → force race selection
+  if (userData.firstTime || userData.race == null || userData.race === 'Human') {
+    const arrancarButton = new ButtonBuilder()
+      .setLabel('Arrancar')
+      .setCustomId('arrancar')
+      .setStyle(ButtonStyle.Primary);
+
+    const soulreaperButton = new ButtonBuilder()
+      .setLabel('Soul Reaper')
+      .setCustomId('soul_reaper')
+      .setStyle(ButtonStyle.Secondary);
+
+    const quincyButton = new ButtonBuilder()
+      .setLabel('Quincy')
+      .setCustomId('quincy')
+      .setStyle(ButtonStyle.Secondary);
+
+    const fullbringerButton = new ButtonBuilder()
+      .setLabel('Fullbringer')
+      .setCustomId('fullbringer')
+      .setStyle(ButtonStyle.Secondary);
+
+    const buttonRow = new ActionRowBuilder().addComponents(
+      arrancarButton,
+      soulreaperButton,
+      quincyButton,
+      fullbringerButton
+    );
+
+    await interaction.reply({
+      content: 'Which Race do you wish to be?',
+      components: [buttonRow],
+      ephemeral: true
+    });
+
+    const collector = interaction.channel.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 60000, // 1 minute
+      filter: (i) => i.user.id === userId,
+    });
+
+    collector.on('collect', async (i) => {
+      const races = {
+        soul_reaper: 'Soul Reaper',
+        arrancar: 'Arrancar',
+        quincy: 'Quincy',
+        fullbringer: 'Fullbringer'
+      };
+
+      if (races[i.customId]) {
+        userData.race = races[i.customId];
+        userData.firstTime = false; // ✅ mark as done
+        updated = true;
+
+        return i.update({
+          content: `✅ You are now **${userData.race}**!`,
+          components: [],
+          ephemeral: true,
+        });
+      }
+    });
+
+    // Timeout handler
+    collector.on('end', async (collected, reason) => {
+      if (reason === 'time' && collected.size === 0) {
+        try {
+          await interaction.editReply({
+            content: '⏳ You did not choose a race in time. Defaulting to **Human**.',
+            components: [],
+          });
+          userData.race = 'Human';
+          userData.firstTime = false; // ✅ still complete
+          updated = true;
+        } catch (err) {
+          console.error('Failed to edit reply on timeout:', err);
+        }
+      }
+    });
+
+    return; // 🚨 stop execution here so user must pick race first
+  }
+
+  // ✅ Save updates
+  if (updated) {
+    await database.saveUserData(userId, userData);
+  }
+}
+
 // --- Interaction Handler ---
 client.on("interactionCreate", async (interaction) => {
   try {
