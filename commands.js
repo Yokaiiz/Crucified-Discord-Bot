@@ -107,13 +107,25 @@ const bossPool = [
   },
 ]
 
-async function antinegativebalance(database) {
+async function antinullvalues(database, interaction) {
   const userId = interaction.user.id;
+
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
 
-  if (userData.balance <= 0) {
+  let updated = false;
+
+  if (userData.balance <= 0 || userData.balance == null) {
     userData.balance = 0;
+    updated = true;
+  }
+
+  if (userData.race == null) {
+    userData.race = 'Human';
+    updated = true;
+  }
+
+  if (updated) {
     await database.saveUserData(userId, userData);
   }
 }
@@ -143,7 +155,7 @@ async function handleBegCommand(interaction) {
   const amount = Math.floor(Math.random() * 5000) + 500;
   const experiencegain = Math.floor(Math.random() * 1000) + 100;
   const itempool = [
-    { item: "Sword", chance: 0.4 },
+    { item: "Fishing Rod", chance: 0.4 },
     { item: "Shovel", chance: 0.4 },
     { item: "Shield", chance: 0.1 },
     { item: "Pickaxe", chance: 0.1 },
@@ -206,7 +218,9 @@ async function handleProfileCommand(interaction) {
       .addFields(
         { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
         { name: "**Experience**", value: `**${targetUserData.experience.toLocaleString("en-US")}**` },
-        { name: "**Inventory**", value: `**${targetInventoryText}**` }
+        { name: "**Inventory**", value: `**${targetInventoryText}**` },
+        { name: '**Shikai**', value: `**${userData.power}**` },
+        { name: '**Race**', value: `**${userData.race}**` },
       )
       .setTimestamp();
   } else {
@@ -225,6 +239,7 @@ async function handleProfileCommand(interaction) {
         { name: "**Experience**", value: `**${userData.experience.toLocaleString("en-US")}**` },
         { name: "**Inventory**", value: `**${inventoryText}**` },
         { name: '**Shikai**', value: `**${userData.power}**`},
+        { name: '**Race**', value: `**${userData.race}**` },
       )
       .setTimestamp();
   }
@@ -1250,6 +1265,13 @@ async function handleShopWeaponsCommand(interaction) {
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
 
+  if ( userData.race = 'human' ) {
+    return interaction.reply({
+      content: `You are a ${userData.race}. You cannot utilise this command.`,
+      ephemeral: false
+    });
+  }
+
   // Shop items
   const shop = {
     zanpakuto: { name: "Zanpakuto", price: 5000 },
@@ -1358,6 +1380,13 @@ async function handleUseItemCommand(interaction) {
       return interaction.reply({
         content: "You have already awakened your Zanpakuto. Use a Zanpakuto Reroll to reroll your shikai.",
         ephemeral: true,
+      });
+    }
+
+    if ( userData.race = 'human' || item === zanpakutoKey, rerollKey ) {
+      return interaction.reply({
+        content: `You are a ${userData.race}, you cannot utilise this command.`,
+        ephemeral: false,
       });
     }
 
@@ -1474,6 +1503,13 @@ async function handleFightCommand(interaction) {
     return interaction.reply({
       content: 'You require a shikai/power to fight or your current shikai is not implemented yet.',
       ephemeral: true,
+    });
+  }
+
+  if (userData.race = 'human' ) {
+    return interaction.reply({
+      content: `You are a ${userData.race}, you cannot utilise this command yet.`,
+      ephemeral: false
     });
   }
 
@@ -1642,7 +1678,7 @@ async function handleFightCommand(interaction) {
 
       // Special embed color for Mugetsu
       if (move.name.toLowerCase() === "mugetsu") {
-        embedColor = "Black";
+        embedColor = "#000000";
       }
 
       resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${battleLog.join('\n')}`;
