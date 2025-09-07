@@ -1,12 +1,13 @@
-// REQUIREMENTS
+// index.js
+require("dotenv").config();
 const {
   Client,
   GatewayIntentBits,
-  SlashCommandBuilder,
   REST,
   Routes,
-  SlashCommandAssertions,
+  SlashCommandBuilder,
 } = require("discord.js");
+const database = require("./database.js");
 const {
   handleHelpCommand,
   handleBegCommand,
@@ -30,620 +31,234 @@ const {
   handleTypeSoulEncyclopaediaCommand,
   handleFightCommand,
   handleShopWeaponsCommand,
-  handleShopItemsCommand,
   handleUseItemCommand,
 } = require("./commands.js");
-const dotenv = require("dotenv");
-const database = require("./database.js");
-require("dotenv").config();
 
-// LOAD SECRETS HERE
-dotenv.config();
+// --- Bot Token ---
+const TOKEN = process.env.DISCORD_BOT_TOKEN;
+if (!TOKEN) throw new Error("❌ Missing DISCORD_BOT_TOKEN in .env file");
 
-// DISCORD BOT TOKEN
-const token = process.env.DISCORD_BOT_TOKEN;
-if (!token) {
-  throw new Error(
-    "No Discord bot token provided in .env file, are you sure it's set?"
-  );
-}
+// --- Bot Owner ID ---
+const OWNER_ID = process.env.OWNER_ID; // set your Discord ID in .env
 
+// --- Client ---
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
-async function initializeBot() {
-  try {
-    console.log("Began starting up bot");
-    await client.login(token);
-    console.log("Logged in successfully");
-
-    console.log("Deploying commands");
-    await deployCommands(client);
-    console.log("Commands deployed successfully");
-
-    console.log("Starting LOWDB");
-    await database.initialize();
-    console.log("LOWDB started successfully");
-
-    console.log(`Logged in as ${client.user.tag}!`);
-    console.log(`Brina bot, are you out there! Hello!!!`);
-  } catch (error) {
-    console.error("Error during initialization:", error);
-    process.exit(1);
-  }
-}
-
-const commands = [
-  new SlashCommandBuilder().setName("help").setDescription("general support"),
-  new SlashCommandBuilder()
-    .setName("cat")
-    .setDescription("Sends a pic of kitty!!"),
-  new SlashCommandBuilder().setName("beg").setDescription("You beg for money!"),
-  new SlashCommandBuilder()
-    .setName("profile")
-    .setDescription("shows you your balance and item inventory")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("the user you want to look into.")
-        .setRequired(false)
-    ),
-  new SlashCommandBuilder()
-    .setName("gamble")
-    .setDescription("Gamble away all of your life savings")
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("the amount you wish to bet")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder().setName("dig").setDescription("Dig for items!"),
-  new SlashCommandBuilder()
-    .setName("craft")
-    .setDescription("Craft items using raw materials"),
-  new SlashCommandBuilder()
-    .setName("sell")
-    .setDescription("Sell items from your inventory")
-    .addStringOption((option) =>
-      option
-        .setName("item")
-        .setDescription("The item you want to sell")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("Amount of the item that you wish to sell")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("donate")
-    .setDescription("Donate money to another user")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user you want to donate money to")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount of money you want to donate")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("reset")
-    .setDescription("Allows the bot owner to reset your data!")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user they want to reset")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("givemoney")
-    .setDescription("Gives a user money (only for bot owner)")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user you want to give money to")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount of money you want to give")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("giveitem")
-    .setDescription("Gives a user an item (only for bot owner)")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user you want to give an item to")
-        .setRequired(true)
-    )
-    .addStringOption((option) =>
-      option
-        .setName("item")
-        .setDescription("The item you want to give")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount of the item you want to give")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder().setName("work").setDescription("Lets you work"),
-  new SlashCommandBuilder()
-    .setName("give_experience")
-    .setDescription("Gives a user an amount of EXP (only for bot owner)")
-    .addUserOption((option) =>
-      option
-        .setName("user")
-        .setDescription("The user you want to give the EXP to")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount you want to give to this user")
-        .setRequired(true)
-    ),
-  new SlashCommandBuilder()
-    .setName("take_money")
-    .setDescription(
-      "Takes a specific amount of money from a user (only for bot owner)"
-    )
-    .addUserOption((option) =>
-      option
-        .setName("target")
-        .setDescription("The user you wish to take the money from")
-        .setRequired(true)
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount you wish to take from that user")
-    ),
-  new SlashCommandBuilder()
-    .setName("take_exp")
-    .setDescription(
-      "Takes a sepcific amount of exp from a user (only for bot owner)"
-    )
-    .addUserOption((option) =>
-      option
-        .setName("target")
-        .setDescription("the user you wish to take the EXP from")
-    )
-    .addIntegerOption((option) =>
-      option
-        .setName("amount")
-        .setDescription("The amount you wish to take from this user")
-    ),
-  new SlashCommandBuilder()
-  .setName('timeout')
-  .setDescription('timeout a member! (EXCLUSIVE TO ADMINS!!)')
-  .addUserOption(option =>
-    option.setName('target')
-    .setDescription('the person which you wish to mute')
-    .setRequired(true)
-  )
-  .addIntegerOption(option =>
-    option.setName('time')
-    .setDescription('the amount of time you wish to time them out for (in milliseconds btw)')
-    .setRequired(true)
-  ),
-  new SlashCommandBuilder()
-  .setName('ban')
-  .setDescription('Ban a member! (EXCLUSIVE TO ADMINS!!)')
-  .addUserOption(option =>
-    option.setName('user')
-    .setDescription('The person you wish to ban.')
-    .setRequired(true)
-  )
-  .addStringOption(option =>
-    option.setName('reason')
-    .setDescription('The reason why you wish to ban that user.')
-    .setRequired(true)
-  ),
-  new SlashCommandBuilder()
-  .setName('rob')
-  .setDescription('Rob a player!')
-  .addUserOption(option =>
-    option.setName('target')
-    .setDescription('the player you wish to rob')
-    .setRequired(true)
-  ),
-  new SlashCommandBuilder()
-  .setName('encyclopaedia')
-  .setDescription('An encyclopaedia for you to use incase you want to find out something.')
-  .addSubcommand(command =>
-    command.setName('type_soul')
-    .setDescription('Shows you information regarding the game Type Soul')
-  ),
-  new SlashCommandBuilder()
-  .setName('shop')
-  .setDescription('Lets you shop for a variety of items')
-  .addSubcommand(command =>
-    command.setName('weapons')
-    .setDescription('Lets you buy weapons!')
-  ),
-  new SlashCommandBuilder()
-  .setName('use')
-  .setDescription('lets you use items within your inventory')
-  .addStringOption(option =>
-    option.setName('item')
-    .setDescription('the item you wish to use.')
-    .setRequired(true)
-  ),
-  new SlashCommandBuilder()
-  .setName('reroll')
-  .setDescription('Rerolls your shikai.'),
-  new SlashCommandBuilder()
-  .setName('fight')
-  .setDescription('You fight a random boss.'),
-].map((command) => command.toJSON());
-
-const rest = new REST({ version: "10" }).setToken(token);
-
-async function deployCommands(client) {
-  try {
-    console.log("Started refreshing application (/) commands.");
-    await rest.put(Routes.applicationCommands(client.user.id), {
-      body: commands,
-    });
-    console.log("Successfully reloaded application (/) commands.");
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// --- Cooldown System ---
-const cooldowns = new Map(); // Map<userId, Map<commandName, expiresAt>>
-
-function isOnCooldown(userId, commandName) {
+// --- Cooldowns ---
+const cooldowns = new Map();
+function isOnCooldown(userId, cmd) {
   const now = Date.now();
   if (!cooldowns.has(userId)) return false;
   const userCooldowns = cooldowns.get(userId);
-  if (!userCooldowns.has(commandName)) return false;
-  const expiresAt = userCooldowns.get(commandName);
-  return now < expiresAt;
+  if (!userCooldowns.has(cmd)) return false;
+  return now < userCooldowns.get(cmd);
 }
-
-function getCooldownTime(commandName) {
-  // Customize per command, or use a default (in ms)
-  const defaultCooldown = 5000;
-  const cooldowns = {
-    help: 5000,
-    cat: 3000,
-    beg: 5000,
-    profile: 5000,
-    dig: 10000,
-    craft: 15000,
-    sell: 7500,
-    donate: 15000,
-    reset: 15000,
-    givemoney: 15000,
-    giveitem: 15000,
-    work: 1800000,
-    take_money: 15000,
-    take_exp: 15000,
-    timeout: 5000,
-    ban: 5000,
-    gamble: 35000,
-    rob: 15000,
-    use: 5000,
-    reroll: 5000,
-    // ...add more as needed
-  };
-  return cooldowns[commandName] ?? defaultCooldown;
-}
-
-function setCooldown(userId, commandName, cooldownTime) {
+function setCooldown(userId, cmd, ms) {
   const now = Date.now();
-  if (!cooldowns.has(userId)) {
-    cooldowns.set(userId, new Map());
-  }
-  const userCooldowns = cooldowns.get(userId);
-  userCooldowns.set(commandName, now + cooldownTime);
-
-  // Cleanup after cooldown expires
-  setTimeout(() => {
-    userCooldowns.delete(commandName);
-    if (userCooldowns.size === 0) {
-      cooldowns.delete(userId);
-    }
-  }, cooldownTime);
+  if (!cooldowns.has(userId)) cooldowns.set(userId, new Map());
+  cooldowns.get(userId).set(cmd, now + ms);
+  setTimeout(() => cooldowns.get(userId).delete(cmd), ms);
+}
+function getCooldownTime(cmd) {
+  const defaults = {
+    help: 5000, cat: 3000, beg: 5000, profile: 5000, dig: 10000,
+    craft: 15000, sell: 7500, donate: 15000, work: 1800000,
+    gamble: 35000, rob: 15000, use: 5000, reroll: 5000
+  };
+  return defaults[cmd] ?? 5000;
 }
 
-async function antinullvalues(database, interaction) {
-  const userId = interaction.user.id;
+// --- Slash Commands ---
+const commands = [
+  new SlashCommandBuilder().setName("help").setDescription("general support"),
+  new SlashCommandBuilder().setName("cat").setDescription("Sends a pic of kitty!!"),
+  new SlashCommandBuilder().setName("beg").setDescription("You beg for money!"),
+  new SlashCommandBuilder()
+    .setName("profile")
+    .setDescription("Shows your balance and inventory")
+    .addUserOption(option => option.setName("user").setDescription("The user to view").setRequired(false)),
+  new SlashCommandBuilder()
+    .setName("gamble")
+    .setDescription("Gamble away your money")
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount to bet").setRequired(true)),
+  new SlashCommandBuilder().setName("dig").setDescription("Dig for items!"),
+  new SlashCommandBuilder().setName("craft").setDescription("Craft items"),
+  new SlashCommandBuilder()
+    .setName("sell")
+    .setDescription("Sell items from your inventory")
+    .addStringOption(option => option.setName("item").setDescription("Item to sell").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  new SlashCommandBuilder()
+    .setName("donate")
+    .setDescription("Donate money to a user")
+    .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  // Owner/admin commands
+  new SlashCommandBuilder().setName("reset").setDescription("Reset user data (owner only)")
+    .addUserOption(option => option.setName("user").setDescription("The user to reset").setRequired(true)),
+  new SlashCommandBuilder().setName("givemoney").setDescription("Give money to a user (owner only)")
+    .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  new SlashCommandBuilder().setName("giveitem").setDescription("Give an item to a user (owner only)")
+    .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
+    .addStringOption(option => option.setName("item").setDescription("Item to give").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  new SlashCommandBuilder().setName("give_experience").setDescription("Give experience (owner only)")
+    .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  new SlashCommandBuilder().setName("take_money").setDescription("Take money from a user (owner only)")
+    .addUserOption(option => option.setName("target").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount").setRequired(true)),
+  new SlashCommandBuilder().setName("take_exp").setDescription("Take experience (owner only)")
+    .addUserOption(option => option.setName("target").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("amount").setDescription("Amount")),
+  new SlashCommandBuilder().setName("timeout").setDescription("Timeout a member (admin only)")
+    .addUserOption(option => option.setName("target").setDescription("Target user").setRequired(true))
+    .addIntegerOption(option => option.setName("time").setDescription("Time in seconds").setRequired(true)),
+  new SlashCommandBuilder().setName("ban").setDescription("Ban a member (admin only)")
+    .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
+    .addStringOption(option => option.setName("reason").setDescription("Reason")),
+  new SlashCommandBuilder().setName("rob").setDescription("Rob a person")
+    .addUserOption(option => option.setName("target").setDescription("Target user").setRequired(true)),
+  new SlashCommandBuilder().setName("encyclopaedia").setDescription("Game encyclopaedia")
+    .addSubcommand(sub => sub.setName("type_soul").setDescription("Info about Type Soul")),
+  new SlashCommandBuilder().setName("shop").setDescription("Shop for items")
+    .addSubcommand(sub => sub.setName("weapons").setDescription("Buy weapons")),
+  new SlashCommandBuilder().setName("use").setDescription("Use an item")
+    .addStringOption(option => option.setName("item").setDescription("Item to use").setRequired(true)),
+  new SlashCommandBuilder().setName("fight").setDescription("Fight a random boss"),
+].map(cmd => cmd.toJSON());
 
-  // Ensure user exists
-  const userData = await database.ensureUser(userId);
-
-  let updated = false;
-
-  // ✅ Balance fix
-  if (userData.balance == null || userData.balance <= 0) {
-    userData.balance = 0;
-    updated = true;
-  }
-
-  // ✅ First-time or no race chosen → force race selection
-  if (userData.firstTime || userData.race == null || userData.race === 'Human') {
-    const arrancarButton = new ButtonBuilder()
-      .setLabel('Arrancar')
-      .setCustomId('arrancar')
-      .setStyle(ButtonStyle.Primary);
-
-    const soulreaperButton = new ButtonBuilder()
-      .setLabel('Soul Reaper')
-      .setCustomId('soul_reaper')
-      .setStyle(ButtonStyle.Secondary);
-
-    const quincyButton = new ButtonBuilder()
-      .setLabel('Quincy')
-      .setCustomId('quincy')
-      .setStyle(ButtonStyle.Secondary);
-
-    const fullbringerButton = new ButtonBuilder()
-      .setLabel('Fullbringer')
-      .setCustomId('fullbringer')
-      .setStyle(ButtonStyle.Secondary);
-
-    const buttonRow = new ActionRowBuilder().addComponents(
-      arrancarButton,
-      soulreaperButton,
-      quincyButton,
-      fullbringerButton
-    );
-
-    await interaction.reply({
-      content: 'Which Race do you wish to be?',
-      components: [buttonRow],
-      ephemeral: true
-    });
-
-    const collector = interaction.channel.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 60000, // 1 minute
-      filter: (i) => i.user.id === userId,
-    });
-
-    collector.on('collect', async (i) => {
-      const races = {
-        soul_reaper: 'Soul Reaper',
-        arrancar: 'Arrancar',
-        quincy: 'Quincy',
-        fullbringer: 'Fullbringer'
-      };
-
-      if (races[i.customId]) {
-        userData.race = races[i.customId];
-        userData.firstTime = false; // ✅ mark as done
-        updated = true;
-
-        return i.update({
-          content: `✅ You are now **${userData.race}**!`,
-          components: [],
-          ephemeral: true,
-        });
-      }
-    });
-
-    // Timeout handler
-    collector.on('end', async (collected, reason) => {
-      if (reason === 'time' && collected.size === 0) {
-        try {
-          await interaction.editReply({
-            content: '⏳ You did not choose a race in time. Defaulting to **Human**.',
-            components: [],
-          });
-          userData.race = 'Human';
-          userData.firstTime = false; // ✅ still complete
-          updated = true;
-        } catch (err) {
-          console.error('Failed to edit reply on timeout:', err);
-        }
-      }
-    });
-
-    return; // 🚨 stop execution here so user must pick race first
-  }
-
-  // ✅ Save updates
-  if (updated) {
-    await database.saveUserData(userId, userData);
-  }
-}
-
-// --- Interaction Handler ---
-client.on("interactionCreate", async (interaction) => {
+// --- Deploy Commands ---
+const rest = new REST({ version: "10" }).setToken(TOKEN);
+async function deployCommands() {
   try {
-    // --- Modal Handling (shop purchases) ---
-    if (interaction.isModalSubmit() && interaction.customId.startsWith('buy_')) {
-      const userId = interaction.user.id;
-      const customIdParts = interaction.customId.split('_');
-      const itemKey = customIdParts.slice(1, -1).join('_')
-      const quantity = parseInt(interaction.fields.getTextInputValue('quantity'));
+    console.log("🌍 Deploying commands...");
+    await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+    console.log("✅ Commands deployed");
+  } catch (err) {
+    console.error("❌ Failed to deploy commands:", err);
+  }
+}
 
-      const shop = {
-        zanpakuto: { name: 'Zanpakuto', price: 5000 },
-        zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000 }
-      };
-      const selectedItem = shop[itemKey];
+// --- Modal Interaction (Shop) ---
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isModalSubmit()) return;
 
-      if (!selectedItem) {
-        return interaction.reply({
-          content: 'That item is not available.',
-          ephemeral: true,
-        });
-      }
+  const customId = interaction.customId;
+  const match = customId.match(/^buy_(.+)_(\d+)$/);
+  if (!match) return;
 
-      if (isNaN(quantity) || quantity <= 0) {
-        return interaction.reply({
-          content: 'Please enter a valid number greater than 0.',
-          ephemeral: true
-        });
-      }
+  const itemKey = match[1];
+  const userId = match[2];
+  if (interaction.user.id !== userId) {
+    return interaction.reply({ content: "❌ This modal isn’t for you.", ephemeral: true }).catch(() => {});
+  }
 
-      await database.ensureUser(userId);
-      const freshUserData = await database.getUserData(userId);
+  try {
+    await interaction.deferReply({ ephemeral: true });
+    const quantity = parseInt(interaction.fields.getTextInputValue("quantity"), 10);
+    if (isNaN(quantity) || quantity <= 0) return interaction.editReply("❌ Please enter a valid number.");
 
-      if (
-        selectedItem.name === 'Zanpakuto' &&
-        ((freshUserData.inventory['Zanpakuto'] || 0) + quantity > 1 || freshUserData.power)
-      ) {
-        return interaction.reply({
-          content: 'You can only own **1 Zanpakuto** and cannot buy another if you have already awakened one.',
-          ephemeral: true,
-        });
-      }
+    const shop = {
+      zanpakuto: { name: "Zanpakuto", price: 5000 },
+      zanpakuto_reroll: { name: "Zanpakuto Reroll", price: 10000 },
+    };
+    const selectedItem = shop[itemKey];
+    if (!selectedItem) return interaction.editReply("❌ That item does not exist.");
 
-      const totalCost = selectedItem.price * quantity;
-
-      if (freshUserData.balance < totalCost) {
-        return interaction.reply({
-          content: `You don't have enough money, you need **¥${totalCost.toLocaleString('en-US')}**.`,
-          ephemeral: true,
-        });
-      }
-
-      freshUserData.balance -= totalCost;
-      freshUserData.inventory[selectedItem.name] =
-        (freshUserData.inventory[selectedItem.name] || 0) + quantity;
-
-      await database.saveUserData(userId, freshUserData);
-
-      return interaction.reply({
-        content: `You bought **${quantity}x ${selectedItem.name}** for **¥${totalCost.toLocaleString('en-US')}**!`,
-        ephemeral: false
-      });
+    await database.ensureUser(userId);
+    const userData = await database.getUserData(userId);
+    const totalPrice = selectedItem.price * quantity;
+    if (userData.balance < totalPrice) {
+      return interaction.editReply(`❌ You don’t have enough money. You need **${totalPrice}**, you have **${userData.balance}**.`);
     }
 
-    // --- Slash Command Handling ---
-    if (!interaction.isChatInputCommand()) return;
-
-    const userId = interaction.user.id;
-    const userData = await database.ensureUser(userId);
-
-    // 🚨 Force race selection on first time
-    if (userData.firstTime) {
-      return antinullvalues(database, interaction);
+    if (selectedItem.name === "Zanpakuto" && userData.power) {
+      return interaction.editReply(`❌ You have already awakened your ${userData.race} power. Use a Zanpakuto Reroll to reroll it.`);
     }
 
-    // --- Cooldowns ---
-    const commandName = interaction.commandName;
-    const cooldownTime = getCooldownTime(commandName);
+    userData.balance -= totalPrice;
+    userData.inventory[selectedItem.name] = (userData.inventory[selectedItem.name] || 0) + quantity;
+    await database.saveUserData(userId, userData);
 
-    if (isOnCooldown(userId, commandName)) {
-      const expiresAt = cooldowns.get(userId).get(commandName);
-      const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
-      return interaction.reply({
-        content: `⏳ Please wait **${timeLeft} seconds** before using \`/${commandName}\` again.`,
-        ephemeral: true,
-      });
+    return interaction.editReply(`✅ You bought **${quantity}x ${selectedItem.name}(s)** for **¥${totalPrice}**.`);
+  } catch (err) {
+    console.error("Error handling shop modal:", err);
+    if (!interaction.replied && !interaction.deferred) {
+      return interaction.reply({ content: "❌ Something went wrong.", ephemeral: true }).catch(() => {});
     }
-
-    setCooldown(userId, commandName, cooldownTime);
-
-    // --- Command Execution ---
-    switch (commandName) {
-      case "help":
-        await handleHelpCommand(interaction);
-        break;
-      case "cat":
-        await handleCatCommand(interaction);
-        break;
-      case "beg":
-        await handleBegCommand(interaction);
-        break;
-      case "profile":
-        await handleProfileCommand(interaction);
-        break;
-      case "gamble":
-        await handleGambleCommand(interaction);
-        break;
-      case "dig":
-        await handleDigCommand(interaction);
-        break;
-      case "craft":
-        await handleCraftCommand(interaction);
-        break;
-      case "sell":
-        await handleSellCommand(interaction);
-        break;
-      case "donate":
-        await handleDonateCommand(interaction);
-        break;
-      case "reset":
-        await handleResetCommand(interaction);
-        break;
-      case "givemoney":
-        await handleGiveMoneyCommand(interaction);
-        break;
-      case "giveitem":
-        await handleGiveItemCommand(interaction);
-        break;
-      case "work":
-        await handleWorkCommand(interaction);
-        break;
-      case "give_experience":
-        await handleGiveEXPCommand(interaction);
-        break;
-      case "take_money":
-        await handleTakeMoneyCommand(interaction);
-        break;
-      case "take_exp":
-        await handleTakeEXPCommand(interaction);
-        break;
-      case "timeout":
-        await handleTimeoutCommand(interaction);
-        break;
-      case "ban":
-        await handleBanCommand(interaction);
-        break;
-      case "rob":
-        await handleRobCommand(interaction);
-        break;
-      case "encyclopaedia": {
-        const sub = interaction.options.getSubcommand();
-        if (sub === 'type_soul') {
-          await handleTypeSoulEncyclopaediaCommand(interaction);
-        }
-        break;
-      }
-      case "shop": {
-        const sub = interaction.options.getSubcommand();
-        if (sub === 'weapons') {
-          await handleShopWeaponsCommand(interaction);
-        }
-        break;
-      }
-      case "use":
-        await handleUseItemCommand(interaction);
-        break;
-      case "fight":
-        await handleFightCommand(interaction);
-        break;
-    }
-  } catch (error) {
-    console.error("Error when executing command", error);
   }
 });
 
-initializeBot();
+// --- Command Interaction ---
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-module.exports = {
-  client,
-  database,
-};
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const cmd = interaction.commandName;
+  const sub = interaction.options.getSubcommand(false);
+
+  // Owner/admin-only check
+  const ownerOnly = ["reset","givemoney","giveitem","give_experience","take_money","take_exp"];
+  if (ownerOnly.includes(cmd) && interaction.user.id !== OWNER_ID) {
+    return interaction.reply({ content: "❌ Only the bot owner can use this command.", ephemeral: true });
+  }
+
+  // Cooldown
+  if (isOnCooldown(userId, cmd)) {
+    const expiresAt = cooldowns.get(userId).get(cmd);
+    const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
+    return interaction.reply({ content: `⏳ Wait **${timeLeft}s** before using \`/${cmd}\`.`, ephemeral: true });
+  }
+  setCooldown(userId, cmd, getCooldownTime(cmd));
+
+  // Handle commands
+  try {
+    switch (cmd) {
+      case "help": return handleHelpCommand(interaction);
+      case "cat": return handleCatCommand(interaction);
+      case "beg": return handleBegCommand(interaction);
+      case "profile": return handleProfileCommand(interaction);
+      case "gamble": return handleGambleCommand(interaction);
+      case "dig": return handleDigCommand(interaction);
+      case "craft": return handleCraftCommand(interaction);
+      case "sell": return handleSellCommand(interaction);
+      case "donate": return handleDonateCommand(interaction);
+      case "reset": return handleResetCommand(interaction);
+      case "givemoney": return handleGiveMoneyCommand(interaction);
+      case "giveitem": return handleGiveItemCommand(interaction);
+      case "work": return handleWorkCommand(interaction);
+      case "give_experience": return handleGiveEXPCommand(interaction);
+      case "take_money": return handleTakeMoneyCommand(interaction);
+      case "take_exp": return handleTakeEXPCommand(interaction);
+      case "timeout": return handleTimeoutCommand(interaction);
+      case "ban": return handleBanCommand(interaction);
+      case "rob": return handleRobCommand(interaction);
+      case "encyclopaedia":
+        if (sub === "type_soul") return handleTypeSoulEncyclopaediaCommand(interaction);
+        break;
+      case "shop":
+        if (sub === "weapons") return handleShopWeaponsCommand(interaction);
+        break;
+      case "use": return handleUseItemCommand(interaction);
+      case "fight": return handleFightCommand(interaction);
+    }
+  } catch (err) {
+    console.error("⚠️ Error handling command:", err);
+  }
+});
+
+// --- Ready Event ---
+client.on("ready", async () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+  await database.initialize();
+  console.log("📂 Database initialized");
+  await deployCommands();
+});
+
+// --- Login ---
+client.login(TOKEN);

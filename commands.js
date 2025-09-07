@@ -42,7 +42,7 @@ const Tester = [
   }
 ]
 
-const powerMovesets = {
+const ShinigamipowerMovesets = {
   'Sode no Shirayuki': [
     { name: 'Frost Slash', damage: 100, description: 'A chilling slash that may potentially freeze the boss.' },
     { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
@@ -1232,17 +1232,17 @@ async function handleShopWeaponsCommand(interaction) {
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
 
-  if ( userData.race = 'human' ) {
+  if (userData.race.toLowerCase() === "human") {
     return interaction.reply({
       content: `You are a ${userData.race}. You cannot utilise this command.`,
-      ephemeral: false
+      ephemeral: true
     });
   }
 
   // Shop items
   const shop = {
     zanpakuto: { name: "Zanpakuto", price: 5000 },
-    zanpakuto_reroll: { name: 'Zanpakuto Reroll', price: 10000},
+    zanpakuto_reroll: { name: "Zanpakuto Reroll", price: 10000 },
   };
 
   // Select menu
@@ -1255,9 +1255,9 @@ async function handleShopWeaponsCommand(interaction) {
         .setValue("zanpakuto")
         .setDescription("Lets you buy a Zanpakuto || Cost: 5,000"),
       new StringSelectMenuOptionBuilder()
-        .setLabel('Zanpakuto Reroll')
-        .setValue('zanpakuto_reroll')
-        .setDescription('Lets you buy a zanpakuto reroll || Cost: 10,000'),
+        .setLabel("Zanpakuto Reroll")
+        .setValue("zanpakuto_reroll")
+        .setDescription("Lets you buy a Zanpakuto Reroll || Cost: 10,000"),
     ]);
 
   const weaponBuyRow = new ActionRowBuilder().addComponents(weaponBuySelectMenu);
@@ -1267,9 +1267,7 @@ async function handleShopWeaponsCommand(interaction) {
     .setColor("Grey")
     .setTitle("Weapon Shop")
     .setDescription("Welcome to the weapon shop! What would you like to buy?")
-    .setImage(
-      "https://i.pinimg.com/1200x/d5/99/2c/d5992c7c032d63578138dd76abf3a72c.jpg"
-    )
+    .setImage("https://i.pinimg.com/1200x/d5/99/2c/d5992c7c032d63578138dd76abf3a72c.jpg")
     .setThumbnail(interaction.user.displayAvatarURL())
     .setFooter({ text: "Thank you for visiting the weapon shop! || Catawampus" })
     .setTimestamp();
@@ -1301,7 +1299,7 @@ async function handleShopWeaponsCommand(interaction) {
 
     // Show modal to ask for quantity
     const modal = new ModalBuilder()
-      .setCustomId(`buy_${choice}_${userId}`) // Make modal ID unique per user
+      .setCustomId(`buy_${choice}_${userId}`)
       .setTitle(`Buy ${selectedItem.name}`);
 
     const quantityInput = new TextInputBuilder()
@@ -1317,149 +1315,184 @@ async function handleShopWeaponsCommand(interaction) {
     await i.showModal(modal);
   });
 
-  collector.on("end", () => {
-    interaction
-      .editReply({
+  collector.on("end", async (collected) => {
+    if (collected.size === 0) {
+      await interaction.editReply({
+        content: "🛑 Shop closed due to inactivity.",
         components: [],
-      })
-      .catch(() => {});
+      }).catch(() => {});
+    } else {
+      await interaction.editReply({ components: [] }).catch(() => {});
+    }
   });
 }
+
 
 async function handleUseItemCommand(interaction) {
   const userId = interaction.user.id;
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
-  const item = interaction.options.getString('item');
 
-  const zanpakutoKey = 'Zanpakuto';
-  const rerollKey = 'Zanpakuto Reroll';
+  try {
+    // Ensure user exists
+    await database.ensureUser(userId);
+    const userData = await database.getUserData(userId);
 
-  // Zanpakuto use (awaken)
-  if (item === zanpakutoKey) {
-    if (!userData.inventory[zanpakutoKey] || userData.inventory[zanpakutoKey] < 1) {
-      return interaction.reply({
-        content: "You don't have a Zanpakuto to use.",
-        ephemeral: true,
-      });
-    }
-    if (userData.power) {
-      return interaction.reply({
-        content: "You have already awakened your Zanpakuto. Use a Zanpakuto Reroll to reroll your shikai.",
-        ephemeral: true,
-      });
-    }
+    const item = interaction.options.getString("item");
 
-    if ( userData.race = 'human' || item === zanpakutoKey, rerollKey ) {
-      return interaction.reply({
-        content: `You are a ${userData.race}, you cannot utilise this command.`,
-        ephemeral: false,
-      });
-    }
+    const ZANPAKUTO = "Zanpakuto";
+    const REROLL = "Zanpakuto Reroll";
 
-    userData.inventory[zanpakutoKey] -= 1;
-    if (userData.inventory[zanpakutoKey] === 0) {
-      delete userData.inventory[zanpakutoKey];
-    }
+    // Power pools by race
+    const powerPools = {
+      "Soul Reaper": [
+        { name: 'Sode no Shirayuki', chance: 0.01 },
+        { name: 'Benihime', chance: 0.01 },
+        { name: 'Zangetsu', chance: 0.01 },
+        { name: 'Ryujin Jakka', chance: 0.01 },
+        { name: 'Kyoka Suigetsu', chance: 0.01 },
+        { name: 'Zabimaru', chance: 0.05 },
+        { name: 'Shinso', chance: 0.05 },
+        { name: 'Hyorinmaru', chance: 0.05 },
+        { name: 'Wabisuke', chance: 0.5 },
+        { name: 'Senbonzakura', chance: 0.1 },
+        { name: 'Katen Kyokotsu', chance: 0.1 },
+        { name: 'Minazuki', chance: 0.1 },
+        { name: 'Suzumebachi', chance: 0.05 },
+      ],
+      "Arrancar": [
+        { name: 'Beast', chance: 0.5 },
+        { name: 'Los Lobos', chance: 0.05 },
+        { name: 'Arrogante', chance: 0.05 },
+        { name: 'Shark', chance: 0.2 },
+        { name: 'Horse', chance: 0.1 },
+        { name: 'Murcielago', chance: 0.05 },
+        { name: 'Pantera', chance: 0.05 },
+      ],
+      "Quincy": [
+        { name: 'Antithesis', chance: 0.2 },
+        { name: 'Balance', chance: 0.05 },
+        { name: 'Deathdealing', chance: 0.05 },
+        { name: 'Explode', chance: 0.05 },
+        { name: 'Fear', chance: 0.1 },
+        { name: 'Gluttony', chance: 0.05 },
+        { name: 'Heat', chance: 0.05 },
+        { name: 'Iron', chance: 0.05 },
+        { name: 'Superstar', chance: 0.05 },
+        { name: 'Visionary', chance: 0.05 },
+        { name: 'Wind', chance: 0.05 },
+        { name: 'X-Axis', chance: 0.05 },
+        { name: 'Thunderbolt', chance: 0.05 },
+        { name: 'Zombie', chance: 0.05 },
+        { name: 'Almighty', chance: 0.01 },
+        { name: 'Miracle', chance: 0.02 },
+        { name: 'Compulsory', chance: 0.02 },
+        { name: 'Generic Schrift', chance: 0.12 },
+      ],
+      "Fullbringer": [
+        { name: 'Cross of Scaffold', chance: 0.05 },
+        { name: 'Dirty Boots', chance: 0.05 },
+        { name: 'Book of the End', chance: 0.05 },
+        { name: 'Invaders Must Die', chance: 0.05 },
+        { name: 'Jackie’s Rage', chance: 0.1 },
+        { name: 'Giriko’s Timepiece', chance: 0.1 },
+        { name: 'Yukio’s Console', chance: 0.1 },
+        { name: 'Generic Fullbring', chance: 0.5 },
+      ],
+    };
 
-    const randomshikai = [
-      {name: 'Sode no Shirayuki', chance: 0.01},
-      {name: 'Benihime', chance: 0.01},
-      {name: 'Zangetsu', chance: 0.01},
-      {name: 'Ryujin Jakka', chance: 0.01},
-      {name: 'Kyoka Suigetsu', chance: 0.01},
-      {name: 'Zabimaru', chance: 0.05},
-      {name: 'Shinso', chance: 0.05},
-      {name: 'Hyorinmaru', chance: 0.05},
-      {name: 'Wabisuke', chance: 0.5},
-      {name: 'Senbonzakura', chance: 0.1},
-      {name: 'Katen Kyokotsu', chance: 0.1},
-      {name: 'Minazuki', chance: 0.1},
-      {name: 'Suzumebachi', chance: 0.05},
-    ];
+    const race = (userData.race || "").trim();
 
-    let cumulative = 0;
-    const roll = Math.random();
-    let selectedShikai = randomshikai[randomshikai.length - 1].name;
-    for (const s of randomshikai) {
-      cumulative += s.chance;
-      if (roll <= cumulative) {
-        selectedShikai = s.name;
-        break;
+    // Helper: get power type name
+    const getPowerType = (race) => {
+      switch (race) {
+        case "Soul Reaper": return "shikai";
+        case "Arrancar": return "Resurrección";
+        case "Quincy": return "Schrift";
+        case "Fullbringer": return "Fullbring";
+        default: return "power";
       }
-    }
+    };
 
-    userData.power = selectedShikai;
-    await database.saveUserData(userId, userData);
+    const powerType = getPowerType(race);
 
-    return interaction.reply({
-      content: `You used a Zanpakuto and awakened the **${selectedShikai}** shikai!`,
-      ephemeral: false,
-    });
-  }
-
-  // Zanpakuto Reroll use
-  if (item === rerollKey) {
-    if (!userData.inventory[rerollKey] || userData.inventory[rerollKey] < 1) {
-      return interaction.reply({
-        content: "You don't have a Zanpakuto Reroll to use.",
-        ephemeral: true,
-      });
-    }
-    if (!userData.power) {
-      return interaction.reply({
-        content: "You must awaken a Zanpakuto first before you can reroll your shikai.",
-        ephemeral: true,
-      });
-    }
-
-    userData.inventory[rerollKey] -= 1;
-    if (userData.inventory[rerollKey] === 0) {
-      delete userData.inventory[rerollKey];
-    }
-
-    const randomshikai = [
-      {name: 'Sode no Shirayuki', chance: 0.01},
-      {name: 'Benihime', chance: 0.01},
-      {name: 'Zangetsu', chance: 0.01},
-      {name: 'Ryujin Jakka', chance: 0.01},
-      {name: 'Kyoka Suigetsu', chance: 0.01},
-      {name: 'Zabimaru', chance: 0.05},
-      {name: 'Shinso', chance: 0.05},
-      {name: 'Hyorinmaru', chance: 0.05},
-      {name: 'Wabisuke', chance: 0.5},
-      {name: 'Senbonzakura', chance: 0.1},
-      {name: 'Katen Kyokotsu', chance: 0.1},
-      {name: 'Minazuki', chance: 0.1},
-      {name: 'Suzumebachi', chance: 0.05},
-    ];
-
-    let cumulative = 0;
-    const roll = Math.random();
-    let selectedShikai = randomshikai[randomshikai.length - 1].name;
-    for (const s of randomshikai) {
-      cumulative += s.chance;
-      if (roll <= cumulative) {
-        selectedShikai = s.name;
-        break;
+    // Weighted random roll
+    const rollPower = (pool) => {
+      const roll = Math.random();
+      let cumulative = 0;
+      for (const p of pool) {
+        cumulative += p.chance;
+        if (roll <= cumulative) return p.name;
       }
+      return pool[pool.length - 1].name;
+    };
+
+    if (!powerPools[race]) {
+      return interaction.reply({
+        content: `You are a ${race}, you cannot use this command.`,
+        ephemeral: true,
+      });
     }
 
-    userData.power = selectedShikai;
-    await database.saveUserData(userId, userData);
+    // Safe reply helper
+    const safeReply = async (content, ephemeral = true) => {
+      if (interaction.replied || interaction.deferred) {
+        return interaction.followUp({ content, ephemeral }).catch(() => {});
+      } else {
+        return interaction.reply({ content, ephemeral }).catch(() => {});
+      }
+    };
 
-    return interaction.reply({
-      content: `You used a Zanpakuto Reroll and rerolled your shikai! Your new shikai is **${selectedShikai}**.`,
-      ephemeral: false,
-    });
+    // --- Zanpakuto Use ---
+    if (item === ZANPAKUTO) {
+      if (!userData.inventory?.[ZANPAKUTO]) {
+        return safeReply("❌ You don't have a Zanpakuto to use.");
+      }
+
+      if (userData.power) {
+        return safeReply(`❌ You have already awakened your ${powerType}. Use a Zanpakuto Reroll to reroll it.`);
+      }
+
+      // Consume Zanpakuto
+      userData.inventory[ZANPAKUTO] = Math.max(0, (userData.inventory[ZANPAKUTO] || 1) - 1);
+      if (userData.inventory[ZANPAKUTO] === 0) delete userData.inventory[ZANPAKUTO];
+
+      // Roll power
+      userData.power = rollPower(powerPools[race]);
+      await database.saveUserData(userId, userData);
+
+      return safeReply(`✅ You used a Zanpakuto and awakened the **${userData.power}** ${powerType}!`, false);
+    }
+
+    // --- Zanpakuto Reroll ---
+    if (item === REROLL) {
+      if (!userData.inventory?.[REROLL]) {
+        return safeReply("❌ You don't have a Zanpakuto Reroll to use.");
+      }
+
+      if (!userData.power) {
+        return safeReply("❌ You must awaken a power first before you can reroll it.");
+      }
+
+      // Consume Reroll
+      userData.inventory[REROLL] = Math.max(0, userData.inventory[REROLL] - 1);
+      if (userData.inventory[REROLL] === 0) delete userData.inventory[REROLL];
+
+      // Roll new power
+      userData.power = rollPower(powerPools[race]);
+      await database.saveUserData(userId, userData);
+
+      return safeReply(`✅ You used a Zanpakuto Reroll and rerolled your ${powerType}! Your new power is **${userData.power}**.`, false);
+    }
+
+    // --- Unknown Item ---
+    return safeReply("❌ That item cannot be used.");
+  } catch (err) {
+    console.error("Error in handleUseItemCommand:", err);
+    if (!interaction.replied && !interaction.deferred) {
+      return interaction.reply({ content: "❌ Something went wrong.", ephemeral: true }).catch(() => {});
+    }
   }
-
-  // Fallback for unknown items
-  return interaction.reply({
-    content: "That item cannot be used.",
-    ephemeral: true,
-  });
 }
+
 
 async function handleFightCommand(interaction) {
   const userId = interaction.user.id;
@@ -1473,7 +1506,7 @@ async function handleFightCommand(interaction) {
     });
   }
 
-  if (userData.race = 'human' ) {
+  if (userData.race = 'Human' ) {
     return interaction.reply({
       content: `You are a ${userData.race}, you cannot utilise this command yet.`,
       ephemeral: false
@@ -1491,24 +1524,24 @@ async function handleFightCommand(interaction) {
   let battleLog = [];
 
   // Player moves
-  const moveset = powerMovesets[userData.power];
-  function getAvailableMoves() {
-    return moveset
+  if (userData.race = 'Soul Reaper') {
+    const Shinigamimoveset = ShinigamipowerMovesets[userData.power];
+    function getAvailableMoves() {
+      return Shinigamimoveset
       .filter(move => {
-        // Hide ultimates unless Bankai is active
         if (move.ultimate && !bankaiActive) return false;
 
-        // Hide Mugetsu unless Bankai is active
-        if (move.name.toLowerCase() === "mugetsu" && !bankaiActive) return false;
+        if (move.name.toLowerCase() === 'mugetsu' && !bankaiActive) return false;
 
         return true;
       })
       .map((move, idx) =>
-        new StringSelectMenuOptionBuilder()
-          .setLabel(move.name.slice(0, 100))
-          .setValue(idx.toString())
-          .setDescription(move.description.slice(0, 100))
+      new StringSelectMenuOptionBuilder()
+      .setname(move.name.slice(0, 100))
+      .setValue(idx.toString())
+      .setDescription(move.description.slice(0, 100))
       );
+    };
   }
 
   const moveMenu = new StringSelectMenuBuilder()

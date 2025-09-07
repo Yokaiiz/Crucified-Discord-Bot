@@ -17,7 +17,7 @@ class Database {
             dailyStreak: 0,
             timezone: 'UTC',
             gambleHistory: [],
-            power: "None",
+            power: "",
             race: "Human",
             firstTime: true,   // 👈 NEW FLAG
         };
