@@ -42,7 +42,7 @@ const Tester = [
   }
 ]
 
-const ShinigamipowerMovesets = {
+const powerMovesets = {
   'Sode no Shirayuki': [
     { name: 'Frost Slash', damage: 100, description: 'A chilling slash that may potentially freeze the boss.' },
     { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
@@ -828,23 +828,35 @@ async function handleResetCommand(interaction) {
 }
 
 async function handleGiveMoneyCommand(interaction) {
-  const userId = interaction.options.getUser("user").id;
-  const amount = interaction.options.getInteger("amount");
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
+    try {
+        const targetUser = interaction.options.getUser("user");
+        const amount = interaction.options.getInteger("amount");
 
-  if (!(await isBotOwner(interaction))) {
-    return interaction.reply({
-      content: "You do not have permission to use this command.",
-      ephemeral: true,
-    });
-  }
-  userData.balance += amount;
-  await database.saveUserData(userId, userData);
-  await interaction.reply({
-    content: `You gave **¥${amount.toLocaleString("en-US")}** to <@${userId}>!`,
-    ephemeral: true,
-  });
+        if (!targetUser) {
+            return interaction.reply({ content: "❌ Target user not found.", ephemeral: true });
+        }
+
+        if (amount <= 0) {
+            return interaction.reply({ content: "❌ Amount must be greater than 0.", ephemeral: true });
+        }
+
+        // Ensure the target user exists
+        const userData = await database.ensureUser(targetUser.id);
+
+        // Add money
+        userData.balance += amount;
+        await database.saveUserData(targetUser.id, userData);
+
+        return interaction.reply({
+            content: `✅ Gave **¥${amount}** to ${targetUser.username}.`,
+            ephemeral: true
+        });
+    } catch (err) {
+        console.error("Error in handleGiveMoneyCommand:", err);
+        if (!interaction.replied && !interaction.deferred) {
+            return interaction.reply({ content: "❌ Something went wrong.", ephemeral: true }).catch(() => {});
+        }
+    }
 }
 
 async function handleGiveItemCommand(interaction) {
@@ -853,13 +865,6 @@ async function handleGiveItemCommand(interaction) {
   const quantity = interaction.options.getInteger("amount");
   await database.ensureUser(userId);
   const userData = await database.getUserData(userId);
-
-  if (!(await isBotOwner(interaction))) {
-    return interaction.reply({
-      content: "You do not have permission to use this command.",
-      ephemeral: true,
-    });
-  }
 
   userData.inventory[item] = (userData.inventory[item] || 0) + quantity;
   await database.saveUserData(userId, userData);
@@ -973,13 +978,6 @@ async function handleGiveEXPCommand(interaction) {
   const userData = await database.getUserData(userId);
   const amount = interaction.options.getInteger("amount");
 
-  if (!(await isBotOwner(interaction))) {
-    return interaction.reply({
-      content: "You do not have permission to use this command.",
-      ephemeral: true,
-    });
-  }
-
   userData.experience += amount;
   await database.saveUserData(userId, userData);
 
@@ -999,13 +997,6 @@ async function handleTakeMoneyCommand(interaction) {
   const userData = await database.getUserData(userId);
   const takeAmount = interaction.options.getInteger("amount");
 
-  if (!(await isBotOwner(interaction))) {
-    return interaction.reply({
-      content: "You do not have permission to use this command.",
-      ephemeral: true,
-    });
-  }
-
   userData.balance -= takeAmount;
   await database.saveUserData(userId, userData);
 
@@ -1024,13 +1015,6 @@ async function handleTakeEXPCommand(interaction) {
   await database.ensureUser(targetID);
   const userData = await database.getUserData(targetID);
   const TakeAwayAmount = interaction.options.getInteger("amount");
-
-  if (!(await isBotOwner(interaction))) {
-    return interaction.reply({
-      content: "You do not have permission to use this command.",
-      ephemeral: true,
-    });
-  }
 
   userData.experience -= TakeAwayAmount;
   await database.saveUserData(targetID, userData);
@@ -1524,8 +1508,7 @@ async function handleFightCommand(interaction) {
   let battleLog = [];
 
   // Player moves
-  if (userData.race = 'Soul Reaper') {
-    const Shinigamimoveset = ShinigamipowerMovesets[userData.power];
+  const moveset = powerMovesets[userData.power];
     function getAvailableMoves() {
       return Shinigamimoveset
       .filter(move => {
@@ -1542,7 +1525,6 @@ async function handleFightCommand(interaction) {
       .setDescription(move.description.slice(0, 100))
       );
     };
-  }
 
   const moveMenu = new StringSelectMenuBuilder()
     .setCustomId("fight-move-select")
