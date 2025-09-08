@@ -80,6 +80,17 @@ const powerMovesets = {
     { name: 'Hypnotic Counter', damage: 200, description: 'You hypnotise the opponent to counter their attack!', counterAttack: true },
     { name: 'Hogyoku Ball', damage: 50, description: 'You utilise a Hogyoku Ball to evolve in this fight', bankaiActivate: true, defenseBoost: 100 },
     { name: 'Hado 90: Kurohitsugi', damage: 1000, description: 'You engulf the opponent in a black coffin that stabs the opponent with 1000 swords', ultimate: true },
+  ],
+  'Zabimaru': [
+    { name: 'Bleeding Slash', damage: 150, description: 'You slash your opponent, making them bleed for 150 damage.' },
+    { name: 'Hungry Mamba', damage: 300, description: 'You unleash a large mamba like creature that is hungry' },
+    { name: 'Bankai', damage: 1000, bankaiActivate: true },
+  ],
+  'Shinso': [
+    { name: 'Expanding Blade', damage: 500, description: 'You expand your blade to 15km' },
+    { name: 'Elongated Barrage', damage: 350, description: 'You expand your blade to barrage your opponent' },
+    { name: 'Bankai: Kamishino no Yari', damage: 100, description: 'You activate Bankai.', bankaiActivate: true },
+    { name: 'Murderous Expansion', damage: 1000, description: 'You expand your blade to its maximum capacity and slash absolutely everything within radius', ultimate: true }
   ]
 };
 
@@ -1497,7 +1508,7 @@ async function handleFightCommand(interaction) {
     });
   }
 
-  if (userData.race = 'Human' ) {
+  if (userData.race === 'Human' ) {
     return interaction.reply({
       content: `You are a ${userData.race}, you cannot utilise this command yet.`,
       ephemeral: false
@@ -1517,7 +1528,7 @@ async function handleFightCommand(interaction) {
   // Player moves
   const moveset = powerMovesets[userData.power];
     function getAvailableMoves() {
-      return Shinigamimoveset
+      return moveset
       .filter(move => {
         if (move.ultimate && !bankaiActive) return false;
 
@@ -1527,7 +1538,7 @@ async function handleFightCommand(interaction) {
       })
       .map((move, idx) =>
       new StringSelectMenuOptionBuilder()
-      .setname(move.name.slice(0, 100))
+      .setLabel(move.name.slice(0, 100))
       .setValue(idx.toString())
       .setDescription(move.description.slice(0, 100))
       );
@@ -1612,8 +1623,8 @@ async function handleFightCommand(interaction) {
 
     if (move.counterAttack === true) {
       bossHealth - move.damage;
-      playerHealth + 200;
-      turnLog.push(`You have countered the boss' attack and dealt 200 damage to them alongside getting 200 health yourself.`);
+      playerHealth += 200;
+      turnLog.push(`You have countered the boss' attack and dealt **200 damage** to them alongside getting **200 health** yourself.`);
     }
 
     // Bankai activation
