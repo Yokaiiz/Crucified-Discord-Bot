@@ -73,6 +73,13 @@ const ShinigamipowerMovesets = {
     { name: 'Fiery Hell', damage: 50, description: 'You heat up your surroundings to dangerous warmth levels.', defenseBoost: 50 },
     { name: 'Bankai: Zanka no Tachi', damage: 100, description: 'You unleash your bankai onto your opponent.', bankaiActivate: true },
     { name: 'Undead Army', damage: 500, description: 'You raise your past opponents from the dead as fiery skeletons and make them fight for you.', ultimate: true}
+  ],
+  'Kyoka Suigetsu': [
+    { name: 'Perfect Hypnosis', damage: 350, description: 'You manipulate the opponents optical nerves to not be able to see you and then you sneak up on them to backstab them' },
+    { name: 'Danku', damage: 50, description: 'You gather reishi into your palm and create a fortified wall that increases your overall defense', defenseBoost: 100 },
+    { name: 'Hypnotic Counter', damage: 200, description: 'You hypnotise the opponent to counter their attack!', counterAttack: true },
+    { name: 'Hogyoku Ball', damage: 50, description: 'You utilise a Hogyoku Ball to evolve in this fight', bankaiActivate: true, defenseBoost: 100 },
+    { name: 'Hado 90: Kurohitsugi', damage: 1000, description: 'You engulf the opponent in a black coffin that stabs the opponent with 1000 swords', ultimate: true },
   ]
 };
 
@@ -1619,6 +1626,12 @@ async function handleFightCommand(interaction) {
         bossHealth -= dmg;
         turnLog.push(`You used **${move.name}** and dealt **${dmg}** damage to ${enemy.name}!`);
       }
+    }
+
+    if (move.counterAttack === true) {
+      bossHealth - move.damage;
+      playerHealth + 200;
+      turnLog.push(`You have countered the boss' attack and dealt 200 damage to them alongside getting 200 health yourself.`);
     }
 
     // Bankai activation
