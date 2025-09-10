@@ -199,8 +199,8 @@ async function handleProfileCommand(interaction) {
         { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
         { name: "**Experience**", value: `**${targetUserData.experience.toLocaleString("en-US")}**` },
         { name: "**Inventory**", value: `**${targetInventoryText}**` },
-        { name: '**Shikai**', value: `**${userData.power}**` },
-        { name: '**Race**', value: `**${userData.race}**` },
+        { name: '**Shikai**', value: `**${targetUserData.power}**` },
+        { name: '**Race**', value: `**${targetUserData.race}**` },
       )
       .setTimestamp();
   } else {
@@ -1237,11 +1237,11 @@ async function handleShopWeaponsCommand(interaction) {
   if (userData.race.toLowerCase() === "human") {
     return interaction.reply({
       content: `You are a ${userData.race}. You cannot utilise this command.`,
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
-  // Shop items
+  // ✅ Shop items (keys now match select menu + modal submit values)
   const shop = {
     zanpakuto: { name: "Zanpakuto", price: 5000 },
     zanpakuto_reroll: { name: "Zanpakuto Reroll", price: 10000 },
@@ -1254,11 +1254,11 @@ async function handleShopWeaponsCommand(interaction) {
     .addOptions([
       new StringSelectMenuOptionBuilder()
         .setLabel("Zanpakuto")
-        .setValue("zanpakuto")
+        .setValue("zanpakuto") // matches shop key
         .setDescription("Lets you buy a Zanpakuto || Cost: 5,000"),
       new StringSelectMenuOptionBuilder()
         .setLabel("Zanpakuto Reroll")
-        .setValue("zanpakuto_reroll")
+        .setValue("zanpakuto_reroll") // matches shop key
         .setDescription("Lets you buy a Zanpakuto Reroll || Cost: 10,000"),
     ]);
 
@@ -1289,7 +1289,7 @@ async function handleShopWeaponsCommand(interaction) {
   collector.on("collect", async (i) => {
     if (i.customId !== "weapon_shop") return;
 
-    const choice = i.values[0];
+    const choice = i.values[0]; // "zanpakuto" or "zanpakuto_reroll"
     const selectedItem = shop[choice];
 
     if (!selectedItem) {
@@ -1301,7 +1301,7 @@ async function handleShopWeaponsCommand(interaction) {
 
     // Show modal to ask for quantity
     const modal = new ModalBuilder()
-      .setCustomId(`buy_${choice}_${userId}`)
+      .setCustomId(`buy_${choice}_${userId}`) // e.g. buy_zanpakuto_reroll_123456
       .setTitle(`Buy ${selectedItem.name}`);
 
     const quantityInput = new TextInputBuilder()
@@ -1328,6 +1328,8 @@ async function handleShopWeaponsCommand(interaction) {
     }
   });
 }
+
+
 
 
 async function handleUseItemCommand(interaction) {
