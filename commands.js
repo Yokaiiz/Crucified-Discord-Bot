@@ -91,6 +91,9 @@ const powerMovesets = {
     { name: 'Elongated Barrage', damage: 350, description: 'You expand your blade to barrage your opponent' },
     { name: 'Bankai: Kamishino no Yari', damage: 100, description: 'You activate Bankai.', bankaiActivate: true },
     { name: 'Murderous Expansion', damage: 1000, description: 'You expand your blade to its maximum capacity and slash absolutely everything within radius', ultimate: true }
+  ],
+  'Hyorinmaru': [
+    { name: 'Freezing Frost', damage: 150, description: 'You emit a freezing aura similarly to snow, but weaker.', defenseBoost: 10 },
   ]
 };
 
