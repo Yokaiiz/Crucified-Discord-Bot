@@ -264,14 +264,14 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       const totalCost = selectedItem.price * quantity;
-      if (userData.money < totalCost) {
+      if (userData.balance < totalCost) {
         return interaction.reply({
-          content: `❌ You don’t have enough money! Need **${totalCost}**, but you only have **${userData.money}**.`,
+          content: `❌ You don’t have enough money! Need **${totalCost}**, but you only have **${userData.balance}**.`,
           ephemeral: true,
         });
       }
 
-      userData.money -= totalCost;
+      userData.balance -= totalCost;
       userData.inventory[selectedItem.name] = (userData.inventory[selectedItem.name] || 0) + quantity;
       await database.saveUserData(interaction.user.id, userData);
 

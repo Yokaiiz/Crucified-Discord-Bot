@@ -47,14 +47,14 @@ const powerMovesets = {
     { name: 'Frost Slash', damage: 100, description: 'A chilling slash that may potentially freeze the boss.' },
     { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
     { name: 'Freezing Aurora', damage: 200, description: 'You freeze everything that surrounds you.' },
-    { name: 'Sode no Shirayuki: Hakka no Togame', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
+    { name: 'Bankai: Sode no Shirayuki - Hakka no Togame', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
     { name: 'Ultimate Freeze', damage: 500, description: 'You unleash the ultimate freezing attack at the boss.', ultimate: true },
-    { name: 'Inescapable Blizzard', damage: 1000, description: 'You freeze everything around you forever, doing 1,000 damage.', ultimate: true}
+    { name: 'Inescapable Blizzard', damage: 1000, description: 'You freeze everything around you forever, doing 1,000 damage.', ultimate: true }
   ],
   'Benihime': [
     { name: 'Fierce Slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.' },
     { name: 'Immaculate Shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15.', defenseBoost: 15 },
-    { name: 'Unstoppable Barrage', damage: 150, description: 'You create an unstoppable barrage.' },
+    { name: 'Unstoppable Barrage', damage: 150, description: 'You create an unstoppable barrage of slashes.' },
     { name: 'Bankai: Kannonbiraki Benihime Aratame', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
     { name: 'Crimson Destruction', damage: 500, description: 'You unleash the ultimate attack, Crimson Destruction.', ultimate: true },
     { name: 'Reconstruction', damage: 1000, description: 'You bring yourself back from the dead to unleash the ultimate skill upon your opponent.', ultimate: true },
@@ -62,40 +62,105 @@ const powerMovesets = {
   'Zangetsu': [
     { name: 'Getsuga Tenshou', damage: 120, description: 'You launch a powerful slash of energy at the boss.' },
     { name: 'Getsuga Jujinshou', damage: 200, description: 'You launch 2 powerful slashes of energy in a cross formation.' },
-    { name: 'Getsuga Barrage', damage: 250, description: 'You build up energy around your blade and slash the boss.' },
+    { name: 'Getsuga Barrage', damage: 250, description: 'You build up energy around your blade and slash the boss repeatedly.' },
     { name: 'Bankai: Tensa Zangetsu', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
     { name: 'Mugetsu', damage: 500, description: 'You unleash the ultimate attack, Mugetsu, sacrificing your power in the process.', ultimate: true, sacrifice: true },
-    { name: 'Blut Vene', description: 'You use Blut vene to boost your defense.', defenseBoost: 50 }
+    { name: 'Blut Vene', damage: 0, description: 'You use Blut Vene to boost your defense.', defenseBoost: 50 }
   ],
   'Ryujin Jakka': [
-    { name: 'Incinerating Slash', damage: 200, description: 'You incinerate your opponents with a slash almost as hot as the sun, dealing 200 damage.' },
-    { name: 'Devastating Bisection', damage: 150, description: 'You smite your opponent with your fiery sword dealig 150 damage to them.' },
-    { name: 'Fiery Hell', damage: 50, description: 'You heat up your surroundings to dangerous warmth levels.', defenseBoost: 50 },
-    { name: 'Bankai: Zanka no Tachi', damage: 100, description: 'You unleash your bankai onto your opponent.', bankaiActivate: true },
-    { name: 'Undead Army', damage: 500, description: 'You raise your past opponents from the dead as fiery skeletons and make them fight for you.', ultimate: true}
+    { name: 'Incinerating Slash', damage: 200, description: 'You incinerate your opponent with a slash almost as hot as the sun.' },
+    { name: 'Devastating Bisection', damage: 150, description: 'You smite your opponent with your fiery sword dealing 150 damage.' },
+    { name: 'Fiery Hell', damage: 50, description: 'You heat up your surroundings to dangerous levels, boosting your defense.', defenseBoost: 50 },
+    { name: 'Bankai: Zanka no Tachi', damage: 100, description: 'You unleash your Bankai onto your opponent.', bankaiActivate: true },
+    { name: 'Undead Army', damage: 500, description: 'You raise past opponents from the dead as fiery skeletons and make them fight for you.', ultimate: true }
   ],
   'Kyoka Suigetsu': [
-    { name: 'Perfect Hypnosis', damage: 350, description: 'You manipulate the opponents optical nerves to not be able to see you and then you sneak up on them to backstab them' },
-    { name: 'Danku', damage: 50, description: 'You gather reishi into your palm and create a fortified wall that increases your overall defense', defenseBoost: 100 },
-    { name: 'Hypnotic Counter', damage: 200, description: 'You hypnotise the opponent to counter their attack!', counterAttack: true },
-    { name: 'Hogyoku Ball', damage: 50, description: 'You utilise a Hogyoku Ball to evolve in this fight', bankaiActivate: true, defenseBoost: 100 },
-    { name: 'Hado 90: Kurohitsugi', damage: 1000, description: 'You engulf the opponent in a black coffin that stabs the opponent with 1000 swords', ultimate: true },
+    { name: 'Perfect Hypnosis', damage: 350, description: 'You manipulate the opponent’s optical nerves to blind them and backstab.' },
+    { name: 'Danku', damage: 50, description: 'You gather reishi to create a fortified wall, boosting defense.', defenseBoost: 100 },
+    { name: 'Hypnotic Counter', damage: 200, description: 'You hypnotize the opponent to counter their attack!', counterAttack: true },
+    { name: 'Hogyoku Ball', damage: 50, description: 'You utilize a Hogyoku Ball to evolve in this fight, boosting defense.', bankaiActivate: true, defenseBoost: 100 },
+    { name: 'Hado 90: Kurohitsugi', damage: 1000, description: 'You engulf the opponent in a black coffin filled with blades.', ultimate: true }
   ],
   'Zabimaru': [
     { name: 'Bleeding Slash', damage: 150, description: 'You slash your opponent, making them bleed for 150 damage.' },
-    { name: 'Hungry Mamba', damage: 300, description: 'You unleash a large mamba like creature that is hungry' },
-    { name: 'Bankai', damage: 1000, bankaiActivate: true },
+    { name: 'Hungry Mamba', damage: 300, description: 'You unleash a large snake-like creature that attacks ferociously.' },
+    { name: 'Bankai: Zabimaru', damage: 0, description: 'You unleash your Bankai.', bankaiActivate: true }
   ],
   'Shinso': [
-    { name: 'Expanding Blade', damage: 500, description: 'You expand your blade to 15km' },
-    { name: 'Elongated Barrage', damage: 350, description: 'You expand your blade to barrage your opponent' },
-    { name: 'Bankai: Kamishino no Yari', damage: 100, description: 'You activate Bankai.', bankaiActivate: true },
-    { name: 'Murderous Expansion', damage: 1000, description: 'You expand your blade to its maximum capacity and slash absolutely everything within radius', ultimate: true }
+    { name: 'Expanding Blade', damage: 500, description: 'You expand your blade to 15km, striking your opponent.' },
+    { name: 'Elongated Barrage', damage: 350, description: 'You extend your blade repeatedly to barrage your opponent.' },
+    { name: 'Bankai: Kamishini no Yari', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
+    { name: 'Murderous Expansion', damage: 1000, description: 'You expand your blade to its maximum capacity and slash everything nearby.', ultimate: true }
   ],
   'Hyorinmaru': [
-    { name: 'Freezing Frost', damage: 150, description: 'You emit a freezing aura similarly to snow, but weaker.', defenseBoost: 10 },
+    { name: 'Freezing Frost', damage: 150, description: 'You emit a freezing aura, slightly boosting defense.', defenseBoost: 10 },
+    { name: 'Freezing Tip', damage: 300, description: 'You stab your opponent with the frozen tip of your sword.' },
+    { name: 'Icy Counter', damage: 500, description: 'You use ice as a shield and counter attack!', counterAttack: true },
+    { name: 'Bankai: Daiguren Hyorinmaru', damage: 0, description: 'You activate your Bankai!', bankaiActivate: true },
+    { name: 'Icy Cross', damage: 1000, description: 'You encase your enemy in an icy cross that freezes them to death.', ultimate: true }
+  ],
+  'Wabisuke': [
+    { name: 'Gravity Multiplication', damage: 300, description: 'You multiply the enemy’s weight tenfold, crushing them.' },
+    { name: 'Gravity Slash', damage: 500, description: 'You conjure a kido-enhanced slash, striking heavily.' },
+    { name: 'Gravity Field', damage: 250, description: 'You increase the weight of everything nearby, boosting defense.', defenseBoost: 50 }
+  ],
+  'Senbonzakura': [
+    { name: 'Bankai: Senbonzakura Kageyoshi', damage: 0, description: 'You unleash your Bankai!', bankaiActivate: true },
+    { name: 'Flower Blades', damage: 500, description: 'You throw thousands of flower blades at your opponent.' },
+    { name: 'Flower Colosseum', damage: 1500, description: 'You form a colosseum of blades that shreds the enemy.', defenseBoost: 50, ultimate: true },
+    { name: 'Flower Shield', damage: 100, description: 'You form a shield out of blades, countering attacks.', counterAttack: true }
+  ],
+  'Katen Kyokotsu': [
+    { name: 'Bankai: Katen Kyokotsu Shinju', damage: 2000, description: 'You unleash your Bankai and perform an instant kill ability.', bankaiActivate: true }
+  ],
+  'Minazuki': [
+    { name: 'Bleeding Slash', damage: 350, description: 'You slash your opponent with blood, causing heavy bleeding.' },
+    { name: 'Bleeding Willow', damage: 500, description: 'You whirl blood around you, critically striking enemies.' },
+    { name: 'Bankai: Minazuki', damage: 0, description: 'You summon your Bankai, a giant creature of blood.', bankaiActivate: true }
+  ],
+  'Suzumebachi': [
+    { name: 'Hornet Strike', damage: 200, description: 'You strike swiftly like a hornet.' },
+    { name: 'Death Stinger', damage: 500, description: 'You deliver a venomous sting that weakens the enemy.' },
+    { name: 'Bankai: Jakuhō Raikōben', damage: 1000, description: 'You activate Bankai, summoning a massive missile.', bankaiActivate: true, ultimate: true }
+  ],
+  'Beast': [
+    { name: 'Savage Bite', damage: 300, description: 'You bite into the opponent with wild ferocity.' },
+    { name: 'Claw Frenzy', damage: 400, description: 'You unleash a barrage of claw strikes.' },
+    { name: 'Beast King’s Roar', damage: 800, description: 'You roar with primal fury, dealing devastating damage.', ultimate: true }
+  ],
+  'Los Lobos': [
+    { name: 'Twin Fang Shot', damage: 300, description: 'You fire twin spiritual blasts at the enemy.' },
+    { name: 'Wolf Pack Barrage', damage: 500, description: 'You summon spirit wolves to attack relentlessly.' },
+    { name: 'Ressurecion: Los Lobos', damage: 0, description: 'You awaken your ressurecion, unleashing your true powers', bankaiActivate: true },
+    { name: 'Cero: Metralleta', damage: 5000, description: 'You shoot thousands of Ceros from your gun like a machine gun.', ultimate: true },
+  ],
+  'Arrogante': [
+    { name: 'Rotting Slash', damage: 250, description: 'You slash with decaying energy that weakens the opponent.' },
+    { name: 'Decay Field', damage: 100, description: 'You release a field of rot, lowering enemy strength.', defenseBoost: 50 },
+    { name: 'Bankai: Rōtting Apocalypse', damage: 0, description: 'You unleash ultimate decay with Bankai.', bankaiActivate: true }
+  ],
+  'Shark': [
+    { name: 'Shark Bite', damage: 300, description: 'You bite into your enemy with shark-like jaws.' },
+    { name: 'Water Prison', damage: 150, description: 'You trap your enemy inside a water sphere, restricting them.' },
+    { name: 'Tidal Wave', damage: 600, description: 'You summon a giant wave to crush your opponent.' },
+  ],
+  'Horse': [
+    { name: 'Trample', damage: 200, description: 'You trample the enemy under hooves.' },
+    { name: 'Gallop Slash', damage: 300, description: 'You charge forward and slash the opponent.' },
+    { name: 'Bankai: Spirit Stallion', damage: 0, description: 'You summon your Bankai steed, a massive spirit horse.', bankaiActivate: true }
+  ],
+  'Murcielago': [
+    { name: 'Cero Oscuras', damage: 500, description: 'You fire a black cero at the opponent.' },
+    { name: 'Lanza del Relámpago', damage: 1000, description: 'You throw a powerful energy spear that explodes on impact.', ultimate: true },
+    { name: 'Segunda Etapa', damage: 0, description: 'You transform into your second release form.', bankaiActivate: true }
+  ],
+  'Pantera': [
+    { name: 'Claw Slash', damage: 250, description: 'You slash your opponent with panther-like claws.' },
+    { name: 'Roaring Pounce', damage: 400, description: 'You pounce on your opponent with incredible force.' },
+    { name: 'Pantera Rampage', damage: 800, description: 'You unleash your ultimate rampage attack.' }
   ]
 };
+
 
 const bossPool = [
   {
@@ -1627,9 +1692,9 @@ async function handleFightCommand(interaction) {
     }
 
     if (move.counterAttack === true) {
-      bossHealth - move.damage;
+      bossHealth -= move.damage;
       playerHealth += 200;
-      turnLog.push(`You have countered the boss' attack and dealt **200 damage** to them alongside getting **200 health** yourself.`);
+      turnLog.push(`You have countered the boss' attack and dealt **${move.damage}** to them alongside getting **200 health** yourself.`);
     }
 
     // Bankai activation
@@ -1639,7 +1704,6 @@ async function handleFightCommand(interaction) {
       playerHealth += 100;
       turnLog.push(`🔥 You have activated **Bankai**! Gained +50 Defense and +100 HP, and your attacks hit harder!`);
     }
-
     // === Boss turn (only if still alive and Mugetsu wasn’t used) ===
     if (bossHealth > 0 && fightActive) {
       let bossDidAction = false;
