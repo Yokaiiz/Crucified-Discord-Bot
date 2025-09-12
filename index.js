@@ -36,6 +36,7 @@ const {
   handleShopWeaponsCommand,
   handleUseItemCommand,
   handleFightCommand,
+  handleFishCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -58,7 +59,7 @@ function setCooldown(userId, cmd, ms) {
   cooldowns.get(userId).set(cmd, Date.now() + ms);
 }
 function getCooldownTime(cmd) {
-  const times = { beg: 15000, work: 1800000 }; // 15s, 30m
+  const times = { beg: 15000, work: 1800000, cat: 0, help: 0, fish: 10000, profile: 5000, gamble: 15000, dig: 7500, craft: 10000, sell: 10000, donate: 10000, rob: 10000, use: 10000, fight: 10000 }; // 15s, 30m
   return times[cmd] || 5000;
 }
 
@@ -129,6 +130,8 @@ const commands = [
   new SlashCommandBuilder().setName("use").setDescription("Use an item")
     .addStringOption(option => option.setName("item").setDescription("Item to use").setRequired(true)),
   new SlashCommandBuilder().setName("fight").setDescription("Fight a random boss"),
+  new SlashCommandBuilder().setName('fish').setDescription('You use a fishing rod to fish!'),
+  new SlashCommandBuilder().setName("work").setDescription("Work to earn money"),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -213,6 +216,7 @@ client.on("interactionCreate", async (interaction) => {
           break;
         case "use": return handleUseItemCommand(interaction);
         case "fight": return handleFightCommand(interaction);
+        case 'fish': return handleFishCommand(interaction);
       }
     } catch (err) {
       console.error("⚠️ Error handling command:", err);

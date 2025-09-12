@@ -120,20 +120,20 @@ const powerMovesets = {
   ],
   'Suzumebachi': [
     { name: 'Hornet Strike', damage: 200, description: 'You strike swiftly like a hornet.' },
-    { name: 'Death Stinger', damage: 500, description: 'You deliver a venomous sting that weakens the enemy.' },
+    { name: 'Death Stinger', damage: 350, description: 'You deliver a venomous sting that weakens the enemy.' },
     { name: 'Bankai: Jakuhō Raikōben', damage: 1000, description: 'You activate Bankai, summoning a massive missile.', bankaiActivate: true },
   ],
   'Beast': [
-    { name: 'Savage Bite', damage: 300, description: 'You bite into the opponent with wild ferocity.' },
-    { name: 'Claw Frenzy', damage: 400, description: 'You unleash a barrage of claw strikes.' },
-    { name: 'Beast King’s Roar', damage: 800, description: 'You roar with primal fury, dealing devastating damage.', ultimate: true }
+    { name: 'Savage Bite', damage: 100, description: 'You bite into the opponent with wild ferocity.' },
+    { name: 'Claw Frenzy', damage: 250, description: 'You unleash a barrage of claw strikes.' },
+    { name: 'Beast King’s Roar', damage: 300, description: 'You roar with primal fury, dealing devastating damage.', ultimate: true }
   ],
   'Los Lobos': [
-    { name: 'Twin Fang Shot', damage: 300, description: 'You fire twin spiritual blasts at the enemy.' },
-    { name: 'Wolf Pack Barrage', damage: 500, description: 'You summon spirit wolves to attack relentlessly.' },
-    { name: 'Cero: Corazon', damage: 500, description: 'You charge up your gun and release a large spiritual blast that does continuous damage.' },
+    { name: 'Twin Fang Shot', damage: 100, description: 'You fire twin spiritual blasts at the enemy.' },
+    { name: 'Wolf Pack Barrage', damage: 200, description: 'You summon spirit wolves to attack relentlessly.' },
+    { name: 'Cero: Corazon', damage: 150, description: 'You charge up your gun and release a large spiritual blast that does continuous damage.' },
     { name: 'Ressurecion: Los Lobos', damage: 1, description: 'You awaken your ressurecion, unleashing your true powers', bankaiActivate: true },
-    { name: 'Cero: Metralleta', damage: 5000, description: 'You shoot thousands of Ceros from your gun like a machine gun.', ultimate: true },
+    { name: 'Cero: Metralleta', damage: 500, description: 'You shoot thousands of Ceros from your gun like a machine gun.', ultimate: true },
   ],
   'Arrogante': [
     { name: 'Rotting Slash', damage: 250, description: 'You slash with decaying energy that weakens the opponent.' },
@@ -154,13 +154,13 @@ const powerMovesets = {
   ],
   'Murcielago': [
     { name: 'Cero Oscuras', damage: 500, description: 'You fire a black cero at the opponent.' },
-    { name: 'Lanza del Relámpago', damage: 1000, description: 'You throw a powerful energy spear that explodes on impact.', ultimate: true },
+    { name: 'Lanza del Relámpago', damage: 850, description: 'You throw a powerful energy spear that explodes on impact.', ultimate: true },
     { name: 'Segunda Etapa', damage: 0, description: 'You transform into your second release form.', bankaiActivate: true }
   ],
   'Pantera': [
-    { name: 'Claw Slash', damage: 400, description: 'You slash your opponent with panther-like claws.' },
-    { name: 'Roaring Pounce', damage: 600, description: 'You pounce on your opponent with incredible force.' },
-    { name: 'Pantera Rampage', damage: 800, description: 'You unleash your ultimate rampage attack.' }
+    { name: 'Claw Slash', damage: 100, description: 'You slash your opponent with panther-like claws.' },
+    { name: 'Roaring Pounce', damage: 250, description: 'You pounce on your opponent with incredible force.' },
+    { name: 'Pantera Rampage', damage: 450, description: 'You unleash your ultimate rampage attack.' }
   ]
 };
 
@@ -168,17 +168,18 @@ const powerMovesets = {
 const bossPool = [
   {
     name:  'Sosuke Aizen',
-    health: 700,
+    health: 2000,
     defense: 0,
     abilities: [
       { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
       { name: 'Danku', effect: 'block', chance: 0.08 },
       { name: 'Slash', damage: 100, chance: 0.2 },
+      { name: 'Kido: Hado 90: Kurohitsugi', damage: 300, chance: 0.1 },
     ]
   },
   {
     name: 'Grimmjow',
-    health: 500,
+    health: 1000,
     defense: 0,
     abilities: [
       { name: 'Claw Slash', damage: 80, chance: 0.05 },
@@ -187,7 +188,7 @@ const bossPool = [
   },
   {
     name: 'Yhwach',
-    health: 1000,
+    health: 1500,
     defense: 0,
     abilities: [
       { name: 'Almighty', damage: 0, effect: 'dodge', chance: 0.1 },
@@ -896,12 +897,6 @@ async function handleDonateCommand(interaction) {
 async function handleResetCommand(interaction) {
   try {
     const targetUserId = interaction.options.getUser("user").id;
-    if (!(await isBotOwner(interaction))) {
-      return interaction.reply({
-        content: "You do not have permission to use this command.",
-        ephemeral: true,
-      });
-    }
     await database.resetUserData(targetUserId);
     await interaction.reply({
       content: `Successfully reset data for <@${targetUserId}>`,
@@ -978,7 +973,7 @@ async function handleWorkCommand(interaction) {
   );
 
   const workEmbed = new EmbedBuilder()
-    .setColor(await createDynamicColour())
+    .setColor('Random')
     .setTitle(`Hello, ${interaction.user.username}`)
     .setDescription("Here are your work options!")
     .setThumbnail(`${avatar}`)
@@ -1811,6 +1806,31 @@ async function handleFightCommand(interaction) {
   });
 }
 
+async function handleFishCommand(interaction) {
+  const userId = interaction.user.id;
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+  const fishingRodKey = 'Fishing Rod';
+
+  if (!userData.inventory[fishingRodKey] || userData.inventory[fishingRodKey] <= 0) {
+    return interaction.reply({
+      content: "❌ You need a Fishing Rod to fish! Acquire one.",
+      ephemeral: true,
+    });
+  }
+
+  const randomFish = ["Salmon", "Tuna", "Trout", "Catfish", "Bass", "Carp", "Goldfish"];
+  const caughtFish = randomFish[Math.floor(Math.random() * randomFish.length)];
+
+  userData.inventory[caughtFish] = (userData.inventory[caughtFish] || 0) + 1;
+  userData.inventory[fishingRodKey] -= 1;
+  if (userData.inventory[fishingRodKey] === 0) delete userData.inventory[fishingRodKey];
+  await database.saveUserData(userId, userData);
+  return interaction.reply({
+    content: `🎣 You went fishing and caught a **${caughtFish}**!`,
+    ephemeral: false,
+  });
+}
 
 
 // --- Exports ---
@@ -1838,4 +1858,5 @@ module.exports = {
   handleShopWeaponsCommand,
   handleUseItemCommand,
   handleFightCommand,
+  handleFishCommand,
 };
