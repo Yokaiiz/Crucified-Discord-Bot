@@ -121,7 +121,7 @@ const powerMovesets = {
   'Suzumebachi': [
     { name: 'Hornet Strike', damage: 200, description: 'You strike swiftly like a hornet.' },
     { name: 'Death Stinger', damage: 500, description: 'You deliver a venomous sting that weakens the enemy.' },
-    { name: 'Bankai: Jakuhō Raikōben', damage: 1000, description: 'You activate Bankai, summoning a massive missile.', bankaiActivate: true, ultimate: true }
+    { name: 'Bankai: Jakuhō Raikōben', damage: 1000, description: 'You activate Bankai, summoning a massive missile.', bankaiActivate: true },
   ],
   'Beast': [
     { name: 'Savage Bite', damage: 300, description: 'You bite into the opponent with wild ferocity.' },
@@ -131,22 +131,25 @@ const powerMovesets = {
   'Los Lobos': [
     { name: 'Twin Fang Shot', damage: 300, description: 'You fire twin spiritual blasts at the enemy.' },
     { name: 'Wolf Pack Barrage', damage: 500, description: 'You summon spirit wolves to attack relentlessly.' },
-    { name: 'Ressurecion: Los Lobos', damage: 0, description: 'You awaken your ressurecion, unleashing your true powers', bankaiActivate: true },
+    { name: 'Cero: Corazon', damage: 500, description: 'You charge up your gun and release a large spiritual blast that does continuous damage.' },
+    { name: 'Ressurecion: Los Lobos', damage: 1, description: 'You awaken your ressurecion, unleashing your true powers', bankaiActivate: true },
     { name: 'Cero: Metralleta', damage: 5000, description: 'You shoot thousands of Ceros from your gun like a machine gun.', ultimate: true },
   ],
   'Arrogante': [
     { name: 'Rotting Slash', damage: 250, description: 'You slash with decaying energy that weakens the opponent.' },
     { name: 'Decay Field', damage: 100, description: 'You release a field of rot, lowering enemy strength.', defenseBoost: 50 },
-    { name: 'Bankai: Rōtting Apocalypse', damage: 0, description: 'You unleash ultimate decay with Bankai.', bankaiActivate: true }
+    { name: 'Bankai: Rōtting Apocalypse', damage: 0, description: 'You unleash ultimate decay with Bankai.', bankaiActivate: true },
+    { name: 'Rotting Grab', damage: 1000, description: 'You grab the opponent and rot them to death.', ultimate: true },
   ],
   'Shark': [
     { name: 'Shark Bite', damage: 300, description: 'You bite into your enemy with shark-like jaws.' },
-    { name: 'Water Prison', damage: 150, description: 'You trap your enemy inside a water sphere, restricting them.' },
+    { name: 'Water Prison', damage: 400, description: 'You trap your enemy inside a water sphere, restricting them.' },
     { name: 'Tidal Wave', damage: 600, description: 'You summon a giant wave to crush your opponent.' },
   ],
   'Horse': [
     { name: 'Trample', damage: 200, description: 'You trample the enemy under hooves.' },
     { name: 'Gallop Slash', damage: 300, description: 'You charge forward and slash the opponent.' },
+    { name: 'Lance Throw', damage: 500, description: 'You charge up your lance and throw it towards your opponent like a javelin.' },
     { name: 'Bankai: Spirit Stallion', damage: 0, description: 'You summon your Bankai steed, a massive spirit horse.', bankaiActivate: true }
   ],
   'Murcielago': [
@@ -155,8 +158,8 @@ const powerMovesets = {
     { name: 'Segunda Etapa', damage: 0, description: 'You transform into your second release form.', bankaiActivate: true }
   ],
   'Pantera': [
-    { name: 'Claw Slash', damage: 250, description: 'You slash your opponent with panther-like claws.' },
-    { name: 'Roaring Pounce', damage: 400, description: 'You pounce on your opponent with incredible force.' },
+    { name: 'Claw Slash', damage: 400, description: 'You slash your opponent with panther-like claws.' },
+    { name: 'Roaring Pounce', damage: 600, description: 'You pounce on your opponent with incredible force.' },
     { name: 'Pantera Rampage', damage: 800, description: 'You unleash your ultimate rampage attack.' }
   ]
 };
@@ -1565,7 +1568,6 @@ async function handleUseItemCommand(interaction) {
   }
 }
 
-
 async function handleFightCommand(interaction) {
   const userId = interaction.user.id;
   await database.ensureUser(userId);
@@ -1578,7 +1580,7 @@ async function handleFightCommand(interaction) {
     });
   }
 
-  if (userData.race === 'Human' ) {
+  if (userData.race === 'Human') {
     return interaction.reply({
       content: `You are a ${userData.race}, you cannot utilise this command yet.`,
       ephemeral: false
@@ -1597,22 +1599,20 @@ async function handleFightCommand(interaction) {
 
   // Player moves
   const moveset = powerMovesets[userData.power];
-    function getAvailableMoves() {
-      return moveset
+  function getAvailableMoves() {
+    return moveset
       .filter(move => {
         if (move.ultimate && !bankaiActive) return false;
-
         if (move.name.toLowerCase() === 'mugetsu' && !bankaiActive) return false;
-
         return true;
       })
       .map((move, idx) =>
-      new StringSelectMenuOptionBuilder()
-      .setLabel(move.name.slice(0, 100))
-      .setValue(idx.toString())
-      .setDescription(move.description.slice(0, 100))
+        new StringSelectMenuOptionBuilder()
+          .setLabel(move.name.slice(0, 100))
+          .setValue(idx.toString())
+          .setDescription(move.description.slice(0, 100))
       );
-    };
+  }
 
   const moveMenu = new StringSelectMenuBuilder()
     .setCustomId("fight-move-select")
@@ -1648,13 +1648,11 @@ async function handleFightCommand(interaction) {
 
     // === Player move ===
     if (move.name.toLowerCase() === "mugetsu") {
-      // Instantly defeat the boss and end fight
       bossHealth = 0;
       fightActive = false;
       turnLog.push(`🌑 You unleashed **Mugetsu**! ${enemy.name} was completely obliterated...`);
       turnLog.push(`⚠️ The cost of this forbidden technique is everything. Your powers have vanished...`);
 
-      // Remove the player's power permanently
       userData.power = null;
       await database.saveUserData(userId, userData);
 
@@ -1665,11 +1663,9 @@ async function handleFightCommand(interaction) {
       playerDefense += move.defenseBoost;
       turnLog.push(`You used **${move.name}** and increased your defense by ${move.defenseBoost}!`);
     } else {
-      // Apply Bankai boost dynamically
       let damage = move.damage;
       if (bankaiActive) damage = Math.floor(damage * 1.5);
 
-      // Boss dodge/block check before applying
       let prevented = false;
       for (const ability of enemy.abilities || []) {
         if (ability.effect === "dodge" && Math.random() < ability.chance) {
@@ -1694,34 +1690,32 @@ async function handleFightCommand(interaction) {
     if (move.counterAttack === true) {
       bossHealth -= move.damage;
       playerHealth += 200;
-      turnLog.push(`You have countered the boss' attack and dealt **${move.damage}** to them alongside getting **200 health** yourself.`);
+      turnLog.push(`You countered the boss' attack, dealt **${move.damage}** damage, and healed **200 HP**.`);
     }
 
-    // Bankai activation
     if (move.bankaiActivate && !bankaiActive) {
       bankaiActive = true;
       playerDefense += 50;
       playerHealth += 100;
-      turnLog.push(`🔥 You have activated **Bankai**! Gained +50 Defense and +100 HP, and your attacks hit harder!`);
+      turnLog.push(`🔥 You have activated **Bankai/Ressurecion**! +50 Defense and +100 HP, your attacks hit harder!`);
     }
-    // === Boss turn (only if still alive and Mugetsu wasn’t used) ===
+
+    // === Boss turn ===
     if (bossHealth > 0 && fightActive) {
       let bossDidAction = false;
 
-      // Pick random ability
       if (enemy.abilities?.length) {
         const ability = enemy.abilities[Math.floor(Math.random() * enemy.abilities.length)];
         if (ability.damage && Math.random() < ability.chance) {
           let effectiveDefense = Math.floor(playerDefense * 0.5);
           let bossDmg = ability.damage - effectiveDefense;
-          bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg); // minimum 30% damage
+          bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg);
           playerHealth -= bossDmg;
           turnLog.push(`${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`);
           bossDidAction = true;
         }
       }
 
-      // Basic attack fallback
       if (!bossDidAction) {
         let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
         let effectiveDefense = Math.floor(playerDefense * 0.5);
@@ -1732,7 +1726,6 @@ async function handleFightCommand(interaction) {
       }
     }
 
-    // Clamp values
     playerHealth = Math.max(0, playerHealth);
     bossHealth = Math.max(0, bossHealth);
 
@@ -1741,7 +1734,7 @@ async function handleFightCommand(interaction) {
 
     // === End conditions ===
     let resultMsg;
-    let embedColor = "Red"; // default
+    let embedColor = "Red";
 
     if (bossHealth <= 0) {
       fightActive = false;
@@ -1751,10 +1744,7 @@ async function handleFightCommand(interaction) {
       userData.experience += rewardExp;
       await database.saveUserData(userId, userData);
 
-      // Special embed color for Mugetsu
-      if (move.name.toLowerCase() === "mugetsu") {
-        embedColor = "#000000";
-      }
+      if (move.name.toLowerCase() === "mugetsu") embedColor = "#000000";
 
       resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${battleLog.join('\n')}`;
       collector.stop();
@@ -1770,24 +1760,46 @@ async function handleFightCommand(interaction) {
       resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${turnLog.join('\n')}\n\n👉 Choose another move!`;
     }
 
-    // Update message
-    await i.update({
-      embeds: [
-        new EmbedBuilder()
-          .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
-          .setDescription(resultMsg)
-          .setColor(embedColor)
-      ],
-      components: fightActive ? [new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId("fight-move-select")
-          .setPlaceholder("Choose your move")
-          .addOptions(getAvailableMoves())
-      )] : [],
-    });
+    // === Safe update ===
+    try {
+      await i.update({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
+            .setDescription(resultMsg)
+            .setColor(embedColor)
+        ],
+        components: fightActive ? [new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId("fight-move-select")
+            .setPlaceholder("Choose your move")
+            .addOptions(getAvailableMoves())
+        )] : [],
+      });
+    } catch (err) {
+      console.error("Failed to update interaction:", err);
+      // fallback
+      try {
+        await interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
+              .setDescription(resultMsg)
+              .setColor(embedColor)
+          ],
+          components: fightActive ? [new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId("fight-move-select")
+              .setPlaceholder("Choose your move")
+              .addOptions(getAvailableMoves())
+          )] : [],
+        });
+      } catch (editErr) {
+        console.error("Also failed to editReply:", editErr);
+      }
+    }
   });
 
-  // Timeout handling
   collector.on("end", async () => {
     if (fightActive) {
       fightActive = false;
@@ -1798,6 +1810,8 @@ async function handleFightCommand(interaction) {
     }
   });
 }
+
+
 
 // --- Exports ---
 module.exports = {
