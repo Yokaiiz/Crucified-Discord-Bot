@@ -2,6 +2,13 @@
 
 // All list of jobs used in the work command, includes there requirements, wage, and experience gain
 const job = {
+  begger: {
+    name: 'Begger',
+    experience_required: 0,
+    wage: 5000,
+    experience_gain: 750,
+    description: 'You beg for money on the streets.',
+  },
   exotic_dancer: {
     name: "Exotic Dancer",
     experience_required: 10000,

@@ -37,6 +37,7 @@ const {
   handleUseItemCommand,
   handleFightCommand,
   handleFishCommand,
+  handleSuggestCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -132,6 +133,8 @@ const commands = [
   new SlashCommandBuilder().setName("fight").setDescription("Fight a random boss"),
   new SlashCommandBuilder().setName('fish').setDescription('You use a fishing rod to fish!'),
   new SlashCommandBuilder().setName("work").setDescription("Work to earn money"),
+  new SlashCommandBuilder().setName('suggest').setDescription('Suggest a feature to the bot owner')
+    .addStringOption(option => option.setName('suggestion').setDescription('Your suggestion').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -217,6 +220,7 @@ client.on("interactionCreate", async (interaction) => {
         case "use": return handleUseItemCommand(interaction);
         case "fight": return handleFightCommand(interaction);
         case 'fish': return handleFishCommand(interaction);
+        case 'suggest': return handleSuggestCommand(interaction);
       }
     } catch (err) {
       console.error("⚠️ Error handling command:", err);

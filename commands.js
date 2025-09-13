@@ -820,6 +820,14 @@ async function handleSellCommand(interaction) {
     { name: "Shield", price: 3000 },
     { name: "Pickaxe", price: 500 },
     { name: "Shovel", price: 500 },
+    { name: 'Salmon', price: 5000 },
+    { name: 'Tuna', price: 3000 },
+    { name: 'Trout', price: 1000 },
+    { name: 'Fishing Rod', price: 2000 },
+    { name: 'Catfish', price: 5000 },
+    { name: 'Bass', price: 3000 },
+    { name: 'Carp', price: 1000 },
+    { name: 'Goldfish', price: 10000 },
   ];
 
   const priceObj = itemPrice.find((item) => item.name === ItemToSell);
@@ -1586,7 +1594,7 @@ async function handleFightCommand(interaction) {
   const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
   let bossHealth = enemy.health;
   let playerDefense = userData.defense || 0;
-  let playerHealth = 500 + (userData.healthBoost || 0);
+  let playerHealth = 700 + (userData.healthBoost || 0);
   let turn = 1;
   let fightActive = true;
   let bankaiActive = false;
@@ -1832,6 +1840,34 @@ async function handleFishCommand(interaction) {
   });
 }
 
+async function handleSuggestCommand(interaction) {
+  const suggestion = interaction.options.getString('suggestion');
+  const userId = interaction.user.id;
+  const userSend = '961370035555811388';
+
+  const suggestionEmbed = new EmbedBuilder()
+  .setColor('Random')
+  .setTitle(`New suggestion from ${interaction.user.username} (${userId})`)
+  .setDescription(suggestion)
+  .setFooter({ text: 'Thank you for using the crucified bot! Developed by crucifiedxx' })
+  .setTimestamp();
+
+  try {
+    const user = await interaction.client.users.fetch(userSend);
+    await user.send({ embeds: [suggestionEmbed] });
+    await interaction.reply({
+      content: '✅ Your suggestion has been sent to the bot developer. Thank you!',
+      ephemeral: true,
+    });
+  } catch (error) {
+    console.error('Error sending suggestion:', error);
+    await interaction.reply({
+      content: '❌ There was an error sending your suggestion. Please try again later.',
+      ephemeral: true,
+    });
+  }
+}
+
 
 // --- Exports ---
 module.exports = {
@@ -1859,4 +1895,5 @@ module.exports = {
   handleUseItemCommand,
   handleFightCommand,
   handleFishCommand,
+  handleSuggestCommand,
 };
