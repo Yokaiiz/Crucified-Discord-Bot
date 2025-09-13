@@ -221,6 +221,8 @@ client.on("interactionCreate", async (interaction) => {
         case "fight": return handleFightCommand(interaction);
         case 'fish': return handleFishCommand(interaction);
         case 'suggest': return handleSuggestCommand(interaction);
+        default:
+          return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }
     } catch (err) {
       console.error("⚠️ Error handling command:", err);

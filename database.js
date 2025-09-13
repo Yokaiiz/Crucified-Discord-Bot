@@ -19,7 +19,7 @@ class Database {
             gambleHistory: [],
             power: "",
             race: "Human",
-            firstTime: true,   // 👈 NEW FLAG
+            firstTime: true,
         };
     }
 

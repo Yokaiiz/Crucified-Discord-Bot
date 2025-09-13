@@ -95,9 +95,36 @@ const job = {
   },
 };
 
+const BusinessTypes = {
+  Cafe: {
+    cost: 100000,
+    income: 10000,
+    incomeRate: 60000,
+    description: 'You open a small café that serves coffee and snacks.',
+  },
+  Restaurant: {
+    cost: 500000,
+    income: 50000,
+    incomeRate: 300000,
+    description: 'You open a fancy restaurant that serves gourmet meals.',
+  },
+  Shop: {
+    cost: 200000,
+    income: 20000,
+    incomeRate: 120000,
+    description: 'You open a retail shop that sells various goods.',
+  },
+  Factory: {
+    cost: 1000000,
+    income: 100000,
+    incomeRate: 600000,
+    description: 'You open a factory that produces goods on a large scale.',
+  },
+};
+
 async function createDynamicColour() {
   const colour = Math.floor(Math.random() * 16777215);
   return `#${colour.toString(16)}`;
 }
 
-module.exports = { job, createDynamicColour };
+module.exports = { job, createDynamicColour, BusinessTypes };
