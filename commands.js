@@ -1583,10 +1583,10 @@ async function handleFightCommand(interaction) {
     });
   }
 
-  if (userData.race === 'Human') {
+  if (userData.race?.toLowerCase() === 'human') {
     return interaction.reply({
       content: `You are a ${userData.race}, you cannot utilise this command yet.`,
-      ephemeral: false
+      ephemeral: false,
     });
   }
 
@@ -1609,12 +1609,11 @@ async function handleFightCommand(interaction) {
         if (move.name.toLowerCase() === 'mugetsu' && !bankaiActive) return false;
         return true;
       })
-      .map((move, idx) =>
-        new StringSelectMenuOptionBuilder()
-          .setLabel(move.name.slice(0, 100))
-          .setValue(idx.toString())
-          .setDescription(move.description.slice(0, 100))
-      );
+      .map((move, idx) => ({
+        label: move.name.slice(0, 100),
+        value: idx.toString(),
+        description: move.description.slice(0, 100),
+      }));
   }
 
   const moveMenu = new StringSelectMenuBuilder()
@@ -1624,8 +1623,8 @@ async function handleFightCommand(interaction) {
 
   const moveRow = new ActionRowBuilder().addComponents(moveMenu);
 
-  // Initial message
-  await interaction.reply({
+  // Initial message (fetchReply so we can attach collector)
+  const fightMessage = await interaction.reply({
     embeds: [
       new EmbedBuilder()
         .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
@@ -1634,10 +1633,11 @@ async function handleFightCommand(interaction) {
     ],
     components: [moveRow],
     ephemeral: false,
+    fetchReply: true, // <— KEY
   });
 
-  // Collector
-  const collector = interaction.channel.createMessageComponentCollector({
+  // Collector attached to the message, not channel
+  const collector = fightMessage.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
     time: 120000,
     filter: (i) => i.user.id === userId,
@@ -1645,6 +1645,7 @@ async function handleFightCommand(interaction) {
 
   collector.on("collect", async (i) => {
     if (!fightActive || i.customId !== "fight-move-select") return;
+
     const moveIdx = parseInt(i.values[0]);
     const move = moveset[moveIdx];
     let turnLog = [`**Turn ${turn}:**`];
@@ -1781,9 +1782,8 @@ async function handleFightCommand(interaction) {
       });
     } catch (err) {
       console.error("Failed to update interaction:", err);
-      // fallback
       try {
-        await interaction.editReply({
+        await fightMessage.edit({
           embeds: [
             new EmbedBuilder()
               .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
@@ -1798,7 +1798,7 @@ async function handleFightCommand(interaction) {
           )] : [],
         });
       } catch (editErr) {
-        console.error("Also failed to editReply:", editErr);
+        console.error("Also failed to edit fight message:", editErr);
       }
     }
   });
@@ -1868,6 +1868,45 @@ async function handleSuggestCommand(interaction) {
   }
 }
 
+async function handlePurgeCommand(interaction) {
+  const amount = interaction.options.getInteger('amount');
+
+  if (!interaction.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+    return interaction.reply({
+      content: 'You do not have permission to use this command.',
+      ephemeral: true,
+    });
+  }
+
+  if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageMessages)) {
+    return interaction.reply({
+      content: 'I do not have permission to manage messages.',
+      ephemeral: true,
+    });
+  }
+
+  if (amount < 1 ) {
+    return interaction.reply({
+      content: 'You must specify an amount of at least 1 message to delete.',
+      ephemeral: true,
+    });
+  }
+
+  try {
+    const deletedMessages = await interaction.channel.bulkDelete(amount, true);
+    return interaction.reply({
+      content: `🧹 Successfully deleted ${deletedMessages.size} messages.`,
+      ephemeral: true,
+    });
+  } catch (error) {
+    console.error('Error deleting messages:', error);
+    return interaction.reply({
+      content: '❌ There was an error trying to delete messages in this channel.',
+      ephemeral: true,
+    });
+  }
+}
+
 
 // --- Exports ---
 module.exports = {
@@ -1896,4 +1935,5 @@ module.exports = {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
+  handlePurgeCommand,
 };

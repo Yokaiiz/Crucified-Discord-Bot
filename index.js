@@ -38,6 +38,7 @@ const {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
+  handlePurgeCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -135,6 +136,8 @@ const commands = [
   new SlashCommandBuilder().setName("work").setDescription("Work to earn money"),
   new SlashCommandBuilder().setName('suggest').setDescription('Suggest a feature to the bot owner')
     .addStringOption(option => option.setName('suggestion').setDescription('Your suggestion').setRequired(true)),
+  new SlashCommandBuilder().setName('purge').setDescription('Purge messages in a channel (admin only)')
+    .addIntegerOption(option => option.setName('amount').setDescription('Number of messages to delete').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -221,6 +224,7 @@ client.on("interactionCreate", async (interaction) => {
         case "fight": return handleFightCommand(interaction);
         case 'fish': return handleFishCommand(interaction);
         case 'suggest': return handleSuggestCommand(interaction);
+        case 'purge': return handlePurgeCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }
