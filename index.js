@@ -38,7 +38,6 @@ const {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
-  handlePurgeCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -47,7 +46,12 @@ const OWNER_ID = process.env.OWNER_ID;
 
 // --- Client setup ---
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages,
+  ],
   partials: [Partials.Channel],
 });
 
@@ -61,7 +65,22 @@ function setCooldown(userId, cmd, ms) {
   cooldowns.get(userId).set(cmd, Date.now() + ms);
 }
 function getCooldownTime(cmd) {
-  const times = { beg: 15000, work: 1800000, cat: 0, help: 0, fish: 10000, profile: 5000, gamble: 15000, dig: 7500, craft: 10000, sell: 10000, donate: 10000, rob: 10000, use: 10000, fight: 10000 }; // 15s, 30m
+  const times = {
+    beg: 15000,
+    work: 1800000,
+    cat: 0,
+    help: 0,
+    fish: 10000,
+    profile: 5000,
+    gamble: 15000,
+    dig: 7500,
+    craft: 10000,
+    sell: 10000,
+    donate: 10000,
+    rob: 10000,
+    use: 10000,
+    fight: 10000,
+  };
   return times[cmd] || 5000;
 }
 
@@ -132,12 +151,10 @@ const commands = [
   new SlashCommandBuilder().setName("use").setDescription("Use an item")
     .addStringOption(option => option.setName("item").setDescription("Item to use").setRequired(true)),
   new SlashCommandBuilder().setName("fight").setDescription("Fight a random boss"),
-  new SlashCommandBuilder().setName('fish').setDescription('You use a fishing rod to fish!'),
+  new SlashCommandBuilder().setName("fish").setDescription("You use a fishing rod to fish!"),
   new SlashCommandBuilder().setName("work").setDescription("Work to earn money"),
-  new SlashCommandBuilder().setName('suggest').setDescription('Suggest a feature to the bot owner')
-    .addStringOption(option => option.setName('suggestion').setDescription('Your suggestion').setRequired(true)),
-  new SlashCommandBuilder().setName('purge').setDescription('Purge messages in a channel (admin only)')
-    .addIntegerOption(option => option.setName('amount').setDescription('Number of messages to delete').setRequired(true)),
+  new SlashCommandBuilder().setName("suggest").setDescription("Suggest a feature to the bot owner")
+    .addStringOption(option => option.setName("suggestion").setDescription("Your suggestion").setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -179,11 +196,19 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand()) {
     const cmd = interaction.commandName;
 
+    // 🔹 Owner-only check
     const ownerOnly = ["reset", "givemoney", "giveitem", "give_experience", "take_money", "take_exp"];
     if (ownerOnly.includes(cmd) && interaction.user.id !== OWNER_ID) {
       return interaction.reply({ content: "❌ Only the bot owner can use this command.", ephemeral: true });
     }
 
+    // 🔹 Guild-only check
+    const guildOnly = ["timeout", "ban"];
+    if (guildOnly.includes(cmd) && !interaction.inGuild()) {
+      return interaction.reply({ content: "❌ This command can only be used in a server.", ephemeral: true });
+    }
+
+    // 🔹 Cooldowns
     if (isOnCooldown(userId, cmd)) {
       const expiresAt = cooldowns.get(userId).get(cmd);
       const timeLeft = ((expiresAt - Date.now()) / 1000).toFixed(1);
@@ -222,9 +247,8 @@ client.on("interactionCreate", async (interaction) => {
           break;
         case "use": return handleUseItemCommand(interaction);
         case "fight": return handleFightCommand(interaction);
-        case 'fish': return handleFishCommand(interaction);
-        case 'suggest': return handleSuggestCommand(interaction);
-        case 'purge': return handlePurgeCommand(interaction);
+        case "fish": return handleFishCommand(interaction);
+        case "suggest": return handleSuggestCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }
@@ -253,7 +277,7 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isModalSubmit()) {
     const match = interaction.customId.match(/^buy_(.+)_(\d+)$/);
     if (match) {
-      let [_, itemKey, modalUserId] = match;
+      let [itemKey, modalUserId] = match;
       if (modalUserId !== interaction.user.id) {
         return interaction.reply({ content: "❌ This modal is not for you.", ephemeral: true });
       }

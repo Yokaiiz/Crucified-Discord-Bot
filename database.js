@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-vars */
 // database.js
 const { Low } = require('lowdb');
 const { JSONFile } = require('lowdb/node');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 
 class Database {
     constructor() {

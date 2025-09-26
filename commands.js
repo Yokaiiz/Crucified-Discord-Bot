@@ -3,44 +3,21 @@ const {
   ActionRowBuilder,
   subtext,
   italic,
-  bold,
-  UserSelectMenuBuilder,
 } = require("@discordjs/builders");
 const {
   EmbedBuilder,
   ButtonStyle,
   PermissionFlagsBits,
   ComponentType,
-  User,
-  RoleFlags,
-  ActionRow,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ReactionUserManager,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
-const { job, businessTypes } = require("./utils/utils.js");
+const { job, } = require("./utils/utils.js");
 
-const Tester = [
-  {
-    name: 'Anon',
-    ID: '1222889346747859036'
-  },
-  {
-    name: 'Derrick',
-    ID: '1053281458602655816'
-  },
-  {
-    name: 'Eto',
-    ID: '961370035555811388'
-  },
-  {
-    name: 'Exact.Pressure',
-    value: '1222050305743523932'
-  }
-]
+
 
 const powerMovesets = {
   'Sode no Shirayuki': [
@@ -224,16 +201,6 @@ async function handleBegCommand(interaction) {
     }
   }
 
-  const isTester = Tester.some(t => t.ID === userId);
-
-  let finalAmount = amount;
-  let finalExperience = experiencegain;
-
-  if (isTester) {
-    finalAmount *= 2;       // Double rewards for testers
-    finalExperience *= 2;
-  }
-
   userData.balance += amount;
   userData.experience += experiencegain;
   userData.inventory[item] = (userData.inventory[item] || 0) + 1;
@@ -245,6 +212,7 @@ async function handleBegCommand(interaction) {
     .setDescription(
       `You begged and received **¥${amount.toLocaleString("en-US")}** along with **${item}** and **${experiencegain.toLocaleString("en-US")} experience**!`
     )
+    .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
   await interaction.reply({ embeds: [embed], ephemeral: false });
@@ -383,268 +351,246 @@ async function handleGambleCommand(interaction) {
 }
 
 async function handleHelpCommand(interaction) {
-
-  const userId = interaction.user.id;
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
-
-  const DiscordButton = new ButtonBuilder()
-    .setLabel('Discord')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://discord.gg/ax5PFRKdMb');
-  const GitHubButton = new ButtonBuilder()
-    .setLabel('Github')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://github.com/Yokaiiz');
-  const YouTubeButton = new ButtonBuilder()
-    .setLabel('YouTube')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://www.youtube.com/@Sunken_zz');
-  const TikTokButton = new ButtonBuilder()
-    .setLabel('TikTok')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://www.tiktok.com/@crucified_xx');
-  const TwitchButton = new ButtonBuilder()
-    .setLabel('Twitch')
-    .setStyle(ButtonStyle.Link)
-    .setURL('https://www.twitch.tv/crucified_xx');
-
-  const helpmenu = new StringSelectMenuBuilder()
-    .setPlaceholder('select an option')
-    .setCustomId('help-menu')
-    .addOptions([
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Discord Server 🗣️')
-        .setDescription('Updates the embed to show information regarding our discord server')
-        .setValue('discord-server'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Crucified bot 🤖')
-        .setDescription('Updates the embed to show information regarding the discord bot Crucified')
-        .setValue('crucified-bot'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Credits 💳')
-        .setDescription('Updates the embed to show information regarding the credits')
-        .setValue('credits'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Updates 📜')
-        .setDescription('Updates the embed to show information regarding each update about the discord bot!')
-        .setValue('updates'),
-    ]);
-
   const avatar = interaction.user.displayAvatarURL();
-  const username = interaction.user.username;
 
-  const selectmenuRow = new ActionRowBuilder().addComponents(helpmenu);
-  const helpbuttonRow = new ActionRowBuilder().addComponents(
-    DiscordButton, GitHubButton, YouTubeButton, TikTokButton, TwitchButton
+  const helpembed = new EmbedBuilder()
+  .setColor('Random')
+  .setTitle('Welcome to the Help Menu!')
+  .setDescription(`Here are the available options, **${interaction.user.username}(${interaction.user.id})**`)
+  .setThumbnail(`${avatar}`)
+  .addFields({
+    name: 'Test', value: 'test',
+  })
+  .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
+  .setTimestamp();
+
+  const helpmenuselect = new StringSelectMenuBuilder()
+  .setPlaceholder('Select an option!')
+  .setCustomId('helpmenuselect')
+  .addOptions([
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Support server 🆘')
+    .setDescription('Information about our support server!')
+    .setValue('support_server'),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Crucified Bot 🤖')
+    .setDescription('Information about the discord bot!')
+    .setValue('crucified_bot'),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Additional information')
+    .setDescription('This shows additional information such as adverts and things that are considered unnecessary')
+    .setValue('additional')
+  ]);
+
+  const additionalMenuSelect = new StringSelectMenuBuilder()
+  .setPlaceholder('Choose an option!')
+  .setCustomId('additionalmenuselect')
+  .addOptions([
+    new StringSelectMenuOptionBuilder()
+    .setLabel('adverts')
+    .setDescription('server advertisements!')
+    .setValue('adverts')
+  ]);
+
+  const advertMenuSelect = new StringSelectMenuBuilder()
+  .setPlaceholder('Choose a server!')
+  .setCustomId('advertmenuselect')
+  .addOptions([
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Whimsyx')
+    .setDescription('Information about Whimsyx!')
+    .setValue('whimsyx'),
+    new StringSelectMenuOptionBuilder()
+    .setLabel('Deflexcted')
+    .setDescription('Information about Deflexcted!')
+    .setValue('deflexcted'),
+  ])
+
+  const supportserverButton = new ButtonBuilder()
+  .setStyle(ButtonStyle.Link)
+  .setLabel(' Support server! 🆘 ')
+  .setURL('https://discord.gg/zzATAzdDHH');
+
+  const mainmenuhelpselectrow = new ActionRowBuilder().addComponents(
+    helpmenuselect,
   );
 
-  const mainEmbed = new EmbedBuilder()
-    .setColor('Default')
-    .setTitle(`Hello, ${username} how may I help you today?`)
-    .setThumbnail(`${avatar}`)
-    .addFields(
-      { name: '`Discord Server` 🗣️', value: 'Shows you information regarding our discord server such as; hierarchy, who to contact and events!' },
-      { name: '`Crucified Bot` 🤖', value: 'Shows information regarding the crucified discord bot such as; list of commands' },
-      { name: '`Credits` 💳', value: 'Shows information regarding the credits for the discord bot' },
-      { name: '`Updates` 📜', value: 'Shows information regarding the updates list for the most recent update on the discord bot'},
-    )
-    .setFooter({ text: 'Thank you for using the crucified bot! || Catawampus'})
-    .setTimestamp();
+  const additionalmenuselectrow = new ActionRowBuilder().addComponents(
+    additionalMenuSelect,
+  );
 
-  await interaction.reply({
-    embeds: [mainEmbed],
-    components: [helpbuttonRow, selectmenuRow]
-  });
+  const advertmenuselectrow = new ActionRowBuilder().addComponents(
+    advertMenuSelect,
+  );
 
-  const collector = interaction.channel.createMessageComponentCollector({
+  const supportButtons = new ActionRowBuilder().addComponents(
+    supportserverButton,
+  );
+
+  try {
+    await interaction.reply({
+      embeds: [helpembed],
+      components: [mainmenuhelpselectrow]
+    });
+  } catch (error) {
+    console.log(error);
+    return interaction.reply({
+      content: 'There has been a problem with the command!',
+      ephemeral: true,
+    });
+  }
+
+  const collector = await interaction.channel.createMessageComponentCollector({
     ComponentType: ComponentType.StringSelect,
-    time: 60000,
-    filter: (i) => i.user.id === interaction.user.id,
+    time: 0,
+    filter: i => i.user.id === interaction.user.id,
   });
 
-  collector.on('collect', async (i) => {
-    if (i.customId === 'help-menu' || interaction.user.id) {
-      if (i.values[0] === 'discord-server') {
-        const discordServerEmbed = new EmbedBuilder()
-          .setColor('Gold')
-          .setTitle(`Welcome to Whimsyx, ${username}`)
-          .setDescription('I hope you enjoy it here!')
-          .setThumbnail(`${interaction.guild.iconURL({dynamic: true})}`)
-          .setAuthor({
-            name: 'Eto',
-            iconURL: 'https://cdn.discordapp.com/attachments/1405954272624902328/1407379269218340977/IMG_3715.jpg?ex=68a5e395&is=68a49215&hm=0fbcecf28e025401e7f34ba3418b2c546712750542ef75240da8ad196969ea32&'
-          })
-          .addFields({ name: 'About `Whimsyx`', value: 'We are quite the inclusive server that aims to make an environment where people can enjoy themselves, make new friends, find potential partners and also feel like theyre welcome into our server!'},
-            {
-              name: '`Server Hierarchy`',
-              value: 'Owner: Kitty\nCo-owner: Eto/Crucified\nHead-mod: Rosie\nMod: Gaelle, Twenty\nTrial-mod: N/A\nGamenight Mod/Movienight Mod: Char'
-            },
-            {
-              name: '`Rules`',
-              value: '1. No discriminatory message of ANY kind and no distribution of NSFW content.\n2. If you are incapable of taking a joke, then please either say youre uncomfortable or leave the server.\n3. No form of leaking each others details including: faces, addresses or/and anything sensitive. (please ask for their content!)\n4. If you are in need of any form of help please dm the owner Kitty or a moderator.\n5. Nobody under 13 is to be allowed in the server at all.\n6. Be kind to each other, we are here to make new friendships or even find a potential partner and not to start any sort of drama between one another.\n7. Everyone is given 2 warnings before being entirely banned from the server, of course this varies depending on the situation/scenario.\n8. Do not self-advertise without the permission of an admin or higher.\n9. Do not be disrespectful towards mods or higher.\n10. if you are not hispanic/black or have any black ancestry then do NOT say the N word (emphasis on the first rule.)'
-            },
-            {
-              name: '`Events`',
-              value: 'Every saturday there will be a movie night hosted by Eto/Kitty or the moderator for the events. Please drop your suggestions in the suggestions channel, and for the game-nights it has not been decided yet.'
-            },
-            {
-              name: '`Partnerships`',
-              value: 'We at `Whimsyx` value actual and properly done partnerships between servers, so if you have any sort of plans to be partnering with us please be aware we demand you are active in our server as much as we are in yours.'
-            }
-          )
-          .setFooter({ text: 'Thank you for using the Crucified Bot || Catawampus' })
-          .setTimestamp();
+  collector.on('collect', async i => {
 
-        await i.update({
-          embeds: [discordServerEmbed],
-          components: [helpbuttonRow, selectmenuRow],
-          ephemeral: false,
+    if (i.customId !== 'helpmenuselect' && i.customId !== 'additionalmenuselect' && i.customId !== 'advertmenuselect' ) {
+      try {
+        return i.reply({
+          content: 'You did not use the actual select menu for the respective command. (help command)',
+          embeds: [],
+          components: [],
+          ephemeral: true,
         });
-      } else if (i.values[0] === 'crucified-bot') {
+      } catch (error) {
+        console.log(error);
+        return i.reply({
+          content: 'There has been an error with the command.',
+          ephemeral: true,
+          components: [],
+          embeds: [],
+        })
+      }
+    }
+
+    switch (i.values[0]) {
+      case 'support_server': {
+        const supportServerEmbed = new EmbedBuilder()
+        .setColor('Random')
+        .setTitle('random')
+        .setDescription('random')
+        .addFields({
+          name: 'random', value: 'random'
+        })
+        .setTimestamp();
+
+        try {
+          return i.update({
+            embeds: [supportServerEmbed],
+            components: [mainmenuhelpselectrow, supportButtons],
+            ephemeral: true
+          });
+        } catch (error) {
+          console.log(error);
+          return i.reply({
+            content: 'The collector for SupportServerEmbed failed!',
+            ephemeral: true,
+            components: []
+          });
+        }
+      }
+
+      case 'crucified_bot': {
         const crucifiedbotEmbed = new EmbedBuilder()
         .setColor('Random')
-        .setTitle(`Welcome to the page regarding the bot, ${username}`)
-        .setAuthor({
-          name: 'Eto',
-          iconURL: 'https://cdn.discordapp.com/attachments/1405954272624902328/1407379269218340977/IMG_3715.jpg?ex=68a5e395&is=68a49215&hm=0fbcecf28e025401e7f34ba3418b2c546712750542ef75240da8ad196969ea32&',
-        })
-        .setThumbnail(`${avatar}`)
-        .setImage('https://i.pinimg.com/1200x/bb/e4/51/bbe4511516852422983846dfd85d6f18.jpg')
+        .setTitle('random')
+        .setDescription('random')
+        .setThumbnail(avatar)
         .addFields(
           {
-            name: '`/beg`',
-            value: 'Lets you beg for a randomised amount of yen and experience alongside an item which you can utilise to `/dig`(if it is the shovel) or `/sell` if you do not want to use it at all.'
-          },
-          {
-            name: '`/cat`',
-            value: 'sends a completely random image of a cat utilising the fetch function from an API, has no other uses and will NOT have any other uses.'
-          },
-          {
-            name: '`/craft`',
-            value: 'Lets you craft sellable items from raw materials, I plan to use this so you can craft your own swords, shields and whatnot for fighting.'
-          },
-          {
-            name: '`/Dig`',
-            value: 'Uses a shovel to dig for for raw materials which you can utilise within the `/craft` command.'
-          },
-          {
-            name: '`/donate <user> <amount>`',
-            value: 'Lets you donate money to anyone! it also gives them a client message that they have been donated to by you.'
-          },
-          {
-            name: '`/gamble <amount>`',
-            value: 'Quite literally lets you gamble your life savings away.'
-          },
-          {
-            name: '`/give_experience <user> <amount>`',
-            value: 'Do not try and use, its an owner-bot exclusive command that lets the creator give experience to anyone within the database meanwhile not being home.'
-          },
-          {
-            name: '`/giveitem <user> <amount>`',
-            value: 'Same as give_experience, do not use as it is an owner-bot exclusive command that lets the creator give any item at any quantity'
-          },
-          {
-            name: '`/givemoney <user> <amount>`',
-            value: 'Do not use as its owner-bot exclusive. It lets me give any amount of money to anyone as long as i have their userID at hand.'
-          },
-          {
-            name: '`/help`',
-            value: 'You are using the command right now!'
-          },
-          {
-            name: '`/profile <user(optional btw)>`',
-            value: 'Lets you see your own balance, experience and inventory. it also lets you see other individuals profiles.'
-          },
-          {
-            name: '`/reset <user>`',
-            value: 'its a command thats exclusive to the bot-owner, it lets him reset anybodys data.'
-          },
-          {
-            name: '`/sell <item> <amount>`',
-            value: 'lets you sell items within your inventory for yen'
-          },
-          {
-            name: '`/take_exp`',
-            value: 'lets the bot-owner take any amount of exp from someone without requiring direct access to the database from his PC'
-          },
-          {
-            name: '`/take_money`',
-            value: 'lets the bot-owner take any amount of money from you at will without requiring direct access to the database.'
-          },
-          {
-            name: '`/timeout <user> <time (in milliseconds)>`',
-            value: 'lets server admins timeout members for a specific duration of time.'
-          },
-          {
-            name: '`/work`',
-            value: 'lets you work to gain exp and money faster, of course though there is a 30 minute cooldown to this command.'
-          },
-          {
-            name: '`/timeout <user> <time>`',
-            value: 'Allows the admins within the server to timeout a member, the maximum time someone can be timed out is 28 days.'
-          },
-          {
-            name: '`/ban <user> <reason>`',
-            value: 'Allows the admins within the server to ban a member, of course with a reason as well as it is required.'
-          },
-          {
-            name: '`/rob <user>`',
-            value: 'Lets you rob a specific user for an amount of money (max is 5K) with the 50% chance of failing and succeeding.'
-          },
-          {
-            name: '`/encyclopaedia <subcommand>`',
-            value: 'It functions like a wikipedia command but for games, the subcommand (e.g, minecraft) tells you what game you will be learning about'
+            name: 'random',
+            value: 'random'
           }
         )
-        .setFooter({text: `thank you for using the Crucified bot || Catawampus`})
         .setTimestamp();
 
-        await i.update({
-          embeds: [crucifiedbotEmbed],
-          components: [helpbuttonRow, selectmenuRow]
-        });
-      } else if (i.values[0] === 'credits') {
-        const creditsEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle('Welcome to the credits page!')
-        .setDescription('the utmost amount of credit goes to my friend Alison, the creator of NStudios and the JJK bot!')
-        .setThumbnail(`${avatar}`)
-        .setFooter({text: `Thank you for using the Crucified bot! || Catawampus`})
-        .setTimestamp();
-
-        await i.update({
-          embeds: [creditsEmbed],
-          components: [helpbuttonRow, selectmenuRow]
-        });
-      } else if (i.values[0] === 'updates') {
-        const updatesEmbed = new EmbedBuilder()
-        .setColor('Grey')
-        .setTitle('Update 1')
-        .setDescription('Here is our very first update, small but impactful nonetheless.')
-        .setImage('https://i.pinimg.com/736x/b7/31/31/b73131e43d1b84ef9c4935827511485f.jpg')
-        .setThumbnail(`${avatar}`)
-        .addFields(
-          {
-            name: 'New commands!',
-            value: 'The following commands were added in update 1:\n`/timeout`\n`/ban`\n`/rob`'
-          },
-          {
-            name: 'Nerfs, Buffs and Changes!',
-            value: '1. Gambling has been nerfed so the chances of winning are way lower (accurate to casinos)\n2. Jobs in `/work` have been buffed but require more experience compared to what they were like before.\n3. Entirely rewrote `/help` to show information regarding the server such as: partnerships.\n I also updated it so it is up to date with the newest information regarding Eto Bot.\n4. Buffed `/beg` quite a bit to make up for the gambling nerf.\n5. Increased the cooldowns on some commands to make up for the increased usage of gambling and so it is not over-used\n5. Made it so you cannot rob yourself using the `/rob` command.'
-          }
-        )
-        .setFooter({text: 'Thank you for using Crucified bot || Catawampus'})
-        .setTimestamp();
-
-        await i.update({
-          embeds: [updatesEmbed],
-          components: [helpbuttonRow, selectmenuRow]
-        });
+        try {
+          return i.update({
+            embeds: [crucifiedbotEmbed],
+            components: [mainmenuhelpselectrow],
+            ephemeral: false
+          });
+        } catch (error) {
+          console.log(error);
+          return i.update({
+            content: 'There has been an issue with the command.',
+            ephemeral: true
+          });
+        }
       }
-      // Add more cases for other menu options as needed
+
+      case 'additional': {
+        const additionalEmbed = new EmbedBuilder()
+        .setColor('Random')
+        .setTitle('random')
+        .setDescription('random')
+        .setThumbnail(avatar)
+        .addFields(
+          {
+            name: 'random',
+            value: 'random'
+          }
+        )
+        .setTimestamp();
+
+        try {
+          return i.update({
+            embeds: [additionalEmbed],
+            components: [mainmenuhelpselectrow, additionalmenuselectrow]
+          });
+        } catch (error) {
+          console.log(error);
+          return i.update({
+            content: 'There has been an issue with the code, it has been automatically reported to the bot creator.',
+            ephemeral: true
+          });
+        }
+      }
+
+      case 'adverts': {
+        const advertEmbed = new EmbedBuilder()
+        .setColor('Random')
+        .setTitle('Advertisements')
+        .setDescription(`Hello ${interaction.user.username}, which advert would you like to view?`)
+        .setThumbnail(avatar)
+        .setAuthor({
+          name: `${interaction.user.username}`,
+          iconURL: avatar
+        })
+        .addFields(
+          {
+            name: 'Whimsyx',
+            value: 'Information about Whimsyx'
+          },
+          {
+            name: 'Deflexcted',
+            value: 'Information about Deflexcted'
+          }
+        )
+        .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus'})
+        .setTimestamp();
+
+        try {
+          return i.update({
+            embeds: [advertEmbed],
+            components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow]
+          });
+        } catch (error) {
+          console.log(error);
+          return i.update({
+            content: 'There has been a problem with the advert information',
+            embeds: [],
+            components: [],
+            ephemeral: true
+          });
+        }
+      }
     }
-  });
+  })
 }
 
 async function handleDigCommand(interaction) {
@@ -1868,44 +1814,7 @@ async function handleSuggestCommand(interaction) {
   }
 }
 
-async function handlePurgeCommand(interaction) {
-  const amount = interaction.options.getInteger('amount');
 
-  if (!interaction.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
-    return interaction.reply({
-      content: 'You do not have permission to use this command.',
-      ephemeral: true,
-    });
-  }
-
-  if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageMessages)) {
-    return interaction.reply({
-      content: 'I do not have permission to manage messages.',
-      ephemeral: true,
-    });
-  }
-
-  if (amount < 1 ) {
-    return interaction.reply({
-      content: 'You must specify an amount of at least 1 message to delete.',
-      ephemeral: true,
-    });
-  }
-
-  try {
-    const deletedMessages = await interaction.channel.bulkDelete(amount, true);
-    return interaction.reply({
-      content: `🧹 Successfully deleted ${deletedMessages.size} messages.`,
-      ephemeral: true,
-    });
-  } catch (error) {
-    console.error('Error deleting messages:', error);
-    return interaction.reply({
-      content: '❌ There was an error trying to delete messages in this channel.',
-      ephemeral: true,
-    });
-  }
-}
 
 
 // --- Exports ---
@@ -1935,5 +1844,4 @@ module.exports = {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
-  handlePurgeCommand,
 };
