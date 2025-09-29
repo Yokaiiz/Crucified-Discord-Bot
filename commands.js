@@ -357,10 +357,23 @@ async function handleHelpCommand(interaction) {
   .setColor('Random')
   .setTitle('Welcome to the Help Menu!')
   .setDescription(`Here are the available options, **${interaction.user.username}(${interaction.user.id})**`)
-  .setThumbnail(`${avatar}`)
-  .addFields({
-    name: 'Test', value: 'test',
+  .setThumbnail(avatar)
+  .setAuthor({
+    name: 'Eto',
+    iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&',
+    url: 'https://www.github.com/Yokaiiz'
   })
+  .addFields(
+    {name: '`Support server` 🆘', value: 'Information about the support server!'},
+    {
+      name: '`Crucified Bot` 🤖',
+      value: 'Information about the Crucified Bot such as commands!'
+    },
+    {
+      name: '`Additional information` 📜',
+      value: 'Additional information that is considered unnecessary by the bot owner (Eto)'
+    }
+  )
   .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
   .setTimestamp();
 
@@ -400,10 +413,6 @@ async function handleHelpCommand(interaction) {
     .setLabel('Whimsyx')
     .setDescription('Information about Whimsyx!')
     .setValue('whimsyx'),
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Deflexcted')
-    .setDescription('Information about Deflexcted!')
-    .setValue('deflexcted'),
   ])
 
   const supportserverButton = new ButtonBuilder()
@@ -471,11 +480,31 @@ async function handleHelpCommand(interaction) {
       case 'support_server': {
         const supportServerEmbed = new EmbedBuilder()
         .setColor('Random')
-        .setTitle('random')
-        .setDescription('random')
-        .addFields({
-          name: 'random', value: 'random'
+        .setTitle('Deflexcted')
+        .setDescription('Welcome to our support server, Deflexcted!')
+        .setAuthor({
+          name: 'Eto',
+          iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&',
+          url: 'https://github.com/Yokaiiz'
         })
+        .setThumbnail('https://cdn.discordapp.com/attachments/1418360206248775754/1421568582357090456/meme_twitter_viral_dexter.jpg?ex=68d98269&is=68d830e9&hm=8379cdc744ce4dc91134a8703b622aa6b6d6acff421eccf728c12b867aff686b&')
+        .setImage('https://i.pinimg.com/originals/6e/38/c4/6e38c452d1ac28ac6d8f21eb74eaeb4b.gif')
+        .addFields(
+          {
+            name: '`Rules`',
+            value: '1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow mebers.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!'
+          },
+          {name: '`Information about Deflexcted`', value: 'The server originally started as an idea where i took in all the flaws of other servers and improved them to make the ideal layout for a community server but now I have actually decided to properly make it grow alongside the Crucified Bot as I am interested in these topics, the server offers access to the widely used bots across Discord such as Dankmemer and other bots (i think marriage bot is included? idk im not sure). There are also other fun things such as game-nights and movie nights that are weekly hosted by me (Eto, the owner).'},
+          {
+            name: '`How can I get support?`',
+            value: 'There will usually be a ticket system which allows you to create a ticket and acquire help from the bot-owner himself or someone qualified to actually help you. If you do not see a ticket system in place, then directly message the bot-owner (Eto) and explicitly mention its for support regarding the bot.'
+          },
+          {
+            name: '`Are there any additional things to do in this server?`',
+            value: 'Yes! There will be additional things to do overtime as the server grows, such as joining a clan, helping with the server in general and much more. But of course, the server is still very much early in development just like the bot itself!'
+          }
+        )
+        .setFooter({text: 'Thank you for using the Crucified Bot || Catawampus '})
         .setTimestamp();
 
         try {
@@ -497,9 +526,14 @@ async function handleHelpCommand(interaction) {
       case 'crucified_bot': {
         const crucifiedbotEmbed = new EmbedBuilder()
         .setColor('Random')
-        .setTitle('random')
+        .setTitle('Crucified Bot 🤖')
         .setDescription('random')
         .setThumbnail(avatar)
+        .setAuthor({
+          name: 'Eto',
+          url: 'https://github.com/Yokaiiz',
+          iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&'
+        })
         .addFields(
           {
             name: 'random',
@@ -566,10 +600,6 @@ async function handleHelpCommand(interaction) {
             name: 'Whimsyx',
             value: 'Information about Whimsyx'
           },
-          {
-            name: 'Deflexcted',
-            value: 'Information about Deflexcted'
-          }
         )
         .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus'})
         .setTimestamp();
