@@ -168,8 +168,9 @@ const bossPool = [
     health: 1500,
     defense: 0,
     abilities: [
-      { name: 'Almighty', damage: 0, effect: 'dodge', chance: 0.1 },
+      { name: 'Almighty', damage: 150, effect: 'dodge', chance: 0.1 },
       { name: 'Slash', damage: 125, chance: 0.1 },
+      { name: "Absolute Eradication", damage: 300, chance: 0.01 },
     ]
   },
 ]
