@@ -38,6 +38,7 @@ const {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
+  handleHugCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -156,6 +157,8 @@ const commands = [
   new SlashCommandBuilder().setName("work").setDescription("Work to earn money"),
   new SlashCommandBuilder().setName("suggest").setDescription("Suggest a feature to the bot owner")
     .addStringOption(option => option.setName("suggestion").setDescription("Your suggestion").setRequired(true)),
+  new SlashCommandBuilder().setName('hug').setDescription('Hug another user!')
+    .addUserOption(option => option.setName('target').setDescription('Who do you want to hug?').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -204,7 +207,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // 🔹 Guild-only check
-    const guildOnly = ["timeout", "ban"];
+    const guildOnly = ["timeout", "ban", "help"];
     if (guildOnly.includes(cmd) && !interaction.inGuild()) {
       return interaction.reply({ content: "❌ This command can only be used in a server.", ephemeral: true });
     }
@@ -250,6 +253,7 @@ client.on("interactionCreate", async (interaction) => {
         case "fight": return handleFightCommand(interaction);
         case "fish": return handleFishCommand(interaction);
         case "suggest": return handleSuggestCommand(interaction);
+        case "hug": return handleHugCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

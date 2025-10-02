@@ -21,6 +21,7 @@ class Database {
             race: "Human",
             firstTime: true,
             roleplayActions: {},
+            name: '',
         };
     }
 

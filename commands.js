@@ -1904,7 +1904,55 @@ async function handleSuggestCommand(interaction) {
   }
 }
 
+async function handleHugCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const userId = interaction.user.id;
+  const avatar = interaction.user.displayAvatarURL({ dynamic: true });
 
+  if (targetUser.id === userId) {
+    return interaction.reply({
+      content: "You cannot hug yourself!",
+      ephemeral: true,
+    });
+  }
+
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  // --- Counter logic ---
+  userData.name ||= interaction.user.displayName;
+  userData.roleplayActions ||= {};
+  userData.roleplayActions.hug ||= {};
+  userData.roleplayActions.hug[targetUser.id] = (userData.roleplayActions.hug[targetUser.id] || 0) + 1;
+  const count = userData.roleplayActions.hug[targetUser.id];
+  await database.saveUserData(userId, userData);
+
+  // --- Embed logic ---
+  const hugImages = [
+    'https://i.pinimg.com/originals/16/f4/ef/16f4ef8659534c88264670265e2a1626.gif',
+    'https://i.pinimg.com/originals/bf/b5/be/bfb5bed89f8c09bf53eab687eb3f9404.gif',
+    'https://i.pinimg.com/originals/6f/26/b1/6f26b102d674cb74e8869103af40f253.gif',
+    'https://i.pinimg.com/originals/ef/b6/e3/efb6e37a8a31e47b1ea969833555b4b6.gif',
+    'https://i.pinimg.com/originals/ef/ec/4e/efec4efb80165788a794f94c14bc9eb6.gif',
+    'https://i.pinimg.com/originals/9c/18/12/9c18129e8449737c6ab013567cddaac0.gif',
+    'https://i.pinimg.com/originals/6e/93/f7/6e93f79d1db5af77a09414b632c2054f.gif',
+    'https://i.pinimg.com/originals/3f/ad/d2/3fadd265abfb14aaace51414f30a55af.gif',
+  ];
+  const selectedImage = hugImages[Math.floor(Math.random() * hugImages.length)];
+
+  const hugEmbed = new EmbedBuilder()
+    .setColor('Random')
+    .setDescription(`**<@${userId}>** has hugged **<@${targetUser.id}>** (**${count}** time${count === 1 ? "" : "s"})!`)
+    .setAuthor({
+      name: `${interaction.user.displayName}`,
+      iconURL: avatar,
+    })
+    .setImage(selectedImage)
+    .setFooter({ text: 'Hugs are nice!' })
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [hugEmbed] });
+}
 
 
 // --- Exports ---
@@ -1934,4 +1982,5 @@ module.exports = {
   handleFightCommand,
   handleFishCommand,
   handleSuggestCommand,
+  handleHugCommand,
 };
