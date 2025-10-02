@@ -20,6 +20,7 @@ class Database {
             power: "",
             race: "Human",
             firstTime: true,
+            roleplayActions: {},
         };
     }
 

@@ -43,6 +43,7 @@ const {
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (!TOKEN) throw new Error("❌ Missing DISCORD_BOT_TOKEN in .env file");
 const OWNER_ID = process.env.OWNER_ID;
+const OWNER_ID2 = process.env.OWNER_ID2;
 
 // --- Client setup ---
 const client = new Client({
@@ -198,7 +199,7 @@ client.on("interactionCreate", async (interaction) => {
 
     // 🔹 Owner-only check
     const ownerOnly = ["reset", "givemoney", "giveitem", "give_experience", "take_money", "take_exp"];
-    if (ownerOnly.includes(cmd) && interaction.user.id !== OWNER_ID) {
+    if (ownerOnly.includes(cmd) && interaction.user.id !== OWNER_ID && interaction.user.id !== OWNER_ID2) {
       return interaction.reply({ content: "❌ Only the bot owner can use this command.", ephemeral: true });
     }
 

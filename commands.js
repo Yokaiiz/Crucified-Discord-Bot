@@ -421,6 +421,11 @@ async function handleHelpCommand(interaction) {
   .setLabel(' Support server! 🆘 ')
   .setURL('https://discord.gg/zzATAzdDHH');
 
+  const githubButton = new ButtonBuilder()
+  .setStyle(ButtonStyle.Link)
+  .setLabel(' Github 🤖 ')
+  .setURL('https://github.com/Yokaiiz/Crucified-Discord-Bot');
+
   const mainmenuhelpselectrow = new ActionRowBuilder().addComponents(
     helpmenuselect,
   );
@@ -435,6 +440,7 @@ async function handleHelpCommand(interaction) {
 
   const supportButtons = new ActionRowBuilder().addComponents(
     supportserverButton,
+    githubButton,
   );
 
   try {
@@ -530,6 +536,7 @@ async function handleHelpCommand(interaction) {
         .setTitle('Crucified Bot 🤖')
         .setDescription('random')
         .setThumbnail(avatar)
+        .setImage('https://i.pinimg.com/1200x/58/5f/4a/585f4a28a3416141541042217afec9f4.jpg')
         .setAuthor({
           name: 'Eto',
           url: 'https://github.com/Yokaiiz',
@@ -537,10 +544,19 @@ async function handleHelpCommand(interaction) {
         })
         .addFields(
           {
-            name: 'random',
-            value: 'random'
+            name: 'Fun',
+            value: '`Cat`, `Beg`, `Gamble`, `Dig`, `Craft`, `Fight`, `Fish (coming soon)`, `Use`'
+          },
+          {
+            name: `Economy`,
+            value: '`Profile`, `Sell`, `Donate`, `Rob`, `Shop`'
+          },
+          {
+            name: 'Administrative',
+            value: '`Help`, `Ban`, `Timeout (uses milliseconds)`'
           }
         )
+        .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
         .setTimestamp();
 
         try {
@@ -561,13 +577,17 @@ async function handleHelpCommand(interaction) {
       case 'additional': {
         const additionalEmbed = new EmbedBuilder()
         .setColor('Random')
-        .setTitle('random')
-        .setDescription('random')
+        .setTitle(`Hello ${interaction.user.username}!`)
+        .setDescription('Here are your options:')
         .setThumbnail(avatar)
+        .setAuthor({
+          name: interaction.user.username,
+          iconURL: avatar
+        })
         .addFields(
           {
-            name: 'random',
-            value: 'random'
+            name: 'Adverts',
+            value: '`Whimsyx`'
           }
         )
         .setTimestamp();
@@ -617,6 +637,45 @@ async function handleHelpCommand(interaction) {
             embeds: [],
             components: [],
             ephemeral: true
+          });
+        }
+      }
+
+      case 'whimsyx': {
+        const whimsyxEmbed = new EmbedBuilder()
+        .setColor('Random')
+        .setTitle('Whimsyx')
+        .setDescription('Welcome to Whimsyx, a friendly community server!')
+        .setThumbnail('https://cdn.discordapp.com/attachments/1405954272624902328/1407383473861296311/IMG_0895.jpg?ex=68dfe980&is=68de9800&hm=2de88150629a6d57453ce5d0e7c4252ae0de074bcd248183581ea7e0c254e23e&')
+        .addFields(
+          {
+            name: '`Rules`',
+            value: '1. Be respectful to all members and staff.\n2. No spamming or self-promotion without permission.\n3. Keep content appropriate for all ages.\n4. Use channels for their intended purposes.'
+          },
+          {
+            name: '`What is Whimsyx?`',
+            value: 'Whimsyx is a friendly community server where members can chat, share interests, and participate in events. We have channels for various topics, including gaming, art, music, and more. Join us for a fun and welcoming experience!'
+          },
+          {
+            name: '`Join Whimsyx`',
+            value: '[Click here to join Whimsyx!](https://discord.gg/ax5PFRKdMb)'
+          }
+        )
+        .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
+        .setTimestamp();
+
+        try {
+          return i.update({
+            embeds: [whimsyxEmbed],
+            components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow, supportButtons],
+            ephemeral: false
+          });
+        } catch (error) {
+          console.log(error);
+          return i.update({
+            content: 'There has been an issue with the command.',
+            ephemeral: true,
+            components: []
           });
         }
       }
