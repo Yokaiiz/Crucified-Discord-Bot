@@ -39,6 +39,7 @@ const {
   handleFishCommand,
   handleSuggestCommand,
   handleHugCommand,
+  handleSlapCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -256,6 +257,7 @@ client.on("interactionCreate", async (interaction) => {
         case "fish": return handleFishCommand(interaction);
         case "suggest": return handleSuggestCommand(interaction);
         case "hug": return handleHugCommand(interaction);
+        case "slap": return handleSlapCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

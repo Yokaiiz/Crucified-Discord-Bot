@@ -545,7 +545,7 @@ async function handleHelpCommand(interaction) {
         .addFields(
           {
             name: 'Fun',
-            value: '`Cat`, `Beg`, `Gamble`, `Dig`, `Craft`, `Fight`, `Fish (coming soon)`, `Use`'
+            value: '`Cat`, `Beg`, `Gamble`, `Dig`, `Craft`, `Fight`, `Fish`, `Use`'
           },
           {
             name: `Economy`,
@@ -554,6 +554,10 @@ async function handleHelpCommand(interaction) {
           {
             name: 'Administrative',
             value: '`Help`, `Ban`, `Timeout (uses milliseconds)`'
+          },
+          {
+            name: 'Roleplay',
+            value: '`Hug`, `Slap`'
           }
         )
         .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
