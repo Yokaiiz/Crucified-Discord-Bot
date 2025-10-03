@@ -1981,7 +1981,13 @@ async function handleSlapCommand(interaction) {
   await database.saveUserData(userID, userData);
 
   const slapimages = [
-
+    'https://i.pinimg.com/originals/2b/3a/3e/2b3a3e107ac57d4f170a8f8e414fec9f.gif',
+    'https://i.pinimg.com/originals/1e/0d/de/1e0dde7324127aa8de046ede80b89d2d.gif',
+    'https://i.pinimg.com/originals/a9/b8/bd/a9b8bd2060d76ec286ec8b4c61ec1f5a.gif',
+    'https://i.pinimg.com/originals/8c/a5/fc/8ca5fc2e6657e04b6a4236cf3dcc3f6b.gif',
+    'https://i.pinimg.com/originals/70/0b/b2/700bb2cc9429e2bab1da767b4486f4e1.gif',
+    'https://i.pinimg.com/originals/a5/b6/da/a5b6da6669d9e8684fdae18932a22ff6.gif',
+    'https://i.pinimg.com/originals/f3/73/d9/f373d9bd0f4e703c0f0d1eae35ec157a.gif',
   ];
   const selectedImage = slapimages[Math.floor(Math.random() * slapimages.length)];
 
