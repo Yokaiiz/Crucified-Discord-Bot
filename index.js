@@ -159,6 +159,8 @@ const commands = [
     .addStringOption(option => option.setName("suggestion").setDescription("Your suggestion").setRequired(true)),
   new SlashCommandBuilder().setName('hug').setDescription('Hug another user!')
     .addUserOption(option => option.setName('target').setDescription('Who do you want to hug?').setRequired(true)),
+  new SlashCommandBuilder().setName('slap').setDescription('Slap a user!')
+    .addUserOption(option => option.setName('target').setDescription('The user you want to slap').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---

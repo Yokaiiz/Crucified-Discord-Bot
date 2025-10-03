@@ -1954,6 +1954,56 @@ async function handleHugCommand(interaction) {
   await interaction.reply({ embeds: [hugEmbed] });
 }
 
+async function handleSlapCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const userID = interaction.user.id;
+  const avatar = interaction.user.displayAvatarURL({ dynamic: true});
+
+  if (targetUser.id === userId) {
+    return interaction.reply({
+      content: 'You cannot slap yourself!',
+      ephemeral: true
+    });
+  }
+
+  await database.ensureUser(userId);
+  const userData = await database.getUserData(userId);
+
+  userData.name ||= interaction.user.displayName;
+  userData.roleplayActions ||= {};
+  userData.roleplayActions.slap ||= {};
+  userData.roleplayActions.slap[targetUser.id] = (userData.roleplayActions.slap[targetUser.id] || 0) + 1;
+  const count = userData.roleplayActions.slap[targetUser.id];
+  await database.saveUserData(userId, userData);
+
+  const slapimages = [
+
+  ];
+  const selectedImage = slapimages[Math.floor(Math.random() * slapimages.length)];
+
+  const slapEmbed = new EmbedBuilder()
+  .setColor('Random')
+  .setDescription(`<@${interaction.user.id}> has slapped <@${targetUser.id}> **${count}** time${count === 1 ? "" : "s"}!`)
+  .setImage(selectedImage)
+  .setAuthor({
+    name: interaction.user.displayName,
+    iconURL: avatar
+  })
+  .setFooter({ text: 'Owh that must hurt!' })
+  .setTimestamp();
+
+  try {
+    await interaction.reply({
+      embeds: [slapEmbed]
+    });
+  } catch (error) {
+    return interaction.reply({
+      content: 'There has been an error with the command!',
+      ephemeral: true
+    });
+  }
+}
+
 
 // --- Exports ---
 module.exports = {
@@ -1983,4 +2033,5 @@ module.exports = {
   handleFishCommand,
   handleSuggestCommand,
   handleHugCommand,
+  handleSlapCommand,
 };
