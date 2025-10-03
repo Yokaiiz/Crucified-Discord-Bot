@@ -1963,22 +1963,22 @@ async function handleSlapCommand(interaction) {
   const userID = interaction.user.id;
   const avatar = interaction.user.displayAvatarURL({ dynamic: true});
 
-  if (targetUser.id === userId) {
+  if (targetUser.id === userID) {
     return interaction.reply({
       content: 'You cannot slap yourself!',
       ephemeral: true
     });
   }
 
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
+  await database.ensureUser(userID);
+  const userData = await database.getUserData(userID);
 
   userData.name ||= interaction.user.displayName;
   userData.roleplayActions ||= {};
   userData.roleplayActions.slap ||= {};
   userData.roleplayActions.slap[targetUser.id] = (userData.roleplayActions.slap[targetUser.id] || 0) + 1;
   const count = userData.roleplayActions.slap[targetUser.id];
-  await database.saveUserData(userId, userData);
+  await database.saveUserData(userID, userData);
 
   const slapimages = [
 
@@ -2001,6 +2001,7 @@ async function handleSlapCommand(interaction) {
       embeds: [slapEmbed]
     });
   } catch (error) {
+    console.log(error);
     return interaction.reply({
       content: 'There has been an error with the command!',
       ephemeral: true
