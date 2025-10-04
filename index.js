@@ -40,6 +40,7 @@ const {
   handleSuggestCommand,
   handleHugCommand,
   handleSlapCommand,
+  handleKissCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -162,6 +163,8 @@ const commands = [
     .addUserOption(option => option.setName('target').setDescription('Who do you want to hug?').setRequired(true)),
   new SlashCommandBuilder().setName('slap').setDescription('Slap a user!')
     .addUserOption(option => option.setName('target').setDescription('The user you want to slap').setRequired(true)),
+  new SlashCommandBuilder().setName('kiss').setDescription('Kiss a user!')
+    .addUserOption(option => option.setName('target').setDescription('The person you want to kiss!')),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -258,6 +261,7 @@ client.on("interactionCreate", async (interaction) => {
         case "suggest": return handleSuggestCommand(interaction);
         case "hug": return handleHugCommand(interaction);
         case "slap": return handleSlapCommand(interaction);
+        case "kiss": return handleKissCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

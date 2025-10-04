@@ -2015,6 +2015,63 @@ async function handleSlapCommand(interaction) {
   }
 }
 
+async function handleKissCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const userID = interaction.user.id;
+  const avatar = interaction.user.displayAvatarURL({dynamic: true});
+
+  await database.ensureUser(userID);
+  const userData = await database.getUserData(userID);
+
+  if (targetUser.id === userID) {
+    return interaction.reply({
+      content: 'You cannot kiss yourself, sadly.',
+      ephemeral: true
+    });
+  }
+
+  userData.name ||= interaction.user.displayName;
+  userData.roleplayActions ||= {};
+  userData.roleplayActions.kiss ||= {};
+  userData.roleplayActions.kiss[targetUser.id] = (userData.roleplayActions.kiss[targetUser.id] || 0) + 1;
+  const count = userData.roleplayActions.kiss[targetUser.id];
+  await database.saveUserData(userID, userData);
+
+  const kissImages = [
+    'https://i.pinimg.com/originals/da/64/eb/da64eb02a04941d4eb31f173cc2c6c40.gif',
+    'https://i.pinimg.com/originals/10/5a/7a/105a7ad7edbe74e5ca834348025cc650.gif',
+    'https://i.pinimg.com/originals/4b/5d/5a/4b5d5afd747fe053ed79317628aac106.gif',
+    'https://i.pinimg.com/originals/6c/05/e5/6c05e58405258b50711b84ac9db7441a.gif',
+    'https://i.pinimg.com/originals/37/63/3f/37633f0b8d39daf70a50f69293e303fc.gif',
+    'https://i.pinimg.com/originals/41/6a/85/416a8536c3ba7830c64cd9847e3b880d.gif',
+    'https://i.pinimg.com/originals/d0/cd/64/d0cd64030f383d56e7edc54a484d4b8d.gif',
+    'https://i.pinimg.com/originals/ae/4c/ad/ae4cad79c863407377e7f498b27bba78.gif'
+  ];
+  const randomKissImage = kissImages[Math.floor(Math.random() * kissImages.length)];
+
+  const kissEmbed = new EmbedBuilder()
+  .setColor('Random')
+  .setDescription(`<@${userID}> has kissed <@${targetUser.id}> **${count}** time${count === 1 ? "" : "s"}!`)
+  .setImage(randomKissImage)
+  .setAuthor({
+    name: interaction.user.displayName,
+    iconURL: avatar,
+  })
+  .setFooter({text: 'All lovey dovey huh'})
+  .setTimestamp();
+
+  try {
+    await interaction.reply({
+      embeds: [kissEmbed]
+    });
+  } catch (error) {
+    console.log(error);
+    return interaction.reply({
+      content: 'There has been an issue with the command!',
+      ephemeral: true
+    });
+  }
+}
 
 // --- Exports ---
 module.exports = {
@@ -2045,4 +2102,5 @@ module.exports = {
   handleSuggestCommand,
   handleHugCommand,
   handleSlapCommand,
+  handleKissCommand,
 };
