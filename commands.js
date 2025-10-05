@@ -2073,6 +2073,48 @@ async function handleKissCommand(interaction) {
   }
 }
 
+async function handleCuddleCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const userID = interaction.user.id;
+
+  await database.ensureUser(userID);
+  const userData = await database.getUserData(userID);
+
+  userData.name ||= interaction.user.displayName;
+  userData.roleplayActions ||= {};
+  userData.roleplayActions.cuddle ||= {};
+  userData.roleplayActions.cuddle[targetUser.id] = (userData.roleplayActions.cuddle[targetUser.id] || 0) + 1;
+  const count = userData.roleplayActions.cuddle[targetUser.id];
+
+  const cuddleImages = [
+    'https://i.pinimg.com/originals/ae/43/03/ae4303ff0a5ba51017874911797e3620.gif',
+    'https://i.pinimg.com/originals/36/d7/4d/36d74d6358b6abb17ad43e2c210a1e84.gif',
+    'https://i.pinimg.com/originals/8d/60/5d/8d605dba1b4b9e0b0c1e4860d4dd2da3.gif',
+    'https://i.pinimg.com/originals/ba/48/1c/ba481c1dcc966425688847b6e17f9299.gif',
+    'https://i.pinimg.com/originals/d1/e8/4c/d1e84cdd185e7cd31daec5d411788eef.gif'
+  ];
+  const selectedCuddleImage = cuddleImages[Math.floor(Math.random() * cuddleImages.length)];
+
+  const cuddleEmbed = new EmbedBuilder()
+  .setColor('Random')
+  .setDescription(`<@${userID}> has cuddled <@${targetUser.id}> **${count}** time${count === 1 ? "" : "s"}!`)
+  .setImage(selectedCuddleImage)
+  .setFooter({text: 'How cute'})
+  .setTimestamp();
+
+  try {
+    await interaction.reply({
+      embeds: [cuddleEmbed]
+    });
+  } catch (error) {
+    console.log(error);
+    return interaction.reply({
+      content: 'There has been an error with the command!',
+      ephemeral: true,
+    });
+  }
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -2103,4 +2145,5 @@ module.exports = {
   handleHugCommand,
   handleSlapCommand,
   handleKissCommand,
+  handleCuddleCommand,
 };
