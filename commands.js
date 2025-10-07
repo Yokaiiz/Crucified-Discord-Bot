@@ -557,7 +557,7 @@ async function handleHelpCommand(interaction) {
           },
           {
             name: 'Roleplay',
-            value: '`Hug`, `Slap`'
+            value: '`Hug`, `Slap`, `Cuddle`, `Kiss`'
           }
         )
         .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
@@ -2115,6 +2115,61 @@ async function handleCuddleCommand(interaction) {
   }
 }
 
+async function handleFuckCommand(interaction) {
+  const targetUserID = interaction.options.getUser('target').id;
+  const userID = interaction.user.id;
+
+  await database.ensureUser(userID);
+  const userData = await database.getUserData(userID);
+
+  userData.name ||= interaction.user.displayName;
+  userData.roleplayActions ||= {};
+  userData.roleplayActions.fuck ||= {};
+  userData.roleplayActions.fuck[targetUserID] = (userData.roleplayActions.fuck[targetUserID] || 0) + 1;
+  const count = userData.roleplayActions.fuck[targetUserID];
+
+  await database.saveUserData(userID, userData);
+
+  const fuckImages = [
+    'https://r2.greed.best/fuck/fuck6.gif',
+    'https://r2.greed.best/fuck/fuck1.gif',
+    'https://r2.greed.best/fuck/fuck4.gif',
+    'https://r2.greed.best/fuck/fuck2.gif',
+    'https://r2.greed.best/fuck/fuck7.gif',
+    'https://r2.greed.best/fuck/fuck10.gif',
+    'https://r2.greed.best/fuck/fuck5.gif',
+    'https://r2.greed.best/fuck/fuck3.gif',
+    'https://r2.greed.best/fuck/fuck11.gif',
+    'https://r2.greed.best/fuck/fuck9.gif',
+    'https://r2.greed.best/fuck/fuck8.gif',
+    ''
+  ];
+  const selectedfuckImages = fuckImages[Math.floor(Math.random() * fuckImages.length)];
+
+  const fuckEmbed = new EmbedBuilder()
+  .setColor('Random')
+  .setDescription(`<@${userID}> has fucked <@${targetUserID}> **${count}** time${count === 1 ? "" : "s"}`)
+  .setImage(selectedfuckImages)
+  .setAuthor({
+    name: interaction.user.displayName,
+    iconURL: interaction.user.displayAvatarURL({dynamic: true})
+  })
+  .setFooter({text: 'Ooh... get a room.'})
+  .setTimestamp();
+
+  try {
+    await interaction.reply({
+      embeds: [fuckEmbed]
+    });
+  } catch (error) {
+    console.log(error);
+    return interaction.reply({
+      content: 'There has been an issue with the command!',
+      ephemeral: true
+    });
+  }
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -2146,4 +2201,5 @@ module.exports = {
   handleSlapCommand,
   handleKissCommand,
   handleCuddleCommand,
+  handleFuckCommand,
 };
