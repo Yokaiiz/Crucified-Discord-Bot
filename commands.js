@@ -538,9 +538,9 @@ async function handleHelpCommand(interaction) {
         .setThumbnail(avatar)
         .setImage('https://i.pinimg.com/1200x/58/5f/4a/585f4a28a3416141541042217afec9f4.jpg')
         .setAuthor({
-          name: 'Eto',
+          name: interaction.user.displayName,
           url: 'https://github.com/Yokaiiz',
-          iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&'
+          iconURL: interaction.user.displayAvatarURL({dynamic: true})
         })
         .addFields(
           {
