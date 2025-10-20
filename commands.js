@@ -355,336 +355,187 @@ async function handleHelpCommand(interaction) {
   const avatar = interaction.user.displayAvatarURL();
 
   const helpembed = new EmbedBuilder()
-  .setColor('Random')
-  .setTitle('Welcome to the Help Menu!')
-  .setDescription(`Here are the available options, **${interaction.user.username}(${interaction.user.id})**`)
-  .setThumbnail(avatar)
-  .setAuthor({
-    name: 'Eto',
-    iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&',
-    url: 'https://www.github.com/Yokaiiz'
-  })
-  .addFields(
-    {name: '`Support server` 🆘', value: 'Information about the support server!'},
-    {
-      name: '`Crucified Bot` 🤖',
-      value: 'Information about the Crucified Bot such as commands!'
-    },
-    {
-      name: '`Additional information` 📜',
-      value: 'Additional information that is considered unnecessary by the bot owner (Eto)'
-    }
-  )
-  .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
-  .setTimestamp();
+    .setColor('Random')
+    .setTitle('Welcome to the Help Menu!')
+    .setDescription(`Here are the available options, **${interaction.user.username}(${interaction.user.id})**`)
+    .setThumbnail(avatar)
+    .setAuthor({
+      name: 'Eto',
+      iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg',
+      url: 'https://www.github.com/Yokaiiz'
+    })
+    .addFields(
+      { name: '`Support server` 🆘', value: 'Information about the support server!' },
+      { name: '`Crucified Bot` 🤖', value: 'Information about the Crucified Bot such as commands!' },
+      { name: '`Additional information` 📜', value: 'Additional information that is considered unnecessary by the bot owner (Eto)' }
+    )
+    .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus' })
+    .setTimestamp();
 
   const helpmenuselect = new StringSelectMenuBuilder()
-  .setPlaceholder('Select an option!')
-  .setCustomId('helpmenuselect')
-  .addOptions([
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Support server 🆘')
-    .setDescription('Information about our support server!')
-    .setValue('support_server'),
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Crucified Bot 🤖')
-    .setDescription('Information about the discord bot!')
-    .setValue('crucified_bot'),
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Additional information')
-    .setDescription('This shows additional information such as adverts and things that are considered unnecessary')
-    .setValue('additional')
-  ]);
+    .setPlaceholder('Select an option!')
+    .setCustomId('helpmenuselect')
+    .addOptions([
+      { label: 'Support server 🆘', description: 'Information about our support server!', value: 'support_server' },
+      { label: 'Crucified Bot 🤖', description: 'Information about the discord bot!', value: 'crucified_bot' },
+      { label: 'Additional information', description: 'Additional info such as adverts', value: 'additional' },
+    ]);
 
   const additionalMenuSelect = new StringSelectMenuBuilder()
-  .setPlaceholder('Choose an option!')
-  .setCustomId('additionalmenuselect')
-  .addOptions([
-    new StringSelectMenuOptionBuilder()
-    .setLabel('adverts')
-    .setDescription('server advertisements!')
-    .setValue('adverts')
-  ]);
+    .setPlaceholder('Choose an option!')
+    .setCustomId('additionalmenuselect')
+    .addOptions([
+      { label: 'adverts', description: 'server advertisements!', value: 'adverts' },
+    ]);
 
   const advertMenuSelect = new StringSelectMenuBuilder()
-  .setPlaceholder('Choose a server!')
-  .setCustomId('advertmenuselect')
-  .addOptions([
-    new StringSelectMenuOptionBuilder()
-    .setLabel('Whimsyx')
-    .setDescription('Information about Whimsyx!')
-    .setValue('whimsyx'),
-  ])
+    .setPlaceholder('Choose a server!')
+    .setCustomId('advertmenuselect')
+    .addOptions([
+      { label: 'Whimsyx', description: 'Information about Whimsyx!', value: 'whimsyx' },
+    ]);
 
   const supportserverButton = new ButtonBuilder()
-  .setStyle(ButtonStyle.Link)
-  .setLabel(' Support server! 🆘 ')
-  .setURL('https://discord.gg/zzATAzdDHH');
+    .setStyle(ButtonStyle.Link)
+    .setLabel(' Support server! 🆘 ')
+    .setURL('https://discord.gg/zzATAzdDHH');
 
   const githubButton = new ButtonBuilder()
-  .setStyle(ButtonStyle.Link)
-  .setLabel(' Github 🤖 ')
-  .setURL('https://github.com/Yokaiiz/Crucified-Discord-Bot');
+    .setStyle(ButtonStyle.Link)
+    .setLabel(' Github 🤖 ')
+    .setURL('https://github.com/Yokaiiz/Crucified-Discord-Bot');
 
-  const mainmenuhelpselectrow = new ActionRowBuilder().addComponents(
-    helpmenuselect,
-  );
+  const mainmenuhelpselectrow = new ActionRowBuilder().addComponents(helpmenuselect);
+  const additionalmenuselectrow = new ActionRowBuilder().addComponents(additionalMenuSelect);
+  const advertmenuselectrow = new ActionRowBuilder().addComponents(advertMenuSelect);
+  const supportButtons = new ActionRowBuilder().addComponents(supportserverButton, githubButton);
 
-  const additionalmenuselectrow = new ActionRowBuilder().addComponents(
-    additionalMenuSelect,
-  );
-
-  const advertmenuselectrow = new ActionRowBuilder().addComponents(
-    advertMenuSelect,
-  );
-
-  const supportButtons = new ActionRowBuilder().addComponents(
-    supportserverButton,
-    githubButton,
-  );
-
+  // Send reply and fetch the message so we can attach a message-level collector
+  let msg;
   try {
-    await interaction.reply({
+    msg = await interaction.reply({
       embeds: [helpembed],
-      components: [mainmenuhelpselectrow]
-    });
-  } catch (error) {
-    console.log(error);
-    return interaction.reply({
-      content: 'There has been a problem with the command!',
+      components: [mainmenuhelpselectrow],
+      fetchReply: true,
       ephemeral: true,
     });
+  } catch (err) {
+    console.error('Failed to send help reply:', err);
+    return interaction.reply({ content: 'There has been a problem with the command!', ephemeral: true }).catch(() => {});
   }
 
-  const collector = await interaction.channel.createMessageComponentCollector({
-    ComponentType: ComponentType.StringSelect,
-    time: 0,
-    filter: i => i.user.id === interaction.user.id,
+  // Collector attached to the sent message (safer than channel collector)
+  const collector = msg.createMessageComponentCollector({
+    componentType: ComponentType.StringSelect,
+    time: 5 * 60 * 1000, // 5 minutes
+    filter: (i) => i.user.id === interaction.user.id,
   });
 
-  collector.on('collect', async i => {
-
-    if (i.customId !== 'helpmenuselect' && i.customId !== 'additionalmenuselect' && i.customId !== 'advertmenuselect' ) {
-      try {
-        return i.reply({
-          content: 'You did not use the actual select menu for the respective command. (help command)',
-          embeds: [],
-          components: [],
-          ephemeral: true,
-        });
-      } catch (error) {
-        console.log(error);
-        return i.reply({
-          content: 'There has been an error with the command.',
-          ephemeral: true,
-          components: [],
-          embeds: [],
-        })
+  collector.on('collect', async (i) => {
+    try {
+      // protect against wrong customId usage
+      if (!['helpmenuselect', 'additionalmenuselect', 'advertmenuselect'].includes(i.customId)) {
+        return i.reply({ content: 'You did not use the correct select menu for this command.', ephemeral: true }).catch(() => {});
       }
+
+      const value = i.values && i.values[0];
+      switch (value) {
+        case 'support_server': {
+          const supportServerEmbed = new EmbedBuilder()
+            .setColor('Random')
+            .setTitle('Deflexcted')
+            .setDescription('Welcome to our support server, Deflexcted!')
+            .setThumbnail('https://cdn.discordapp.com/attachments/1418360206248775754/1421568582357090456/meme_twitter_viral_dexter.jpg')
+            .setImage('https://i.pinimg.com/originals/6e/38/c4/6e38c452d1ac28ac6d8f21eb74eaeb4b.gif')
+            .addFields(
+              { name: '`Rules`', value: '1. Treat everyone with respect. No harassment, hate, spam, or NSFW content.\n2. No spam or self-promotion without permission.\n3. Keep content appropriate.\n4. Report rule breaking to staff.' },
+              { name: '`Information about Deflexcted`', value: 'The server originally started as an idea...' },
+              { name: '`How can I get support?`', value: 'Use the ticket system or DM the bot owner.' }
+            )
+            .setFooter({ text: 'Thank you for using the Crucified Bot || Catawampus ' })
+            .setTimestamp();
+
+          return i.update({ embeds: [supportServerEmbed], components: [mainmenuhelpselectrow, supportButtons], ephemeral: true });
+        }
+
+        case 'crucified_bot': {
+          const crucifiedbotEmbed = new EmbedBuilder()
+            .setColor('Random')
+            .setTitle('Crucified Bot 🤖')
+            .setDescription('random')
+            .setThumbnail(avatar)
+            .addFields(
+              { name: 'Fun', value: '`Cat`, `Beg`, `Gamble`, `Dig`, `Craft`, `Fight`, `Fish`, `Use`' },
+              { name: 'Economy', value: '`Profile`, `Sell`, `Donate`, `Rob`, `Shop`' },
+              { name: 'Administrative', value: '`Help`, `Ban`, `Timeout (uses milliseconds)`' },
+              { name: 'Roleplay', value: '`Hug`, `Slap`, `Cuddle`, `Kiss`' }
+            )
+            .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus' })
+            .setTimestamp();
+
+          return i.update({ embeds: [crucifiedbotEmbed], components: [mainmenuhelpselectrow], ephemeral: true });
+        }
+
+        case 'additional': {
+          const additionalEmbed = new EmbedBuilder()
+            .setColor('Random')
+            .setTitle(`Hello ${interaction.user.username}!`)
+            .setDescription('Here are your options:')
+            .setThumbnail(avatar)
+            .addFields({ name: 'Adverts', value: '`Whimsyx`' })
+            .setTimestamp();
+
+          return i.update({ embeds: [additionalEmbed], components: [mainmenuhelpselectrow, additionalmenuselectrow], ephemeral: true });
+        }
+
+        case 'adverts': {
+          const advertEmbed = new EmbedBuilder()
+            .setColor('Random')
+            .setTitle('Advertisements')
+            .setDescription(`Hello ${interaction.user.username}, which advert would you like to view?`)
+            .setThumbnail(avatar)
+            .addFields({ name: 'Whimsyx', value: 'Information about Whimsyx' })
+            .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus' })
+            .setTimestamp();
+
+          return i.update({ embeds: [advertEmbed], components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow], ephemeral: true });
+        }
+
+        case 'whimsyx': {
+          const whimsyxEmbed = new EmbedBuilder()
+            .setColor('Random')
+            .setTitle('Whimsyx')
+            .setDescription('Welcome to Whimsyx, a friendly community server!')
+            .setThumbnail('https://cdn.discordapp.com/attachments/1405954272624902328/1407383473861296311/IMG_0895.jpg')
+            .addFields(
+              { name: '`Rules`', value: '1. Be respectful.\n2. No spam or self-promotion without permission.\n3. Keep content appropriate.\n4. Use channels correctly.' },
+              { name: '`What is Whimsyx?`', value: 'A friendly community server with channels for various topics.' },
+              { name: '`Join Whimsyx`', value: '[Click here to join Whimsyx!](https://discord.gg/ax5PFRKdMb)' }
+            )
+            .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus' })
+            .setTimestamp();
+
+          return i.update({ embeds: [whimsyxEmbed], components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow, supportButtons], ephemeral: true });
+        }
+
+        default:
+          return i.reply({ content: 'Unknown selection.', ephemeral: true }).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Help collector error:', err);
+      return i.reply({ content: 'There was an error handling your selection.', ephemeral: true }).catch(() => {});
     }
+  });
 
-    switch (i.values[0]) {
-      case 'support_server': {
-        const supportServerEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle('Deflexcted')
-        .setDescription('Welcome to our support server, Deflexcted!')
-        .setAuthor({
-          name: 'Eto',
-          iconURL: 'https://cdn.discordapp.com/attachments/1418360206248775754/1421582156710412299/Patrick_Bateman_n_Hello_Kitty.jpg?ex=68d98f0d&is=68d83d8d&hm=3db4e6958c933f51e53f0bc9db574ad82af3e53c1ed18fb68ec1725f4e6a979c&',
-          url: 'https://github.com/Yokaiiz'
-        })
-        .setThumbnail('https://cdn.discordapp.com/attachments/1418360206248775754/1421568582357090456/meme_twitter_viral_dexter.jpg?ex=68d98269&is=68d830e9&hm=8379cdc744ce4dc91134a8703b622aa6b6d6acff421eccf728c12b867aff686b&')
-        .setImage('https://i.pinimg.com/originals/6e/38/c4/6e38c452d1ac28ac6d8f21eb74eaeb4b.gif')
-        .addFields(
-          {
-            name: '`Rules`',
-            value: '1. Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism or hate speech will be tolerated.\n2. No spam or self-promotion (server invites, advertisements etc) without permission from a staff member. This includes DMing fellow mebers.\n3. No age-restricted or obscene content. This includes text, images or links featuring nudity, sex, hard violence or other disturbing graphic content.\n4. If you see something against the rules or something that makes you feel unsafe, let staff know. We want this server to be a welcoming space!'
-          },
-          {name: '`Information about Deflexcted`', value: 'The server originally started as an idea where i took in all the flaws of other servers and improved them to make the ideal layout for a community server but now I have actually decided to properly make it grow alongside the Crucified Bot as I am interested in these topics, the server offers access to the widely used bots across Discord such as Dankmemer and other bots (i think marriage bot is included? idk im not sure). There are also other fun things such as game-nights and movie nights that are weekly hosted by me (Eto, the owner).'},
-          {
-            name: '`How can I get support?`',
-            value: 'There will usually be a ticket system which allows you to create a ticket and acquire help from the bot-owner himself or someone qualified to actually help you. If you do not see a ticket system in place, then directly message the bot-owner (Eto) and explicitly mention its for support regarding the bot.'
-          },
-          {
-            name: '`Are there any additional things to do in this server?`',
-            value: 'Yes! There will be additional things to do overtime as the server grows, such as joining a clan, helping with the server in general and much more. But of course, the server is still very much early in development just like the bot itself!'
-          }
-        )
-        .setFooter({text: 'Thank you for using the Crucified Bot || Catawampus '})
-        .setTimestamp();
-
-        try {
-          return i.update({
-            embeds: [supportServerEmbed],
-            components: [mainmenuhelpselectrow, supportButtons],
-            ephemeral: true
-          });
-        } catch (error) {
-          console.log(error);
-          return i.reply({
-            content: 'The collector for SupportServerEmbed failed!',
-            ephemeral: true,
-            components: []
-          });
-        }
-      }
-
-      case 'crucified_bot': {
-        const crucifiedbotEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle('Crucified Bot 🤖')
-        .setDescription('random')
-        .setThumbnail(avatar)
-        .setImage('https://i.pinimg.com/1200x/58/5f/4a/585f4a28a3416141541042217afec9f4.jpg')
-        .setAuthor({
-          name: interaction.user.displayName,
-          url: 'https://github.com/Yokaiiz',
-          iconURL: interaction.user.displayAvatarURL({dynamic: true})
-        })
-        .addFields(
-          {
-            name: 'Fun',
-            value: '`Cat`, `Beg`, `Gamble`, `Dig`, `Craft`, `Fight`, `Fish`, `Use`'
-          },
-          {
-            name: `Economy`,
-            value: '`Profile`, `Sell`, `Donate`, `Rob`, `Shop`'
-          },
-          {
-            name: 'Administrative',
-            value: '`Help`, `Ban`, `Timeout (uses milliseconds)`'
-          },
-          {
-            name: 'Roleplay',
-            value: '`Hug`, `Slap`, `Cuddle`, `Kiss`'
-          }
-        )
-        .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
-        .setTimestamp();
-
-        try {
-          return i.update({
-            embeds: [crucifiedbotEmbed],
-            components: [mainmenuhelpselectrow],
-            ephemeral: false
-          });
-        } catch (error) {
-          console.log(error);
-          return i.update({
-            content: 'There has been an issue with the command.',
-            ephemeral: true
-          });
-        }
-      }
-
-      case 'additional': {
-        const additionalEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle(`Hello ${interaction.user.username}!`)
-        .setDescription('Here are your options:')
-        .setThumbnail(avatar)
-        .setAuthor({
-          name: interaction.user.username,
-          iconURL: avatar
-        })
-        .addFields(
-          {
-            name: 'Adverts',
-            value: '`Whimsyx`'
-          }
-        )
-        .setTimestamp();
-
-        try {
-          return i.update({
-            embeds: [additionalEmbed],
-            components: [mainmenuhelpselectrow, additionalmenuselectrow]
-          });
-        } catch (error) {
-          console.log(error);
-          return i.update({
-            content: 'There has been an issue with the code, it has been automatically reported to the bot creator.',
-            ephemeral: true
-          });
-        }
-      }
-
-      case 'adverts': {
-        const advertEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle('Advertisements')
-        .setDescription(`Hello ${interaction.user.username}, which advert would you like to view?`)
-        .setThumbnail(avatar)
-        .setAuthor({
-          name: `${interaction.user.username}`,
-          iconURL: avatar
-        })
-        .addFields(
-          {
-            name: 'Whimsyx',
-            value: 'Information about Whimsyx'
-          },
-        )
-        .setFooter({ text: 'Thank you for using the Crucified Bot! || Catawampus'})
-        .setTimestamp();
-
-        try {
-          return i.update({
-            embeds: [advertEmbed],
-            components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow]
-          });
-        } catch (error) {
-          console.log(error);
-          return i.update({
-            content: 'There has been a problem with the advert information',
-            embeds: [],
-            components: [],
-            ephemeral: true
-          });
-        }
-      }
-
-      case 'whimsyx': {
-        const whimsyxEmbed = new EmbedBuilder()
-        .setColor('Random')
-        .setTitle('Whimsyx')
-        .setDescription('Welcome to Whimsyx, a friendly community server!')
-        .setThumbnail('https://cdn.discordapp.com/attachments/1405954272624902328/1407383473861296311/IMG_0895.jpg?ex=68dfe980&is=68de9800&hm=2de88150629a6d57453ce5d0e7c4252ae0de074bcd248183581ea7e0c254e23e&')
-        .addFields(
-          {
-            name: '`Rules`',
-            value: '1. Be respectful to all members and staff.\n2. No spamming or self-promotion without permission.\n3. Keep content appropriate for all ages.\n4. Use channels for their intended purposes.'
-          },
-          {
-            name: '`What is Whimsyx?`',
-            value: 'Whimsyx is a friendly community server where members can chat, share interests, and participate in events. We have channels for various topics, including gaming, art, music, and more. Join us for a fun and welcoming experience!'
-          },
-          {
-            name: '`Join Whimsyx`',
-            value: '[Click here to join Whimsyx!](https://discord.gg/ax5PFRKdMb)'
-          }
-        )
-        .setFooter({text: 'Thank you for using the Crucified Bot! || Catawampus'})
-        .setTimestamp();
-
-        try {
-          return i.update({
-            embeds: [whimsyxEmbed],
-            components: [mainmenuhelpselectrow, additionalmenuselectrow, advertmenuselectrow, supportButtons],
-            ephemeral: false
-          });
-        } catch (error) {
-          console.log(error);
-          return i.update({
-            content: 'There has been an issue with the command.',
-            ephemeral: true,
-            components: []
-          });
-        }
-      }
+  collector.on('end', async (collected) => {
+    // Disable components on end
+    try {
+      const disabledRow = new ActionRowBuilder().addComponents(helpmenuselect.setDisabled(true));
+      await interaction.editReply({ components: [disabledRow] }).catch(() => {});
+    } catch (err) {
+      // ignore edit failures
     }
-  })
+  });
 }
 
 async function handleDigCommand(interaction) {
