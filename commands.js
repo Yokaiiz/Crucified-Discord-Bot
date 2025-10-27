@@ -150,7 +150,7 @@ const bossPool = [
     abilities: [
       { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
       { name: 'Danku', effect: 'block', chance: 0.08 },
-      { name: 'Slash', damage: 100, chance: 0.2 },
+      { name: 'Slash', damage: 250, chance: 0.2 },
       { name: 'Kido: Hado 90: Kurohitsugi', damage: 300, chance: 0.1 },
     ]
   },
@@ -159,7 +159,7 @@ const bossPool = [
     health: 1000,
     defense: 0,
     abilities: [
-      { name: 'Claw Slash', damage: 80, chance: 0.05 },
+      { name: 'Claw Slash', damage: 200, chance: 0.50 },
       { name: 'Roar', damage: 30, chance: 0.1 },
     ]
   },
