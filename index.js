@@ -298,13 +298,13 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isModalSubmit()) {
     const match = interaction.customId.match(/^buy_(.+)_(\d+)$/);
     if (match) {
-      let [itemKey, modalUserId] = match;
-      if (modalUserId !== interaction.user.id) {
+      const [, rawItemKey, modalUserId] = match; // <-- correct destructuring
+      if (String(modalUserId) !== String(interaction.user.id)) {
         return interaction.reply({ content: "❌ This modal is not for you.", ephemeral: true });
       }
 
       // normalize key
-      itemKey = itemKey.toLowerCase().trim();
+      const itemKey = rawItemKey.toLowerCase().trim();
 
       const quantity = parseInt(interaction.fields.getTextInputValue("quantity"), 10);
       if (isNaN(quantity) || quantity <= 0) {
@@ -331,6 +331,11 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       userData.balance -= totalCost;
+      // keep inventory as array/object consistent with your DB (adjust if needed)
+      if (!userData.inventory || Array.isArray(userData.inventory)) {
+        // if inventory is an array in your schema, convert/adjust accordingly
+        userData.inventory = userData.inventory || {};
+      }
       userData.inventory[selectedItem.name] = (userData.inventory[selectedItem.name] || 0) + quantity;
       await database.saveUserData(interaction.user.id, userData);
 
