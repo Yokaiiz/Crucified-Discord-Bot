@@ -138,6 +138,13 @@ const powerMovesets = {
     { name: 'Claw Slash', damage: 100, description: 'You slash your opponent with panther-like claws.' },
     { name: 'Roaring Pounce', damage: 250, description: 'You pounce on your opponent with incredible force.' },
     { name: 'Pantera Rampage', damage: 450, description: 'You unleash your ultimate rampage attack.' }
+  ],
+  'Ichimonji': [
+    { name: 'Erasing Cut', damage: 500, description: 'You perform a cut with your ink brush and do 500 damage to the opponent.' },
+    { name: 'Ink Shield', damage: 0, description: 'You create a shield of ink that boosts your defense by 50.', defenseBoost: 50 },
+    { name: 'Bankai: Shirafude Ichimonji', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
+    { name: 'Futen Taisatsuryo', damage: 5000, description: 'You unleash the ultimate ink attack that is capable of existence erasure.', ultimate: true},
+    { name: 'Ink Castle', damage: 0, description: 'You manifest a castle of ink that boosts your defense by 100.', defenseBoost: 100, ultimate: true },
   ]
 };
 
@@ -1326,6 +1333,8 @@ async function handleUseItemCommand(interaction) {
         { name: 'Katen Kyokotsu', chance: 0.1 },
         { name: 'Minazuki', chance: 0.1 },
         { name: 'Suzumebachi', chance: 0.05 },
+        { name: 'Ichimonji', chance: 0.001 },
+        { name: 'Nozarashi', chance: 0.001 },
       ],
       "Arrancar": [
         { name: 'Beast', chance: 0.5 },
