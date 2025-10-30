@@ -145,6 +145,11 @@ const powerMovesets = {
     { name: 'Bankai: Shirafude Ichimonji', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
     { name: 'Futen Taisatsuryo', damage: 5000, description: 'You unleash the ultimate ink attack that is capable of existence erasure.', ultimate: true},
     { name: 'Ink Castle', damage: 0, description: 'You manifest a castle of ink that boosts your defense by 100.', defenseBoost: 100, ultimate: true },
+  ],
+  'Nozarashi': [
+    { name: 'Sword Smash', damage: 600, description: 'You smash your opponent with your giant axe.' },
+    { name: 'Earth Shatter', damage: 800, description: 'You slam your sword into the ground, causing an earth-shattering shockwave.' },
+    { name: 'Bankai: RAGHHHHHH', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
   ]
 };
 
