@@ -12,6 +12,7 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  UserContextMenuCommandInteraction,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -214,10 +215,18 @@ async function handleBegCommand(interaction) {
     }
   }
 
-  userData.balance += amount;
-  userData.experience += experiencegain;
-  userData.inventory[item] = (userData.inventory[item] || 0) + 1;
-  await database.saveUserData(userId, userData);
+  try {
+    userData.balance += amount;
+    userData.experience += experiencegain;
+    userData.inventory[item] = (userData.inventory[item] || 0) + 1;
+    await database.saveUserData(userId, userData);
+  } catch (error) {
+    console.log("Error updating user data on beg command:", error);
+    return interaction.reply({
+      content: "There was an error processing your beg command. Please try again later.",
+      ephemeral: true,
+    });
+  }
 
   const embed = new EmbedBuilder()
     .setColor("Green")
@@ -687,15 +696,25 @@ async function handleCraftCommand(interaction) {
       });
     }
 
-    userData.inventory[requiredItem] -= requiredAmount;
-    if (userData.inventory[requiredItem] === 0) {
-      delete userData.inventory[requiredItem];
-    }
-    userData.balance -= requiredMoney;
-    userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
-    userData.experience += expGain;
+    try {
+      userData.balance -= requiredMoney;
+      userData.inventory[requiredItem] -= requiredAmount;
+      userData.inventory[itemName] = (userData.inventory[itemName] || 0) + 1;
+      userData.experience += expGain;
 
-    await database.saveUserData(userId, userData);
+      if (userData.inventory[requiredItem] === 0) {
+        delete userData.inventory[requiredItem];
+      }
+
+      await database.saveUserData(userId, userData);
+    } catch (error) {
+      console.log("Error updating user data on craft command:", error);
+      return i.reply({
+        content: "There was an error processing your craft command. Please try again later.",
+        ephemeral: true,
+      });
+
+    }
 
     await i.reply({
       content: `You crafted a **${itemName}** and also acquired **${expGain}** EXP from crafting!`,
