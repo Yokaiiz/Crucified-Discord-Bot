@@ -2006,6 +2006,13 @@ async function handleFuckCommand(interaction) {
   await database.ensureUser(userID);
   const userData = await database.getUserData(userID);
 
+  if (interaction.channel.nsfw === false) {
+    return interaction.reply({
+      content: 'This command can only be used in NSFW channels.',
+      ephemeral: true
+    });
+  }
+
   userData.name ||= interaction.user.displayName;
   userData.roleplayActions ||= {};
   userData.roleplayActions.fuck ||= {};
