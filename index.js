@@ -1,4 +1,3 @@
-// index.js
 require("dotenv").config();
 const {
   Client,
@@ -9,6 +8,7 @@ const {
   SlashCommandBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  Colors,
 } = require("discord.js");
 
 const database = require("./database.js");
@@ -49,6 +49,7 @@ const TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (!TOKEN) throw new Error("❌ Missing DISCORD_BOT_TOKEN in .env file");
 const OWNER_ID = process.env.OWNER_ID;
 const OWNER_ID2 = process.env.OWNER_ID2;
+const MOD_LOG_CHANNEL = process.env.MOD_LOG_CHANNEL || null;
 
 // --- Client setup ---
 const client = new Client({
@@ -60,6 +61,68 @@ const client = new Client({
   ],
   partials: [Partials.Channel],
 });
+
+// --- AutoMod patterns (regex based, catches obfuscation/patterns) ---
+const autoModPatterns = {
+  racial: [
+    /\b(n+[\W_]*[i1!|¡]+[\W_]*g+[\W_]*[a4@e3r]*)\b/i,
+    /\b(c+[\W_]*o+[\W_]*o+[\W_]*n+[\W_]*[i1!|]+)\b/i,
+    /\b(chin|chink|chinky)\b/i, // cautious inclusion: for moderation purposes
+  ],
+  homophobic: [
+    /\b(f+[\W_]*[a4@]+[\W_]*g+[\W_]*g+[\W_]*[o0]+[\W_]*t)\b/i,
+    /\b(d+[\W_]*y+[\W_]*k+e?)\b/i,
+  ],
+  ableist: [
+    /\b(r+[\W_]*e+[\W_]*t+[\W_]*a+[\W_]*r+[\W_]*d+)\b/i,
+    /\b(s+p+[a4@]+[z]+)\b/i,
+  ],
+  antisemitic_xenophobic: [
+    /\b(j+[\W_]*e+[\W_]*w+)\b/i,
+    /\b(k+[\W_]*i+[\W_]*k+e?)\b/i,
+  ],
+  evasion: {
+    separators: /[\s._\-+=*&^%$#@!~]+/g,
+    repeats: /(.)\1{2,}/g,
+    leet: {
+      a: /[@4]/g,
+      i: /[!1|¡]/g,
+      e: /[3]/g,
+      o: /0/g,
+      s: /[$5]/g,
+      t: /7/g,
+      l: /[1|]/g,
+    },
+  },
+};
+
+// Normalize text to reduce evasion attempts
+function normalizeText(text) {
+  if (!text) return "";
+  let normalized = String(text).toLowerCase();
+  // remove separators
+  normalized = normalized.replace(autoModPatterns.evasion.separators, "");
+  // replace leet chars
+  for (const [letter, regex] of Object.entries(autoModPatterns.evasion.leet)) {
+    normalized = normalized.replace(regex, letter);
+  }
+  // collapse repeated chars
+  normalized = normalized.replace(autoModPatterns.evasion.repeats, "$1");
+  // remove stray non-word chars
+  normalized = normalized.replace(/[^\p{L}\p{N}]/gu, "");
+  return normalized;
+}
+
+function detectViolation(originalContent) {
+  const normalized = normalizeText(originalContent);
+  // check each category
+  if (!normalized) return null;
+  if (autoModPatterns.racial.some(r => r.test(normalized))) return "racial";
+  if (autoModPatterns.homophobic.some(r => r.test(normalized))) return "homophobic";
+  if (autoModPatterns.ableist.some(r => r.test(normalized))) return "ableist";
+  if (autoModPatterns.antisemitic_xenophobic.some(r => r.test(normalized))) return "antisemitic_xenophobic";
+  return null;
+}
 
 // --- Cooldowns ---
 const cooldowns = new Map();
@@ -99,6 +162,7 @@ const races = [
 ];
 
 // --- Slash Commands ---
+// leave this block unchanged as requested
 const commands = [
   new SlashCommandBuilder().setName("help").setDescription("general support"),
   new SlashCommandBuilder().setName("cat").setDescription("Sends a pic of kitty!!"),
@@ -185,10 +249,114 @@ async function deployCommands() {
   }
 }
 
+client.on('messageCreate', async (message) => {
+  // Skip bot messages and DMs
+  if (message.author.bot || !message.guild) return;
+
+  try {
+    const content = message.content || "";
+    let violation = null;
+    const normalized = normalizeText(content);
+
+    // Check each category of patterns
+    for (const [category, patterns] of Object.entries(autoModPatterns)) {
+      if (category === 'evasion') continue; // Skip evasion since it's not a violation category
+
+      // If it's an array of patterns, check each one
+      if (Array.isArray(patterns)) {
+        for (const pattern of patterns) {
+          if (pattern.test(normalized) || pattern.test(content)) {
+            violation = category;
+            break;
+          }
+        }
+      }
+
+      if (violation) break;
+    }
+
+    // If a violation is found, handle it
+    if (violation) {
+      try {
+        // Delete the message
+        await message.delete();
+
+        // Send warning
+        const warning = await message.channel.send({
+          embeds: [{
+            color: 0xFF0000,
+            title: "⚠️ Message Removed",
+            description: `${message.author}, your message was removed for containing prohibited content.`,
+            fields: [
+              { name: "Category", value: violation, inline: true },
+              { name: "Note", value: "Please keep conversations respectful. Repeated violations may lead to moderation." }
+            ],
+            footer: { text: "This warning will auto-delete in 10 seconds" },
+            timestamp: new Date()
+          }]
+        });
+
+        // Delete warning after 10s
+        setTimeout(() => warning.delete().catch(() => {}), 10000);
+
+        // Log to mod channel if configured
+        if (MOD_LOG_CHANNEL) {
+          const logChannel = message.guild.channels.cache.get(MOD_LOG_CHANNEL) ||
+                           await message.guild.channels.fetch(MOD_LOG_CHANNEL).catch(() => null);
+
+          if (logChannel) {
+            await logChannel.send({
+              embeds: [{
+                color: 0xFF0000,
+                title: "🛡️ AutoMod - Message Filtered",
+                fields: [
+                  { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
+                  { name: "Channel", value: `${message.channel}`, inline: true },
+                  { name: "Category", value: violation, inline: true },
+                  { name: "Message", value: `||${content}||` },
+                  { name: "Normalized", value: `||${normalized}||` }
+                ],
+                timestamp: new Date()
+              }]
+            });
+          }
+        }
+
+        // Record violation in database
+        try {
+          await database.ensureUser(message.author.id);
+          const userData = await database.getUserData(message.author.id) || {};
+          userData.violations = userData.violations || [];
+          userData.violations.unshift({
+            type: violation,
+            time: Date.now(),
+            content: content // Optional: store the violating message
+          });
+          // Keep last 20 violations
+          if (userData.violations.length > 20) userData.violations.length = 20;
+          await database.saveUserData(message.author.id, userData);
+        } catch (dbError) {
+          console.error("Failed to record violation:", dbError);
+        }
+
+      } catch (actionError) {
+        console.error("Failed to handle violation:", actionError);
+      }
+    }
+  } catch (error) {
+    console.error("AutoMod error:", error);
+  }
+});
+
 // --- Interaction Handler ---
 client.on("interactionCreate", async (interaction) => {
+  if (!interaction || !interaction.user) return;
   const userId = interaction.user.id;
-  await database.ensureUser(userId);
+  try {
+    await database.ensureUser(userId);
+  } catch (err) {
+    console.error("DB ensureUser error:", err);
+  }
   const userData = await database.getUserData(userId);
 
   // 🔹 Race selection enforcement
@@ -294,51 +462,39 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
-  // 🔹 Shop modal
-  if (interaction.isModalSubmit()) {
+  // 🔹 Shop modal submit
+  if (interaction.isModalSubmit && interaction.isModalSubmit()) {
     const match = interaction.customId.match(/^buy_(.+)_(\d+)$/);
     if (match) {
-      const [, rawItemKey, modalUserId] = match; // <-- correct destructuring
+      const [, rawItemKey, modalUserId] = match;
       if (String(modalUserId) !== String(interaction.user.id)) {
         return interaction.reply({ content: "❌ This modal is not for you.", ephemeral: true });
       }
-
-      // normalize key
       const itemKey = rawItemKey.toLowerCase().trim();
-
       const quantity = parseInt(interaction.fields.getTextInputValue("quantity"), 10);
       if (isNaN(quantity) || quantity <= 0) {
         return interaction.reply({ content: "❌ Invalid quantity.", ephemeral: true });
       }
-
-      const userData = await database.getUserData(interaction.user.id);
+      const userData = await database.getUserData(interaction.user.id) || {};
       const shop = {
         zanpakuto: { name: "Zanpakuto", price: 5000 },
         zanpakuto_reroll: { name: "Zanpakuto Reroll", price: 10000 },
       };
-
       const selectedItem = shop[itemKey];
       if (!selectedItem) {
         return interaction.reply({ content: "❌ That item cannot be bought.", ephemeral: true });
       }
-
       const totalCost = selectedItem.price * quantity;
-      if (userData.balance < totalCost) {
+      if ((userData.balance || 0) < totalCost) {
         return interaction.reply({
-          content: `❌ You don’t have enough money! Need **${totalCost}**, but you only have **${userData.balance}**.`,
+          content: `❌ You don’t have enough money! Need **${totalCost}**, but you only have **${userData.balance || 0}**.`,
           ephemeral: true,
         });
       }
-
-      userData.balance -= totalCost;
-      // keep inventory as array/object consistent with your DB (adjust if needed)
-      if (!userData.inventory || Array.isArray(userData.inventory)) {
-        // if inventory is an array in your schema, convert/adjust accordingly
-        userData.inventory = userData.inventory || {};
-      }
+      userData.balance = (userData.balance || 0) - totalCost;
+      userData.inventory = userData.inventory || {};
       userData.inventory[selectedItem.name] = (userData.inventory[selectedItem.name] || 0) + quantity;
       await database.saveUserData(interaction.user.id, userData);
-
       return interaction.reply({
         content: `✅ You bought **${quantity}x ${selectedItem.name}** for **${totalCost}** coins!`,
         ephemeral: true,
@@ -350,9 +506,17 @@ client.on("interactionCreate", async (interaction) => {
 // --- Ready Event ---
 client.on("ready", async () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
-  await database.initialize();
-  console.log("📂 Database initialized");
-  await deployCommands();
+  try {
+    await database.initialize();
+    console.log("📂 Database initialized");
+  } catch (err) {
+    console.error("Database initialization failed:", err);
+  }
+  try {
+    await deployCommands();
+  } catch (err) {
+    console.error("Command deploy failed:", err);
+  }
 });
 
 // --- Login ---
