@@ -65,63 +65,87 @@ const client = new Client({
 
 // --- AutoMod patterns (regex based, catches obfuscation/patterns) ---
 const autoModPatterns = {
-  racial: [
-    /\b(n+[\W_]*[i1!|¡]+[\W_]*g+[\W_]*[a4@e3r]*)\b/i,
-    /\b(c+[\W_]*o+[\W_]*o+[\W_]*n+[\W_]*[i1!|]+)\b/i,
-    /\b(chin|chink|chinky)\b/i, // cautious inclusion: for moderation purposes
+  hate_speech: [
+    /\b(h[a4@]tr[e3]d|h[a4@]t[e3])\s*([o0]f|t[o0]w[a4@]rd[s$5]?)\s*\w+/i,
+    /\b(d[e3][a4@]th\s*t[o0]|[e3]xtr[e3]rm[i1!|¡]n[a4@]t[e3])\s*\w+/i,
   ],
-  homophobic: [
-    /\b(f+[\W_]*[a4@]+[\W_]*g+[\W_]*g+[\W_]*[o0]+[\W_]*t)\b/i,
-    /\b(d+[\W_]*y+[\W_]*k+e?)\b/i,
+  discrimination: [
+    /\b(g[o0]\s*b[a4@]ck|g[e3]t\s*[o0]ut)\b/i,
+    /\b(th[e3][i1!|¡]r\s*k[i1!|¡]nd|th[o0][s$5][e3]\s*p[e3][o0]pl[e3])\b/i,
   ],
-  ableist: [
-    /\b(r+[\W_]*e+[\W_]*t+[\W_]*a+[\W_]*r+[\W_]*d+)\b/i,
-    /\b(s+p+[a4@]+[z]+)\b/i,
-  ],
-  antisemitic_xenophobic: [
-    /\b(j+[\W_]*e+[\W_]*w+)\b/i,
-    /\b(k+[\W_]*i+[\W_]*k+e?)\b/i,
+  context_patterns: [
+    /\b([s$5][u\u00fb\u00fc\u00f9\u00fa]+p[e3]r[i1!|¡][o0]r)\b/i,
+    /\b(n[o0]t\s*w[e3]lc[o0]m[e3])\b/i,
   ],
   evasion: {
-    separators: /[\s._\-+=*&^%$#@!~]+/g,
+    separators: /[\s._\-+=*&^%$#@!~\/\\,:;'"<>()[\]{}⠀\u200B-\u200D\uFEFF\u2060-\u2064]/g,
     repeats: /(.)\1{2,}/g,
     leet: {
-      a: /[@4]/g,
-      i: /[!1|¡]/g,
-      e: /[3]/g,
-      o: /0/g,
-      s: /[$5]/g,
-      t: /7/g,
-      l: /[1|]/g,
+      a: /[@4∆^àáâãäåāăąǎǟǡǻȁȃạảấầẩẫậắằẳẵặ]/g,
+      e: /[3€èéêëēĕėęěȅȇẹẻẽếềểễệ]/g,
+      i: /[!1|¡ìíîïĩīĭįǐȉȋḭḯỉịớờởỡợ]/g,
+      o: /[0θōŏőơǒǫǭọỏốồổỗộớờởỡợ]/g,
+      u: /[µùúûüũūŭůűųưǔǖǘǚǜụủứừửữự]/g,
     },
-  },
+    homoglyphs: new Map([
+      ['а', 'a'], ['е', 'e'], ['і', 'i'], ['о', 'o'], ['р', 'p'],
+      ['с', 'c'], ['у', 'y'], ['х', 'x'], ['ь', 'b'], ['ѕ', 's'],
+      ['ḱ', 'k'], ['ṁ', 'm'], ['ń', 'n'], ['ṗ', 'p'], ['ṡ', 's']
+    ])
+  }
 };
 
 // Normalize text to reduce evasion attempts
 function normalizeText(text) {
   if (!text) return "";
   let normalized = String(text).toLowerCase();
-  // remove separators
-  normalized = normalized.replace(autoModPatterns.evasion.separators, "");
-  // replace leet chars
+
+  // Remove invisible characters
+  normalized = normalized.replace(/[\u200B-\u200F\uFEFF\u2060-\u206F\u180E\u00AD\u034F]/g, '');
+
+  // Handle homoglyphs
+  for (const [special, standard] of autoModPatterns.evasion.homoglyphs) {
+    normalized = normalized.replace(new RegExp(special, 'g'), standard);
+  }
+
+  // Handle leet speak
   for (const [letter, regex] of Object.entries(autoModPatterns.evasion.leet)) {
     normalized = normalized.replace(regex, letter);
   }
-  // collapse repeated chars
-  normalized = normalized.replace(autoModPatterns.evasion.repeats, "$1");
-  // remove stray non-word chars
-  normalized = normalized.replace(/[^\p{L}\p{N}]/gu, "");
+
+  // Remove separators
+  normalized = normalized.replace(autoModPatterns.evasion.separators, '');
+
+  // Collapse repeated characters
+  normalized = normalized.replace(/(.)\1+/g, '$1');
+
+  // Final cleanup
+  normalized = normalized.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+
   return normalized;
 }
 
 function detectViolation(originalContent) {
   const normalized = normalizeText(originalContent);
-  // check each category
   if (!normalized) return null;
-  if (autoModPatterns.racial.some(r => r.test(normalized))) return "racial";
-  if (autoModPatterns.homophobic.some(r => r.test(normalized))) return "homophobic";
-  if (autoModPatterns.ableist.some(r => r.test(normalized))) return "ableist";
-  if (autoModPatterns.antisemitic_xenophobic.some(r => r.test(normalized))) return "antisemitic_xenophobic";
+
+  // Context-aware checks
+  for (const pattern of autoModPatterns.context_patterns) {
+    if (pattern.test(originalContent)) {
+      return 'hate_speech';
+    }
+  }
+
+  // Check discrimination patterns
+  if (autoModPatterns.discrimination.some(r => r.test(normalized))) {
+    return 'discrimination';
+  }
+
+  // Check hate speech patterns
+  if (autoModPatterns.hate_speech.some(r => r.test(normalized))) {
+    return 'hate_speech';
+  }
+
   return null;
 }
 
