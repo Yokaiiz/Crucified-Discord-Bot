@@ -2061,6 +2061,37 @@ async function handleFuckCommand(interaction) {
   }
 }
 
+async function handleClearUserWarningCommand(interaction) {
+  // Permission check first - remove .Flags
+  if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    return interaction.reply({
+      content: '❌ You do not have permission to use this command.',
+      ephemeral: true,
+    });
+  }
+
+  const targetID = interaction.options.getUser('user').id;
+  await database.ensureUser(targetID);
+  const targetData = await database.getUserData(targetID);
+
+  // Check if user has warnings
+  if (!targetData.violations || targetData.violations.length === 0) {
+    return interaction.reply({
+      content: `❌ <@${targetID}> has no warnings to clear.`,
+      ephemeral: true,
+    });
+  }
+
+  // Clear warnings and save
+  targetData.violations = [];
+  await database.saveUserData(targetID, targetData);
+
+  return interaction.reply({
+    content: `✅ All warnings for <@${targetID}> have been cleared.`,
+    ephemeral: true,
+  });
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -2093,4 +2124,5 @@ module.exports = {
   handleKissCommand,
   handleCuddleCommand,
   handleFuckCommand,
+  handleClearUserWarningCommand,
 };
