@@ -63,87 +63,173 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-// --- AutoMod patterns (regex based, catches obfuscation/patterns) ---
+// --- AutoMod patterns & helpers (enhanced, no command changes) ---
 const autoModPatterns = {
-  hate_speech: [
-    /\b(h[a4@]tr[e3]d|h[a4@]t[e3])\s*([o0]f|t[o0]w[a4@]rd[s$5]?)\s*\w+/i,
-    /\b(d[e3][a4@]th\s*t[o0]|[e3]xtr[e3]rm[i1!|¡]n[a4@]t[e3])\s*\w+/i,
+  // contextual phrases that target protected groups or encourage exclusion/violence
+  contextual: [
+    /\b(go\s+back\s+to|go\s+back\s+where|return\s+to)\b/i,
+    /\b(get\s+out\s+of|get\s+out)\b/i,
+    /\b(not\s+welcome|you\s+are\s+not\s+welcome)\b/i,
+    /\b(kill\s+them|kill\s+all|death\s+to)\b/i,
+    /\b(exterminate|extermination|ethnic\s+cleansing)\b/i
   ],
-  discrimination: [
-    /\b(g[o0]\s*b[a4@]ck|g[e3]t\s*[o0]ut)\b/i,
-    /\b(th[e3][i1!|¡]r\s*k[i1!|¡]nd|th[o0][s$5][e3]\s*p[e3][o0]pl[e3])\b/i,
-  ],
-  context_patterns: [
-    /\b([s$5][u\u00fb\u00fc\u00f9\u00fa]+p[e3]r[i1!|¡][o0]r)\b/i,
-    /\b(n[o0]t\s*w[e3]lc[o0]m[e3])\b/i,
-  ],
+  // category-specific regexes (catch obvious patterns, but rely mainly on normalization + fuzzy match)
+  categories: {
+    racism: [
+      // lightweight regex seeds — normalized input is used later for fuzzy checks
+      /\b(nig+|n[i1!|¡].*g+)\b/i,
+      /\b(chin[kk]?)\b/i,
+      /\b(coo+n+)\b/i
+    ],
+    homophobia: [
+      /\b(fag+|faggo+t?)\b/i,
+      /\b(dyke|dyk[ek]?)\b/i
+    ],
+    ableism: [
+      /\b(retard+|r[e3]t[a4@]rd)\b/i,
+      /\b(spaz+)\b/i
+    ],
+    antisemitic_xenophobic: [
+      /\b(kik+e?)\b/i,
+      /\b(jew+)\b/i
+    ]
+  },
+  // evasion helpers
   evasion: {
     separators: /[\s._\-+=*&^%$#@!~\/\\,:;'"<>()[\]{}⠀\u200B-\u200D\uFEFF\u2060-\u2064]/g,
     repeats: /(.)\1{2,}/g,
+    // expanded leet -> letter mappings (used to normalize text before checks)
     leet: {
-      a: /[@4∆^àáâãäåāăąǎǟǡǻȁȃạảấầẩẫậắằẳẵặ]/g,
-      e: /[3€èéêëēĕėęěȅȇẹẻẽếềểễệ]/g,
-      i: /[!1|¡ìíîïĩīĭįǐȉȋḭḯỉịớờởỡợ]/g,
-      o: /[0θōŏőơǒǫǭọỏốồổỗộớờởỡợ]/g,
-      u: /[µùúûüũūŭůűųưǔǖǘǚǜụủứừửữự]/g,
+      a: /[@4∆^àáâãäåāăąǎ]/g,
+      e: /[3€èéêëēĕėęě]/g,
+      i: /[!1|¡ìíîïĩīĭį]/g,
+      o: /[0θōŏő]/g,
+      s: /[$5ѕ]/g,
+      t: /[7†]/g,
+      g: /[6q]/g,
+      b: /[8|ß]/g,
+      n: /[ñń]/g,
+      c: /[¢©]/g
     },
+    // some common homoglyphs mapped to ascii
     homoglyphs: new Map([
-      ['а', 'a'], ['е', 'e'], ['і', 'i'], ['о', 'o'], ['р', 'p'],
-      ['с', 'c'], ['у', 'y'], ['х', 'x'], ['ь', 'b'], ['ѕ', 's'],
-      ['ḱ', 'k'], ['ṁ', 'm'], ['ń', 'n'], ['ṗ', 'p'], ['ṡ', 's']
+      ['а','a'], ['е','e'], ['і','i'], ['о','o'], ['р','p'],
+      ['с','c'], ['у','y'], ['х','x'], ['ь','b'], ['ѕ','s'],
+      ['ґ','g'], ['є','e'], ['ї','i'], ['л','l']
     ])
   }
 };
 
-// Normalize text to reduce evasion attempts
-function normalizeText(text) {
-  if (!text) return "";
-  let normalized = String(text).toLowerCase();
+// small curated list of slur stems for fuzzy detection (used only for moderation)
+// these are stems/pieces used to detect obfuscated variants — they are not output as suggestions
+const slurStems = {
+  racism: ['nig', 'nigg', 'coon', 'chink', 'spic', 'gypo', 'wetback'],
+  homophobia: ['fag', 'faag', 'dyke', 'queer'],
+  ableism: ['retard', 'spaz', 'crip'],
+  antisemitic: ['kike', 'yid']
+};
 
-  // Remove invisible characters
-  normalized = normalized.replace(/[\u200B-\u200F\uFEFF\u2060-\u206F\u180E\u00AD\u034F]/g, '');
-
-  // Handle homoglyphs
-  for (const [special, standard] of autoModPatterns.evasion.homoglyphs) {
-    normalized = normalized.replace(new RegExp(special, 'g'), standard);
+// Levenshtein distance (iterative DP) -> returns similarity ratio 0..1
+function levenshteinSimilarity(a, b) {
+  if (!a || !b) return 0;
+  const la = a.length, lb = b.length;
+  if (la === 0) return 0;
+  const dp = Array.from({ length: la + 1 }, () => new Array(lb + 1));
+  for (let i = 0; i <= la; i++) dp[i][0] = i;
+  for (let j = 0; j <= lb; j++) dp[0][j] = j;
+  for (let i = 1; i <= la; i++) {
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
   }
-
-  // Handle leet speak
-  for (const [letter, regex] of Object.entries(autoModPatterns.evasion.leet)) {
-    normalized = normalized.replace(regex, letter);
-  }
-
-  // Remove separators
-  normalized = normalized.replace(autoModPatterns.evasion.separators, '');
-
-  // Collapse repeated characters
-  normalized = normalized.replace(/(.)\1+/g, '$1');
-
-  // Final cleanup
-  normalized = normalized.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
-
-  return normalized;
+  const dist = dp[la][lb];
+  const maxLen = Math.max(la, lb);
+  return maxLen === 0 ? 0 : 1 - dist / maxLen;
 }
 
-function detectViolation(originalContent) {
-  const normalized = normalizeText(originalContent);
-  if (!normalized) return null;
+// Normalize text to reduce evasion attempts and split into tokens
+function normalizeText(text) {
+  if (!text) return { raw: '', normalized: '', tokens: [] };
+  let s = String(text).toLowerCase();
 
-  // Context-aware checks
-  for (const pattern of autoModPatterns.context_patterns) {
-    if (pattern.test(originalContent)) {
-      return 'hate_speech';
+  // 1) Remove zero-width & invisible characters
+  s = s.replace(/[\u200B-\u200F\uFEFF\u2060-\u206F\u180E\u00AD\u034F]/g, '');
+
+  // 2) Replace homoglyphs
+  for (const [hg, ch] of autoModPatterns.evasion.homoglyphs) {
+    s = s.replace(new RegExp(hg, 'g'), ch);
+  }
+
+  // 3) Replace common leet sequences
+  for (const [letter, regex] of Object.entries(autoModPatterns.evasion.leet)) {
+    s = s.replace(regex, letter);
+  }
+
+  // 4) Remove punctuation & separators but keep spaces for tokenization
+  s = s.replace(autoModPatterns.evasion.separators, ' ').trim();
+
+  // 5) Collapse long repeated characters (aaaa -> a)
+  s = s.replace(/(.)\1{2,}/g, '$1');
+
+  // 6) Normalize remaining non-alphanumerics and trim
+  s = s.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+
+  // 7) produce tokens (words)
+  const tokens = s.split(/\s+/).filter(Boolean);
+
+  return { raw: text, normalized: s, tokens };
+}
+
+// Main detection function (returns category string or null)
+function detectViolation(originalContent) {
+  if (!originalContent) return null;
+  const { raw, normalized, tokens } = normalizeText(originalContent);
+
+  // 1) Contextual regex checks on raw content (catches direct phrases)
+  for (const rx of autoModPatterns.contextual) {
+    if (rx.test(raw)) return 'contextual_hate';
+  }
+
+  // 2) Category-specific regex checks against normalized text
+  for (const [cat, list] of Object.entries(autoModPatterns.categories)) {
+    for (const rx of list) {
+      if (rx.test(normalized)) return cat;
     }
   }
 
-  // Check discrimination patterns
-  if (autoModPatterns.discrimination.some(r => r.test(normalized))) {
-    return 'discrimination';
+  // 3) Fuzzy/stem checks: compare tokens and concatenated normalized string substrings
+  const concatenated = normalized.replace(/\s+/g, '');
+  const candidates = new Set([...tokens, concatenated]);
+
+  // check against stems with a reasonable similarity threshold
+  const SIM_THRESHOLD = 0.78; // adjustable: higher -> fewer false positives
+  for (const [category, stems] of Object.entries(slurStems)) {
+    for (const stem of stems) {
+      for (const cand of candidates) {
+        const similarity = levenshteinSimilarity(cand, stem);
+        if (similarity >= SIM_THRESHOLD || cand.includes(stem)) {
+          return category;
+        }
+        // also check substrings of cand for short slur-like matches
+        if (cand.length >= 3) {
+          for (let i = 0; i <= cand.length - 3; i++) {
+            const sub = cand.substring(i, Math.min(cand.length, i + Math.max(3, stem.length)));
+            if (levenshteinSimilarity(sub, stem) >= SIM_THRESHOLD) return category;
+          }
+        }
+      }
+    }
   }
 
-  // Check hate speech patterns
-  if (autoModPatterns.hate_speech.some(r => r.test(normalized))) {
-    return 'hate_speech';
+  // 4) Fallback: detect explicit short exclusionary phrases in normalized text
+  const fallbackExclusions = [/go?back/i, /getout|getoutof/i, /notwelcome/i, /\bkill\b/];
+  for (const rx of fallbackExclusions) {
+    if (rx.test(normalized)) return 'exclusionary';
   }
 
   return null;
@@ -282,25 +368,8 @@ client.on('messageCreate', async (message) => {
 
   try {
     const content = message.content || "";
-    let violation = null;
-    const normalized = normalizeText(content);
-
-    // Check each category of patterns
-    for (const [category, patterns] of Object.entries(autoModPatterns)) {
-      if (category === 'evasion') continue; // Skip evasion since it's not a violation category
-
-      // If it's an array of patterns, check each one
-      if (Array.isArray(patterns)) {
-        for (const pattern of patterns) {
-          if (pattern.test(normalized) || pattern.test(content)) {
-            violation = category;
-            break;
-          }
-        }
-      }
-
-      if (violation) break;
-    }
+    // Use the dedicated detection function instead of manual pattern checking
+    const violation = detectViolation(content);
 
     // If a violation is found, handle it
     if (violation) {
