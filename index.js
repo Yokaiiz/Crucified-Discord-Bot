@@ -8,8 +8,6 @@ const {
   SlashCommandBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
-  Colors,
-  roleMention,
 } = require("discord.js");
 
 const database = require("./database.js");
@@ -207,34 +205,77 @@ function detectViolation(originalContent) {
     }
   }
 
-  // 3) Fuzzy/stem checks: compare tokens and concatenated normalized string substrings
-  // Only check individual tokens (words). Avoid scanning arbitrary substrings
-  // inside longer tokens or the full concatenated sentence which can create
-  // false positives (e.g. 'watching' contains 'ching'). If needed, we can
-  // add targeted concatenated checks later with stricter rules.
-  const candidates = new Set(tokens);
-
-  // check against stems with a reasonable similarity threshold
-  // Raise threshold slightly to reduce false positives and add a small
-  // whitelist of common benign tokens that include 'nig' (e.g. 'night').
-  const SIM_THRESHOLD = 0.89; // higher -> fewer false positives
+  // 3) Fuzzy/stem checks
+  // - First: check individual tokens (words) with a conservative similarity threshold
+  // - Second: check the concatenated normalized sentence (no spaces) for substrings
+  //   that may represent obfuscated or split slurs. Substring checks use a
+  //   higher similarity threshold to avoid reintroducing false positives
+  //   (e.g. 'watching' -> 'ching').
+  const SIM_THRESHOLD = 0.89; // token-based similarity
+  const SUBSTR_SIM_THRESHOLD = 0.94; // substring-based similarity (stricter)
 
   const safeTokens = new Set([
-  'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
-  'nigeria', 'niger', 'nigel', 'nightmare', 'zipper', 'watching', 'watch',
-  'conjuring', 'conjure', 'watching', 'last', 'rites', 'rights', 'everyone'
+    'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
+    'nigeria', 'niger', 'nigel', 'nightmare', 'zipper', 'watching', 'watch',
+    'conjuring', 'conjure', 'last', 'rites', 'rights', 'everyone', 'teaching',
+    'teacher', 'retired', 'retire'
   ]);
 
+  // Token-level checks (conservative)
+  const candidates = new Set(tokens);
   for (const [category, stems] of Object.entries(slurStems)) {
     for (const stem of stems) {
       for (const cand of candidates) {
-        // Skip candidates that are known safe words to avoid false positives
         if (safeTokens.has(cand)) continue;
-
         const similarity = levenshteinSimilarity(cand, stem);
-        // Only accept strong similarities on whole tokens. This avoids matching
-        // slur stems that merely appear as suffixes/prefixes inside normal words.
         if (similarity >= SIM_THRESHOLD) return category;
+      }
+    }
+  }
+
+  // Concatenated-substring checks (stricter rules)
+  // Build a compact form of the message removing spaces so we can detect
+  // obfuscated slurs that are split across separators/tokens.
+  const concat = tokens.join('');
+  if (concat.length >= 3) {
+    // map each token to its start/end index inside the concatenated string
+    const tokenPositions = [];
+    let _pos = 0;
+    for (const t of tokens) {
+      tokenPositions.push({ token: t, start: _pos, end: _pos + t.length - 1 });
+      _pos += t.length;
+    }
+    for (const [category, stems] of Object.entries(slurStems)) {
+      for (const stem of stems) {
+        // consider substrings with lengths close to the stem length
+        const minLen = Math.max(3, stem.length - 1);
+        const maxLen = Math.min(concat.length, stem.length + 2);
+        for (let i = 0; i <= concat.length - minLen; i++) {
+          for (let l = minLen; l <= maxLen && i + l <= concat.length; l++) {
+            const sub = concat.substr(i, l);
+            if (safeTokens.has(sub)) continue;
+            // Require length proximity to reduce accidental matches
+            if (Math.abs(sub.length - stem.length) > 2) continue;
+
+            // If the substring is fully inside a single original token,
+            // apply an extra heuristic: skip matches that are likely English
+            // gerunds (words ending with 'ing') which commonly create false
+            // positives (e.g. 'teaching' contains 'ching'). This preserves
+            // detection for standalone or clearly obfuscated slurs while
+            // reducing accidental triggers inside normal words.
+            const subStart = i;
+            const subEnd = i + l - 1;
+            const covering = tokenPositions.filter(p => p.start <= subStart && p.end >= subEnd);
+            if (covering.length === 1) {
+              const tok = covering[0].token;
+              if (tok.endsWith('ing') && tok.length > stem.length + 1) continue;
+              if (safeTokens.has(tok)) continue;
+            }
+
+            const sim = levenshteinSimilarity(sub, stem);
+            if (sim >= SUBSTR_SIM_THRESHOLD) return category;
+          }
+        }
       }
     }
   }
