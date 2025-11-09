@@ -218,7 +218,11 @@ function detectViolation(originalContent) {
     'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
     'nigeria', 'niger', 'nigel', 'nightmare', 'zipper', 'watching', 'watch',
     'conjuring', 'conjure', 'last', 'rites', 'rights', 'everyone', 'teaching',
-    'teacher', 'retired', 'retire'
+    'teacher', 'retired', 'retire',
+    // common programming / technology tokens to avoid false positives
+    'javascript', 'typescript', 'java', 'python', 'php', 'ruby', 'go', 'golang', 'rust', 'swift',
+    'kotlin', 'scala', 'perl', 'node', 'nodejs', 'react', 'angular', 'vue', 'svelte',
+    'csharp', 'cpp', 'html', 'css'
   ]);
 
   // Token-level checks (conservative)
@@ -268,8 +272,10 @@ function detectViolation(originalContent) {
             const covering = tokenPositions.filter(p => p.start <= subStart && p.end >= subEnd);
             if (covering.length === 1) {
               const tok = covering[0].token;
-              if (tok.endsWith('ing') && tok.length > stem.length + 1) continue;
+              // skip obvious technology tokens or words containing 'script'
+              if (tok.includes('script')) continue;
               if (safeTokens.has(tok)) continue;
+              if (tok.endsWith('ing') && tok.length > stem.length + 1) continue;
             }
 
             const sim = levenshteinSimilarity(sub, stem);
