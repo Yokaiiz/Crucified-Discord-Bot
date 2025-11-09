@@ -9,6 +9,7 @@ const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   Colors,
+  roleMention,
 } = require("discord.js");
 
 const database = require("./database.js");
@@ -207,17 +208,21 @@ function detectViolation(originalContent) {
   }
 
   // 3) Fuzzy/stem checks: compare tokens and concatenated normalized string substrings
-  const concatenated = normalized.replace(/\s+/g, '');
-  const candidates = new Set([...tokens, concatenated]);
+  // Only check individual tokens (words). Avoid scanning arbitrary substrings
+  // inside longer tokens or the full concatenated sentence which can create
+  // false positives (e.g. 'watching' contains 'ching'). If needed, we can
+  // add targeted concatenated checks later with stricter rules.
+  const candidates = new Set(tokens);
 
   // check against stems with a reasonable similarity threshold
   // Raise threshold slightly to reduce false positives and add a small
   // whitelist of common benign tokens that include 'nig' (e.g. 'night').
-  const SIM_THRESHOLD = 0.85; // higher -> fewer false positives
+  const SIM_THRESHOLD = 0.89; // higher -> fewer false positives
 
   const safeTokens = new Set([
-    'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
-    'nigeria', 'niger', 'nigel', 'nightmare', 'zipper'
+  'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
+  'nigeria', 'niger', 'nigel', 'nightmare', 'zipper', 'watching', 'watch',
+  'conjuring', 'conjure', 'watching', 'last', 'rites', 'rights', 'everyone'
   ]);
 
   for (const [category, stems] of Object.entries(slurStems)) {
@@ -227,19 +232,9 @@ function detectViolation(originalContent) {
         if (safeTokens.has(cand)) continue;
 
         const similarity = levenshteinSimilarity(cand, stem);
-        // Only accept strong similarities
+        // Only accept strong similarities on whole tokens. This avoids matching
+        // slur stems that merely appear as suffixes/prefixes inside normal words.
         if (similarity >= SIM_THRESHOLD) return category;
-
-        // also check substrings of cand for slur-like matches, but limit
-        // substring lengths to avoid matching long benign words
-        if (cand.length >= 3) {
-          const subLen = Math.max(3, stem.length);
-          for (let i = 0; i <= cand.length - subLen; i++) {
-            const sub = cand.substring(i, i + subLen);
-            if (safeTokens.has(sub)) continue;
-            if (levenshteinSimilarity(sub, stem) >= SIM_THRESHOLD) return category;
-          }
-        }
       }
     }
   }
@@ -386,8 +381,112 @@ client.on('messageCreate', async (message) => {
 
   try {
     const content = message.content || "";
-    // Use the dedicated detection function instead of manual pattern checking
-    const violation = detectViolation(content);
+
+  // Skip checking Discord role/user mentions by removing them before analysis
+  const cleanContent = content.replace(/<@&?\d+>/g, '') // Remove role/user mentions
+           .replace(/@(everyone|here)/g, '') // Remove @everyone/@here
+           .replace(/^@\w+\s+/g, '') // Remove any other @ mentions at start
+           .trim();
+
+    // Only check if there's content left after removing mentions
+    if (!cleanContent) return;
+
+    // --- Self-ban feature: if the user has configured selfBanWords in their
+    // user data, and they say one of those words, notify a configured user
+    // (BAN_NOTIFY_ID env or owner) and delete the message. This allows people
+    // to opt into a personal "can't say these words" enforcement.
+    try {
+      await database.ensureUser(message.author.id).catch(() => {});
+      const selfData = await database.getUserData(message.author.id) || {};
+      // support legacy/db variations: accept `selfBanWords` or `SelfBanWords` (case differences)
+      const rawSelfList = Array.isArray(selfData.selfBanWords)
+        ? selfData.selfBanWords
+        : (Array.isArray(selfData.SelfBanWords) ? selfData.SelfBanWords : []);
+      const selfBanWords = rawSelfList.map(w => String(w).toLowerCase()).filter(Boolean);
+      // If the DB used the legacy `SelfBanWords` key, migrate it to `selfBanWords`
+      if (Array.isArray(selfData.SelfBanWords) && !Array.isArray(selfData.selfBanWords)) {
+        try {
+          selfData.selfBanWords = selfBanWords.slice();
+          await database.saveUserData(message.author.id, selfData).catch(() => {});
+        } catch (mErr) {
+          // non-fatal
+          console.error('Failed to migrate SelfBanWords to selfBanWords:', mErr);
+        }
+      }
+      // Restrict self-ban enforcement to the bot owner(s) only
+      if (message.author.id !== OWNER_ID && message.author.id !== OWNER_ID2) {
+        // not owner, skip self-ban check
+      } else if (selfBanWords.length > 0) {
+        const { normalized: normalizedClean } = normalizeText(cleanContent);
+        // debug logging to help diagnose why self-ban might not trigger
+        console.log(`AutoMod: selfBan check for ${message.author.id} -> words=[${selfBanWords.join(',')}] normalized="${normalizedClean}"`);
+        const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        for (const bw of selfBanWords) {
+          const rx = new RegExp('\\b' + escapeRegExp(bw) + '\\b', 'i');
+          if (rx.test(normalizedClean)) {
+            // delete the message (best-effort)
+            await message.delete().catch(() => {});
+
+            // notify configured recipient
+            const notifyId = process.env.BAN_NOTIFY_ID || OWNER_ID || OWNER_ID2;
+            try {
+              if (notifyId) {
+                const notifyUser = await client.users.fetch(notifyId).catch(() => null);
+                if (notifyUser) {
+                  await notifyUser.send({
+                    content: `🔔 Notice: **${message.author.tag}** (${message.author.id}) said a self-banned word: **${bw}**\nContext: ${cleanContent}`
+                  }).catch(() => {});
+                }
+              }
+            } catch (notifyErr) {
+              console.error('Failed to notify about self-ban:', notifyErr);
+            }
+
+            // optional: log to mod channel for visibility
+            if (MOD_LOG_CHANNEL) {
+              try {
+                const logChannel = message.guild.channels.cache.get(MOD_LOG_CHANNEL) ||
+                                     await message.guild.channels.fetch(MOD_LOG_CHANNEL).catch(() => null);
+                if (logChannel?.isTextBased()) {
+                  await logChannel.send({
+                    embeds: [{
+                      color: 0xFFA500,
+                      title: '🔒 Self-Ban Triggered',
+                      fields: [
+                        { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                        { name: 'Word', value: bw, inline: true },
+                        { name: 'Content', value: cleanContent || '*no content*' }
+                      ],
+                      timestamp: new Date()
+                    }]
+                  }).catch(() => {});
+                }
+              } catch (logErr) {
+                console.error('Failed to send self-ban log:', logErr);
+              }
+            }
+
+            // record the self-ban violation in user data
+            try {
+              selfData.selfBanViolations = selfData.selfBanViolations || [];
+              selfData.selfBanViolations.unshift({ word: bw, time: Date.now(), content: cleanContent });
+              if (selfData.selfBanViolations.length > 50) selfData.selfBanViolations.length = 50;
+              await database.saveUserData(message.author.id, selfData).catch(() => {});
+            } catch (dbErr) {
+              console.error('Failed to record self-ban violation:', dbErr);
+            }
+
+            // stop further processing for this message
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Self-ban check error:', err);
+    }
+
+    // Use the dedicated detection function on the cleaned content
+    const violation = detectViolation(cleanContent);
 
     // If a violation is found, handle it
     if (violation) {
