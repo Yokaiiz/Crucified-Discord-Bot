@@ -249,13 +249,22 @@ async function handleProfileCommand(interaction) {
     const targetUserId = targetUserObj.id;
     await database.ensureUser(targetUserId);
     const targetUserData = await database.getUserData(targetUserId);
+
+    // Format violations from array to readable text
+    const targetUserViolations = targetUserData.violations?.length
+      ? targetUserData.violations
+          .slice(0, 5) // Show only last 5 violations
+          .map(v => `${v.type} (${new Date(v.time).toLocaleDateString()})`)
+          .join("\n")
+      : "None";
+
     const targetInventoryText = Object.entries(targetUserData.inventory)
       .map(([item, qty]) => `${item} x${qty}`)
       .join("\n") || "None";
 
     profileEmbed = new EmbedBuilder()
       .setColor("Default")
-      .setTitle(`${targetUserObj.username}'s inventory, balance and experience`)
+      .setTitle(`${targetUserObj.displayName}'s inventory, balance and experience`)
       .setThumbnail(targetUserObj.displayAvatarURL())
       .addFields(
         { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
@@ -263,18 +272,28 @@ async function handleProfileCommand(interaction) {
         { name: "**Inventory**", value: `**${targetInventoryText}**` },
         { name: '**Shikai**', value: `**${targetUserData.power}**` },
         { name: '**Race**', value: `**${targetUserData.race}**` },
+        { name: "**Violations**", value: `**${targetUserViolations}**` },
       )
       .setTimestamp();
   } else {
     await database.ensureUser(userId);
     const userData = await database.getUserData(userId);
+
+    // Format violations from array to readable text
+    const userViolations = userData.violations?.length
+      ? userData.violations
+          .slice(0, 5) // Show only last 5 violations
+          .map(v => `${v.type} (${new Date(v.time).toLocaleDateString()})`)
+          .join("\n")
+      : "None";
+
     const inventoryText = Object.entries(userData.inventory)
       .map(([item, qty]) => `${item} x${qty}`)
       .join("\n") || "None";
 
     profileEmbed = new EmbedBuilder()
       .setColor("Default")
-      .setTitle(`${interaction.user.username}'s inventory, balance and experience!`)
+      .setTitle(`${interaction.user.displayName}'s inventory, balance and experience!`)
       .setThumbnail(interaction.user.displayAvatarURL())
       .addFields(
         { name: "**Balance**", value: `**¥${userData.balance.toLocaleString("en-US")}**` },
@@ -282,6 +301,7 @@ async function handleProfileCommand(interaction) {
         { name: "**Inventory**", value: `**${inventoryText}**` },
         { name: '**Shikai**', value: `**${userData.power}**`},
         { name: '**Race**', value: `**${userData.race}**` },
+        { name: "**Violations**", value: `**${userViolations}**` },
       )
       .setTimestamp();
   }

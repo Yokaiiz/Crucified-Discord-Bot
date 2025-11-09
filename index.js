@@ -79,7 +79,11 @@ const autoModPatterns = {
       // lightweight regex seeds — normalized input is used later for fuzzy checks
       /\b(nig+|n[i1!|¡].*g+)\b/i,
       /\b(chin[kk]?)\b/i,
-      /\b(coo+n+)\b/i
+      /\b(coo+n+)\b/i,
+      /\b(g[o0][\s_]*[kc])\b/i,
+      /\b(sl[a@]nt)\b/i,
+      /\b(y[e3]ll[o0]w)\s*(b[o0]ne|d[e3]v[i1]l|m[o0]nk[e3]y|p[e3][o0]pl[e3])\b/i,
+      /\b(r[i1]c[e3])\s*(p[i1]ck[e3]r|n[i1]gg[e3]r)\b/i
     ],
     homophobia: [
       /\b(fag+|faggo+t?)\b/i,
@@ -123,7 +127,7 @@ const autoModPatterns = {
 // small curated list of slur stems for fuzzy detection (used only for moderation)
 // these are stems/pieces used to detect obfuscated variants — they are not output as suggestions
 const slurStems = {
-  racism: ['nig', 'nigg', 'coon', 'chink', 'spic', 'gypo', 'wetback'],
+  racism: ['nig', 'nigg', 'coon', 'chink', 'spic', 'gypo', 'wetback', 'ching', 'whigg', 'whigger', 'gook', 'slant', 'zippr'],
   homophobia: ['fag', 'faag', 'dyke', 'queer'],
   ableism: ['retard', 'spaz', 'crip'],
   antisemitic: ['kike', 'yid']
@@ -207,18 +211,32 @@ function detectViolation(originalContent) {
   const candidates = new Set([...tokens, concatenated]);
 
   // check against stems with a reasonable similarity threshold
-  const SIM_THRESHOLD = 0.78; // adjustable: higher -> fewer false positives
+  // Raise threshold slightly to reduce false positives and add a small
+  // whitelist of common benign tokens that include 'nig' (e.g. 'night').
+  const SIM_THRESHOLD = 0.85; // higher -> fewer false positives
+
+  const safeTokens = new Set([
+    'night', 'knight', 'ignite', 'reignite', 'significant', 'denigrate',
+    'nigeria', 'niger', 'nigel', 'nightmare', 'zipper'
+  ]);
+
   for (const [category, stems] of Object.entries(slurStems)) {
     for (const stem of stems) {
       for (const cand of candidates) {
+        // Skip candidates that are known safe words to avoid false positives
+        if (safeTokens.has(cand)) continue;
+
         const similarity = levenshteinSimilarity(cand, stem);
-        if (similarity >= SIM_THRESHOLD || cand.includes(stem)) {
-          return category;
-        }
-        // also check substrings of cand for short slur-like matches
+        // Only accept strong similarities
+        if (similarity >= SIM_THRESHOLD) return category;
+
+        // also check substrings of cand for slur-like matches, but limit
+        // substring lengths to avoid matching long benign words
         if (cand.length >= 3) {
-          for (let i = 0; i <= cand.length - 3; i++) {
-            const sub = cand.substring(i, Math.min(cand.length, i + Math.max(3, stem.length)));
+          const subLen = Math.max(3, stem.length);
+          for (let i = 0; i <= cand.length - subLen; i++) {
+            const sub = cand.substring(i, i + subLen);
+            if (safeTokens.has(sub)) continue;
             if (levenshteinSimilarity(sub, stem) >= SIM_THRESHOLD) return category;
           }
         }
@@ -397,24 +415,31 @@ client.on('messageCreate', async (message) => {
 
         // Log to mod channel if configured
         if (MOD_LOG_CHANNEL) {
-          const logChannel = message.guild.channels.cache.get(MOD_LOG_CHANNEL) ||
-                           await message.guild.channels.fetch(MOD_LOG_CHANNEL).catch(() => null);
+          try {
+            const logChannel = message.guild.channels.cache.get(MOD_LOG_CHANNEL) ||
+                             await message.guild.channels.fetch(MOD_LOG_CHANNEL).catch(() => null);
 
-          if (logChannel) {
-            await logChannel.send({
-              embeds: [{
-                color: 0xFF0000,
-                title: "🛡️ AutoMod - Message Filtered",
-                fields: [
-                  { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
-                  { name: "Channel", value: `${message.channel}`, inline: true },
-                  { name: "Category", value: violation, inline: true },
-                  { name: "Message", value: `||${content}||` },
-                  { name: "Normalized", value: `||${normalized}||` }
-                ],
-                timestamp: new Date()
-              }]
-            });
+            if (logChannel?.isTextBased()) {
+              const { normalized } = normalizeText(content);
+              await logChannel.send({
+                embeds: [{
+                  color: 0xFF0000,
+                  title: "🛡️ AutoMod - Message Filtered",
+                  fields: [
+                    { name: "User", value: `${message.author.tag} (${message.author.id})`, inline: true },
+                    { name: "Channel", value: `<#${message.channel.id}>`, inline: true },
+                    { name: "Category", value: violation, inline: true },
+                    { name: "Message Content", value: content ? `||${content}||` : "*No content*" },
+                    { name: "Normalized Form", value: normalized ? `||${normalized}||` : "*No content*" }
+                  ],
+                  timestamp: new Date()
+                }]
+              }).catch(error => console.error("Failed to send log message:", error));
+            } else {
+              console.error("Log channel is not a text channel");
+            }
+          } catch (error) {
+            console.error("Error sending to log channel:", error);
           }
         }
 
