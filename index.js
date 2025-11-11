@@ -126,7 +126,7 @@ const autoModPatterns = {
 // small curated list of slur stems for fuzzy detection (used only for moderation)
 // these are stems/pieces used to detect obfuscated variants — they are not output as suggestions
 const slurStems = {
-  racism: ['nig', 'nigg', 'coon', 'chink', 'spic', 'gypo', 'wetback', 'ching', 'whigg', 'whigger', 'gook', 'slant', 'zippr'],
+  racism: ['nig', 'nigg', 'coon', 'chink', 'spic', 'gypo', 'wetback', 'ching', 'whigg', 'whigger', 'gook', 'slant', 'zippr', 'negr', 'negro'],
   homophobia: ['fag', 'faag', 'dyke', 'queer'],
   ableism: ['retard', 'spaz', 'crip'],
   antisemitic: ['kike', 'yid']
@@ -222,7 +222,7 @@ function detectViolation(originalContent) {
     // common programming / technology tokens to avoid false positives
     'javascript', 'typescript', 'java', 'python', 'php', 'ruby', 'go', 'golang', 'rust', 'swift',
     'kotlin', 'scala', 'perl', 'node', 'nodejs', 'react', 'angular', 'vue', 'svelte',
-    'csharp', 'cpp', 'html', 'css'
+    'csharp', 'cpp', 'html', 'css', 'nighty', 'goodnight', 'good night', 'if', 'game'
   ]);
 
   // Token-level checks (conservative)
@@ -269,13 +269,16 @@ function detectViolation(originalContent) {
             // reducing accidental triggers inside normal words.
             const subStart = i;
             const subEnd = i + l - 1;
-            const covering = tokenPositions.filter(p => p.start <= subStart && p.end >= subEnd);
-            if (covering.length === 1) {
-              const tok = covering[0].token;
-              // skip obvious technology tokens or words containing 'script'
-              if (tok.includes('script')) continue;
-              if (safeTokens.has(tok)) continue;
-              if (tok.endsWith('ing') && tok.length > stem.length + 1) continue;
+            // find tokens that intersect the substring (covering or partially)
+            const intersecting = tokenPositions.filter(p => !(p.end < subStart || p.start > subEnd));
+            if (intersecting.length > 0) {
+              // if any intersecting token is known safe (or contains 'script'), skip
+              if (intersecting.some(p => p.token.includes('script') || safeTokens.has(p.token))) continue;
+              // if the substring is fully inside a single token, apply gerund heuristic
+              if (intersecting.length === 1) {
+                const tok = intersecting[0].token;
+                if (tok.endsWith('ing') && tok.length > stem.length + 1) continue;
+              }
             }
 
             const sim = levenshteinSimilarity(sub, stem);
