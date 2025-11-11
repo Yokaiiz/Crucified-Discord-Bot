@@ -468,8 +468,6 @@ client.on('messageCreate', async (message) => {
         // not owner, skip self-ban check
       } else if (selfBanWords.length > 0) {
         const { normalized: normalizedClean } = normalizeText(cleanContent);
-        // debug logging to help diagnose why self-ban might not trigger
-        console.log(`AutoMod: selfBan check for ${message.author.id} -> words=[${selfBanWords.join(',')}] normalized="${normalizedClean}"`);
         const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         for (const bw of selfBanWords) {
           const rx = new RegExp('\\b' + escapeRegExp(bw) + '\\b', 'i');
