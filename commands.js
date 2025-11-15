@@ -2124,8 +2124,8 @@ async function handleGiveWarningCommand(interaction) {
   const targetUser = interaction.options.getUser('target');
   const targetID = targetUser.id;
   const reason = interaction.options.getString('reason') || 'No reason provided';
+  const MOD_LOG_CHANNEL_ID = process.env.MOD_LOG_CHANNEL;
 
-  // Resolve target as a guild member (required for timeout)
   const targetMember = interaction.guild.members.resolve(targetID);
 
   await database.ensureUser(targetID);
@@ -2152,42 +2152,78 @@ async function handleGiveWarningCommand(interaction) {
 
   await database.saveUserData(targetID, targetData);
 
-  // Timeout configuration
-  const timeoutMs = 60 * 60 * 1000; // 1 hour
-  const secondTimeoutMs = 5 * 60 * 60 * 1000; // 5 hours
+  // Timeout lengths
+  const timeoutMs5 = 60 * 60 * 1000; // 1 hour
+  const timeoutMs10 = 5 * 60 * 60 * 1000; // 5 hours
 
-  // Convert timeout to human readable format
-  const readableDuration = msToReadable(timeoutMs);
-  const secondReadableDuration = msToReadable(secondTimeoutMs);
+  const readable5 = msToReadable(timeoutMs5);
+  const readable10 = msToReadable(timeoutMs10);
 
-  let timedOut = false;
+  let replyMessage = `✅ <@${targetID}> has been warned for: **${reason}**.`;
 
+  // Handle 5-warning timeout
   if (targetData.violations.length === 5 && targetMember) {
     try {
-      await targetMember.timeout(timeoutMs, 'Accumulated 5 warnings');
-      timedOut = true;
+      await targetMember.timeout(timeoutMs5, 'Accumulated 5 warnings');
+      replyMessage += `\n⚠️ User has been timed out for accumulating **5 warnings**.\n⏳ Duration: **${readable5}**`;
+
+      const logChannel = interaction.client.channels.cache.get(MOD_LOG_CHANNEL_ID);
+      if (logChannel) {
+        await logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('User Timed Out for 5 Warnings')
+              .setDescription(`<@${targetID}> has been timed out after reaching 5 warnings.`)
+              .addFields(
+                { name: 'Duration', value: readable5, inline: true },
+                { name: 'Issued By', value: `<@${interaction.user.id}>`, inline: true },
+                { name: 'Reason', value: 'Accumulated 5 warnings', inline: false }
+              )
+              .setColor('Random')
+              .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
+              .setTimestamp()
+          ]
+        });
+      }
     } catch (err) {
-      console.error('Timeout failed:', err);
+      console.error('Timeout (5 warnings) failed:', err);
     }
   }
 
-  // Reply once, including timeout info if applicable
-  await interaction.reply({
-    content:
-      `✅ <@${targetID}> has been warned for: **${reason}**.` +
-      (timedOut ? `\n⚠️ User has been timed out for accumulating 5 warnings.\n⏳ Duration: **${readableDuration}**` : ''),
-    ephemeral: true,
-  });
+  // Send initial reply
+  await interaction.reply({ content: replyMessage, ephemeral: true });
 
-  if (targetData.violations.length >= 10 && targetMember) {
+  // Handle 10-warning timeout
+  if (targetData.violations.length === 10 && targetMember) {
     try {
-      await targetMember.timeout(secondTimeoutMs, 'Accumulated 10 warnings');
+      await targetMember.timeout(timeoutMs10, 'Accumulated 10 warnings');
+
       await interaction.followUp({
-        content: `⚠️ <@${targetID}> has been timed out again for accumulating 10 warnings.\n⏳ Duration: **${secondReadableDuration}**`,
+        content:
+          `⚠️ <@${targetID}> has been timed out for accumulating **10 warnings**.\n⏳ Duration: **${readable10}**`,
         ephemeral: true,
       });
+
+      const logChannel = interaction.client.channels.cache.get(MOD_LOG_CHANNEL_ID);
+      if (logChannel) {
+        await logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('User Timed Out for 10 Warnings')
+              .setDescription(`<@${targetID}> has been timed out after reaching 10 warnings.`)
+              .addFields(
+                { name: 'Duration', value: readable10, inline: true },
+                { name: 'Issued By', value: `<@${interaction.user.id}>`, inline: true },
+                { name: 'Reason', value: 'Accumulated 10 warnings', inline: false }
+              )
+              .setColor('Random')
+              .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
+              .setTimestamp()
+          ]
+        });
+      }
     } catch (err) {
-      console.error('Second timeout failed:', err);
+      console.error('Timeout (10 warnings) failed:', err);
     }
   }
 }
