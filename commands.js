@@ -2162,7 +2162,7 @@ async function handleGiveWarningCommand(interaction) {
 
   let timedOut = false;
 
-  if (targetData.violations.length >= 5 && targetMember) {
+  if (targetData.violations.length === 5 && targetMember) {
     try {
       await targetMember.timeout(timeoutMs, 'Accumulated 5 warnings');
       timedOut = true;
@@ -2181,9 +2181,10 @@ async function handleGiveWarningCommand(interaction) {
 
   if (targetData.violations.length >= 10 && targetMember) {
     try {
-      await targetMember.timeout(secondReadableDuration, 'Accumulated 10 warnings');
+      await targetMember.timeout(secondTimeoutMs, 'Accumulated 10 warnings');
       await interaction.followUp({
         content: `⚠️ <@${targetID}> has been timed out again for accumulating 10 warnings.\n⏳ Duration: **${secondReadableDuration}**`,
+        ephemeral: true,
       });
     } catch (err) {
       console.error('Second timeout failed:', err);
