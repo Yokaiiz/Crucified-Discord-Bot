@@ -8,6 +8,7 @@ const {
   SlashCommandBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  GuildMember,
 } = require("discord.js");
 
 const database = require("./database.js");
@@ -42,7 +43,8 @@ const {
   handleKissCommand,
   handleCuddleCommand,
   handleFuckCommand,
-  handleClearUserWarningCommand
+  handleClearUserWarningCommand,
+  handleGiveWarningCommand,
 } = require("./commands.js");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -176,6 +178,9 @@ const commands = [
     .addUserOption(option => option.setName('target').setDescription('The person you want to fuck').setRequired(true)),
   new SlashCommandBuilder().setName('clear_user').setDescription('Allows a moderator to clear someones warnings.')
     .addUserOption(option => option.setName('user').setDescription('The person who you want to clear.').setRequired(true)),
+  new SlashCommandBuilder().setName('give_warning').setDescription('You give a warning for a member based on what rules they have broken.')
+    .addUserOption(option => option.setName('target').setDescription('The person you wish to give the warning to.').setRequired(true))
+    .addStringOption(option => option.setName('reason').setDescription('Why do you want to give them a warning?').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -282,6 +287,7 @@ client.on("interactionCreate", async (interaction) => {
         case "cuddle": return handleCuddleCommand(interaction);
         case "fuck": return handleFuckCommand(interaction);
         case "clear_user": return handleClearUserWarningCommand(interaction);
+        case "give_warning": return handleGiveWarningCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

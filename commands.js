@@ -245,22 +245,37 @@ async function handleProfileCommand(interaction) {
   const targetUserObj = interaction.options.getUser("user");
   let profileEmbed;
 
+  // Helper function to format violations safely
+  function formatViolations(violations) {
+    if (!Array.isArray(violations) || violations.length === 0) return "None";
+
+    return violations
+      .slice(-5) // last 5
+      .map(v => {
+        const reason = v.reason || "No reason provided";
+        const date = v.date ? new Date(v.date).toLocaleString() : "Unknown Date";
+        return `${reason} (${date})`;
+      })
+      .join("\n");
+  }
+
+  // Helper function for inventory
+  function formatInventory(inv) {
+    if (!inv || Object.keys(inv).length === 0) return "None";
+
+    return Object.entries(inv)
+      .map(([item, qty]) => `${item} x${qty}`)
+      .join("\n");
+  }
+
+  // PROFILE OF ANOTHER USER
   if (targetUserObj) {
     const targetUserId = targetUserObj.id;
     await database.ensureUser(targetUserId);
     const targetUserData = await database.getUserData(targetUserId);
 
-    // Format violations from array to readable text
-    const targetUserViolations = targetUserData.violations?.length
-      ? targetUserData.violations
-          .slice(0, 5) // Show only last 5 violations
-          .map(v => `${v.type} (${new Date(v.time).toLocaleDateString()})`)
-          .join("\n")
-      : "None";
-
-    const targetInventoryText = Object.entries(targetUserData.inventory)
-      .map(([item, qty]) => `${item} x${qty}`)
-      .join("\n") || "None";
+    const violationsText = formatViolations(targetUserData.violations);
+    const inventoryText = formatInventory(targetUserData.inventory);
 
     profileEmbed = new EmbedBuilder()
       .setColor("Default")
@@ -269,27 +284,20 @@ async function handleProfileCommand(interaction) {
       .addFields(
         { name: "**Balance**", value: `**¥${targetUserData.balance.toLocaleString("en-US")}**` },
         { name: "**Experience**", value: `**${targetUserData.experience.toLocaleString("en-US")}**` },
-        { name: "**Inventory**", value: `**${targetInventoryText}**` },
-        { name: '**Shikai**', value: `**${targetUserData.power}**` },
-        { name: '**Race**', value: `**${targetUserData.race}**` },
-        { name: "**Violations**", value: `**${targetUserViolations}**` },
+        { name: "**Inventory**", value: `**${inventoryText}**` },
+        { name: "**Shikai**", value: `**${targetUserData.power}**` },
+        { name: "**Race**", value: `**${targetUserData.race}**` },
+        { name: "**Violations**", value: `**${violationsText}**` },
       )
       .setTimestamp();
+
+  // PROFILE OF SELF
   } else {
     await database.ensureUser(userId);
     const userData = await database.getUserData(userId);
 
-    // Format violations from array to readable text
-    const userViolations = userData.violations?.length
-      ? userData.violations
-          .slice(0, 5) // Show only last 5 violations
-          .map(v => `${v.type} (${new Date(v.time).toLocaleDateString()})`)
-          .join("\n")
-      : "None";
-
-    const inventoryText = Object.entries(userData.inventory)
-      .map(([item, qty]) => `${item} x${qty}`)
-      .join("\n") || "None";
+    const violationsText = formatViolations(userData.violations);
+    const inventoryText = formatInventory(userData.inventory);
 
     profileEmbed = new EmbedBuilder()
       .setColor("Default")
@@ -299,9 +307,9 @@ async function handleProfileCommand(interaction) {
         { name: "**Balance**", value: `**¥${userData.balance.toLocaleString("en-US")}**` },
         { name: "**Experience**", value: `**${userData.experience.toLocaleString("en-US")}**` },
         { name: "**Inventory**", value: `**${inventoryText}**` },
-        { name: '**Shikai**', value: `**${userData.power}**`},
-        { name: '**Race**', value: `**${userData.race}**` },
-        { name: "**Violations**", value: `**${userViolations}**` },
+        { name: "**Shikai**", value: `**${userData.power}**` },
+        { name: "**Race**", value: `**${userData.race}**` },
+        { name: "**Violations**", value: `**${violationsText}**` },
       )
       .setTimestamp();
   }
@@ -2112,6 +2120,76 @@ async function handleClearUserWarningCommand(interaction) {
   });
 }
 
+async function handleGiveWarningCommand(interaction) {
+  const targetUser = interaction.options.getUser('target');
+  const targetID = targetUser.id;
+  const reason = interaction.options.getString('reason') || 'No reason provided';
+
+  // Resolve target as a guild member (required for timeout)
+  const targetMember = interaction.guild.members.resolve(targetID);
+
+  await database.ensureUser(targetID);
+  const targetData = await database.getUserData(targetID);
+
+  // Permission check
+  const hasModerate = interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers);
+  const hasAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+
+  if (!hasModerate && !hasAdmin) {
+    return interaction.reply({
+      content: 'You do not have the required permissions to issue warnings.',
+      ephemeral: true,
+    });
+  }
+
+  // Add warning
+  targetData.violations ??= [];
+  targetData.violations.push({
+    reason,
+    date: new Date().toISOString(),
+    issuedBy: interaction.user.id,
+  });
+
+  await database.saveUserData(targetID, targetData);
+
+  // Timeout configuration
+  const timeoutMs = 60 * 60 * 1000; // 1 hour
+
+  // Convert timeout to human readable format
+  const readableDuration = msToReadable(timeoutMs);
+
+  let timedOut = false;
+
+  if (targetData.violations.length >= 5 && targetMember) {
+    try {
+      await targetMember.timeout(timeoutMs, 'Accumulated 5 warnings');
+      timedOut = true;
+    } catch (err) {
+      console.error('Timeout failed:', err);
+    }
+  }
+
+  // Reply once, including timeout info if applicable
+  return interaction.reply({
+    content:
+      `✅ <@${targetID}> has been warned for: **${reason}**.` +
+      (timedOut ? `\n⚠️ User has been timed out for accumulating 5 warnings.\n⏳ Duration: **${readableDuration}**` : ''),
+    ephemeral: true,
+  });
+}
+
+
+// Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
+function msToReadable(ms) {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (hours >= 1) return `${hours} hour${hours > 1 ? 's' : ''}`;
+  if (minutes >= 1) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  return `${seconds} second${seconds > 1 ? 's' : ''}`;
+}
+
 // --- Exports ---
 module.exports = {
   handleCatCommand,
@@ -2145,4 +2223,5 @@ module.exports = {
   handleCuddleCommand,
   handleFuckCommand,
   handleClearUserWarningCommand,
+  handleGiveWarningCommand,
 };
