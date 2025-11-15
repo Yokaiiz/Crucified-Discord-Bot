@@ -2154,9 +2154,11 @@ async function handleGiveWarningCommand(interaction) {
 
   // Timeout configuration
   const timeoutMs = 60 * 60 * 1000; // 1 hour
+  const secondTimeoutMs = 5 * 60 * 60 * 1000; // 5 hours
 
   // Convert timeout to human readable format
   const readableDuration = msToReadable(timeoutMs);
+  const secondReadableDuration = msToReadable(secondTimeoutMs);
 
   let timedOut = false;
 
@@ -2170,12 +2172,23 @@ async function handleGiveWarningCommand(interaction) {
   }
 
   // Reply once, including timeout info if applicable
-  return interaction.reply({
+  await interaction.reply({
     content:
       `✅ <@${targetID}> has been warned for: **${reason}**.` +
       (timedOut ? `\n⚠️ User has been timed out for accumulating 5 warnings.\n⏳ Duration: **${readableDuration}**` : ''),
     ephemeral: true,
   });
+
+  if (targetData.violations.length >= 10 && targetMember) {
+    try {
+      await targetMember.timeout(secondReadableDuration, 'Accumulated 10 warnings');
+      await interaction.followUp({
+        content: `⚠️ <@${targetID}> has been timed out again for accumulating 10 warnings.\n⏳ Duration: **${secondReadableDuration}**`,
+      });
+    } catch (err) {
+      console.error('Second timeout failed:', err);
+    }
+  }
 }
 
 
