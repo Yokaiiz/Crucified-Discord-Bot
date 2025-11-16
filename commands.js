@@ -136,9 +136,9 @@ const powerMovesets = {
     { name: 'Segunda Etapa', damage: 0, description: 'You transform into your second release form.', bankaiActivate: true }
   ],
   'Pantera': [
-    { name: 'Claw Slash', damage: 100, description: 'You slash your opponent with panther-like claws.' },
-    { name: 'Roaring Pounce', damage: 250, description: 'You pounce on your opponent with incredible force.' },
-    { name: 'Pantera Rampage', damage: 450, description: 'You unleash your ultimate rampage attack.' }
+    { name: 'Claw Slash', damage: 350, description: 'You slash your opponent with panther-like claws.' },
+    { name: 'Roaring Pounce', damage: 750, description: 'You pounce on your opponent with incredible force.' },
+    { name: 'Pantera Rampage', damage: 1250, description: 'You unleash your ultimate rampage attack.' }
   ],
   'Ichimonji': [
     { name: 'Erasing Cut', damage: 500, description: 'You perform a cut with your ink brush and do 500 damage to the opponent.' },
@@ -151,6 +151,9 @@ const powerMovesets = {
     { name: 'Sword Smash', damage: 600, description: 'You smash your opponent with your giant axe.' },
     { name: 'Earth Shatter', damage: 800, description: 'You slam your sword into the ground, causing an earth-shattering shockwave.' },
     { name: 'Bankai: RAGHHHHHH', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
+    { name: 'Heavenly cleave', damage: 750, description: 'You swing your axe downwards into the ground with immense force, creating a massive shockwave and crater.'},
+    { name: 'Meteor Destroyer', damage: 1500, description: 'You lunge into the sky and cleave through an entire meteor.'},
+    { name: 'Heavenly Descent', damage: 2000, description: 'You smash your fists into the ground with immense force, creating a massive shock and increasing your defense by 200.', defenseBoost: 200, ultimate: true },
   ]
 };
 
@@ -1069,16 +1072,18 @@ async function handleTakeEXPCommand(interaction) {
 
 async function handleTimeoutCommand(interaction) {
   const targetUser = interaction.options.getUser('target');
-  const time = interaction.options.getInteger('time'); // in ms
+  const minutes = interaction.options.getInteger('minutes'); // minutes
+  const MAX_MINUTES = 40320; // 28 days
+  const timeInMs = minutes * 60 * 1000;
 
-  const MAX_TIMEOUT = 2419200000; // 28 days in ms
-  if (!time || time < 1000 || time > MAX_TIMEOUT) {
+  if (minutes < 1 || minutes > MAX_MINUTES) {
     return interaction.reply({
-      content: "Please provide a valid timeout duration (1s to 28d in ms).",
+      content: "Please provide a valid timeout duration (1–40320 minutes).",
       ephemeral: true,
     });
   }
 
+  // Fetch member
   let member;
   try {
     member = await interaction.guild.members.fetch(targetUser.id);
@@ -1089,6 +1094,7 @@ async function handleTimeoutCommand(interaction) {
     });
   }
 
+  // Permission checks
   if (!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
     return interaction.reply({
       content: "You do not have permission to timeout members.",
@@ -1103,16 +1109,19 @@ async function handleTimeoutCommand(interaction) {
     });
   }
 
+  // Apply timeout
   try {
-    await member.timeout(time, `Timed out by ${interaction.user.username}`);
+    await member.timeout(timeInMs, `Timed out by ${interaction.user.tag}`);
+
     await interaction.reply({
-      content: `<@${targetUser.id}> has been timed out for ${(time / 1000).toLocaleString("en-US")} seconds by ${interaction.user.username}`,
+      content: `🔨 <@${targetUser.id}> has been timed out for **${minutes} minute(s)** by **${interaction.user.username}**.`,
       ephemeral: false,
     });
   } catch (error) {
     console.error(error);
     await interaction.reply({
-      content: "Failed to timeout the member. Do I have the right permissions and is the target below me in the role list?",
+      content:
+        "Failed to timeout the member. I may not have permissions or the member may be above me in the role list.",
       ephemeral: true,
     });
   }

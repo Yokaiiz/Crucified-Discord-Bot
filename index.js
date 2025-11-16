@@ -149,7 +149,7 @@ const commands = [
     .addIntegerOption(option => option.setName("amount").setDescription("Amount")),
   new SlashCommandBuilder().setName("timeout").setDescription("Timeout a member (admin only)")
     .addUserOption(option => option.setName("target").setDescription("Target user").setRequired(true))
-    .addIntegerOption(option => option.setName("time").setDescription("Time in seconds").setRequired(true)),
+    .addIntegerOption(option => option.setName("minutes").setDescription("Time in seconds").setRequired(true)),
   new SlashCommandBuilder().setName("ban").setDescription("Ban a member (admin only)")
     .addUserOption(option => option.setName("user").setDescription("Target user").setRequired(true))
     .addStringOption(option => option.setName("reason").setDescription("Reason")),
