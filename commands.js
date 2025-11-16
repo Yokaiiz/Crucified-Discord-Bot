@@ -2155,9 +2155,11 @@ async function handleGiveWarningCommand(interaction) {
   // Timeout lengths
   const timeoutMs5 = 60 * 60 * 1000; // 1 hour
   const timeoutMs10 = 5 * 60 * 60 * 1000; // 5 hours
+  const timeoutMs15 = 24 * 60 * 60 * 1000; // 24 hours
 
   const readable5 = msToReadable(timeoutMs5);
   const readable10 = msToReadable(timeoutMs10);
+  const readable15 = msToReadable(timeoutMs15);
 
   let replyMessage = `✅ <@${targetID}> has been warned for: **${reason}**.`;
 
@@ -2224,6 +2226,70 @@ async function handleGiveWarningCommand(interaction) {
       }
     } catch (err) {
       console.error('Timeout (10 warnings) failed:', err);
+    }
+  }
+
+  if (targetData.violations.length === 15 && targetMember) {
+    try {
+      await targetMember.timeout(24 * 60 * 60 * 1000, 'Accumulated 15 warnings');
+
+      await interaction.followUp({
+        content: `⚠️ <@${targetID}> has been timed out for accumulating **15 warnings**.\n⏳ Duration: **24 hours**`,
+        ephemeral: true,
+      });
+
+      const logChannel = interaction.client.channels.cache.get(MOD_LOG_CHANNEL_ID);
+      if (logChannel) {
+        await logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('User Timed Out for 15 Warnings')
+              .setDescription(`<@${targetID}> has been timed out after reaching 15 warnings.`)
+              .addFields(
+                { name: 'Duration', value: readable15, inline: true },
+                { name: 'Issued By', value: `<@${interaction.user.id}>`, inline: true },
+                { name: 'Reason', value: 'Accumulated 15 warnings', inline: false }
+              )
+              .setColor('Random')
+              .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
+              .setTimestamp()
+          ]
+        });
+      }
+    } catch (err) {
+      console.error('Timeout (15 warnings) failed:', err);
+    }
+  }
+
+  if (targetData.violations.length > 20 && targetMember) {
+    try {
+      await targetMember.ban({ reason: 'Accumulated more than 15 warnings' });
+
+      await interaction.followUp({
+        content: `🚫 <@${targetID}> has been banned for accumulating more than **15 warnings**.`,
+        ephemeral: true,
+      });
+
+      const logChannel = interaction.client.channels.cache.get(MOD_LOG_CHANNEL_ID);
+      if (logChannel) {
+        await logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('User Banned for Excessive Warnings')
+              .setDescription(`<@${targetID}> has been banned after exceeding 15 warnings.`)
+              .addFields(
+                { name: 'Issued By', value: `<@${interaction.user.id}>`, inline: true },
+                { name: 'Reason', value: 'Accumulated more than 15 warnings', inline: false },
+                { name: 'Duration', value: 'Permanent (Appealable depending on severity)', inline: true }
+              )
+              .setColor('Random')
+              .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
+              .setTimestamp()
+          ]
+        });
+      }
+    } catch (err) {
+      console.error('Ban (15+ warnings) failed:', err);
     }
   }
 }
