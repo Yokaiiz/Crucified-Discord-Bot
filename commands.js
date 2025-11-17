@@ -1831,28 +1831,43 @@ async function handleSuggestCommand(interaction) {
 
 async function handleHugCommand(interaction) {
   const targetUser = interaction.options.getUser('target');
-  const userId = interaction.user.id;
+  const huggerId = interaction.user.id;        // Person using the command
+  const targetId = targetUser.id;              // Person receiving hug
   const avatar = interaction.user.displayAvatarURL({ dynamic: true });
 
-  if (targetUser.id === userId) {
+  // --- Prevent hugging yourself ---
+  if (targetId === huggerId) {
     return interaction.reply({
-      content: "You cannot hug yourself!",
+      content: "You can't hug yourself!",
       ephemeral: true,
     });
   }
 
-  await database.ensureUser(userId);
-  const userData = await database.getUserData(userId);
+  // --- Build the Hug Back button ---
+  const hugBackBtn = new ButtonBuilder()
+    .setCustomId('hug_back')
+    .setLabel('Hug back 🫂')
+    .setStyle(ButtonStyle.Primary);
 
-  // --- Counter logic ---
-  userData.name ||= interaction.user.displayName;
-  userData.roleplayActions ||= {};
-  userData.roleplayActions.hug ||= {};
-  userData.roleplayActions.hug[targetUser.id] = (userData.roleplayActions.hug[targetUser.id] || 0) + 1;
-  const count = userData.roleplayActions.hug[targetUser.id];
-  await database.saveUserData(userId, userData);
+  const actionRow = new ActionRowBuilder().addComponents(hugBackBtn);
 
-  // --- Embed logic ---
+  // --- Database logic for main hugger ---
+  await database.ensureUser(huggerId);
+  const huggerData = await database.getUserData(huggerId);
+
+  huggerData.name ??= interaction.user.displayName;
+  huggerData.roleplayActions ??= {};
+  huggerData.roleplayActions.hug ??= {};
+
+  // Increment hug count (hugger → target)
+  huggerData.roleplayActions.hug[targetId] =
+    (huggerData.roleplayActions.hug[targetId] || 0) + 1;
+
+  const hugCount = huggerData.roleplayActions.hug[targetId];
+
+  await database.saveUserData(huggerId, huggerData);
+
+  // --- Pick a hug GIF ---
   const hugImages = [
     'https://i.pinimg.com/originals/16/f4/ef/16f4ef8659534c88264670265e2a1626.gif',
     'https://i.pinimg.com/originals/bf/b5/be/bfb5bed89f8c09bf53eab687eb3f9404.gif',
@@ -1863,45 +1878,105 @@ async function handleHugCommand(interaction) {
     'https://i.pinimg.com/originals/6e/93/f7/6e93f79d1db5af77a09414b632c2054f.gif',
     'https://i.pinimg.com/originals/3f/ad/d2/3fadd265abfb14aaace51414f30a55af.gif',
   ];
-  const selectedImage = hugImages[Math.floor(Math.random() * hugImages.length)];
+  const randomGif = hugImages[Math.floor(Math.random() * hugImages.length)];
 
+  // --- Build embed ---
   const hugEmbed = new EmbedBuilder()
     .setColor('Random')
-    .setDescription(`**<@${userId}>** has hugged **<@${targetUser.id}>** (**${count}** time${count === 1 ? "" : "s"})!`)
-    .setAuthor({
-      name: `${interaction.user.displayName}`,
-      iconURL: avatar,
-    })
-    .setImage(selectedImage)
-    .setFooter({ text: 'Hugs are nice!' })
+    .setAuthor({ name: interaction.user.displayName, iconURL: avatar })
+    .setDescription(`🫂 **<@${huggerId}> hugged <@${targetId}>!**\nThey have hugged them **${hugCount}** time${hugCount === 1 ? '' : 's'} so far!`)
+    .setImage(randomGif)
+    .setFooter({ text: 'Hugs are wholesome ❤️' })
     .setTimestamp();
 
-  await interaction.reply({ embeds: [hugEmbed] });
+  // Send the message
+  const sentMessage = await interaction.reply({
+    embeds: [hugEmbed],
+    components: [actionRow],
+  });
+
+  // --- Create collector for Hug Back button ---
+  const collector = sentMessage.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 60000,
+    filter: (i) =>
+      i.customId === 'hug_back' && i.user.id === targetId, // only target user can hug back
+  });
+
+  // --- When Hug Back is clicked ---
+  collector.on('collect', async (i) => {
+    await database.ensureUser(targetId);
+    const targetData = await database.getUserData(targetId);
+
+    targetData.roleplayActions ??= {};
+    targetData.roleplayActions.hug ??= {};
+
+    // target → hugger counter
+    targetData.roleplayActions.hug[huggerId] =
+      (targetData.roleplayActions.hug[huggerId] || 0) + 1;
+
+    const hugBackCount = targetData.roleplayActions.hug[huggerId];
+
+    await database.saveUserData(targetId, targetData);
+
+    await i.reply({
+      content: `🫂 **<@${targetId}> hugged back <@${huggerId}>!**\nThey have hugged them **${hugBackCount}** time${hugBackCount === 1 ? '' : 's'}!`,
+    });
+
+    collector.stop('hug_back_pressed');
+  });
+
+  // --- When time ends or button is used ---
+  collector.on('end', async () => {
+    hugBackBtn.setDisabled(true);
+    const disabledRow = new ActionRowBuilder().addComponents(hugBackBtn);
+
+    await sentMessage.edit({
+      components: [disabledRow],
+    }).catch(() => {});
+  });
 }
 
 async function handleSlapCommand(interaction) {
   const targetUser = interaction.options.getUser('target');
-  const userID = interaction.user.id;
-  const avatar = interaction.user.displayAvatarURL({ dynamic: true});
+  const slapperId = interaction.user.id;
+  const targetId = targetUser.id;
+  const avatar = interaction.user.displayAvatarURL({ dynamic: true });
 
-  if (targetUser.id === userID) {
+  // --- Prevent slapping yourself ---
+  if (slapperId === targetId) {
     return interaction.reply({
-      content: 'You cannot slap yourself!',
+      content: "You cannot slap yourself!",
       ephemeral: true
     });
   }
 
-  await database.ensureUser(userID);
-  const userData = await database.getUserData(userID);
+  // --- Create slap-back button ---
+  const slapBackBtn = new ButtonBuilder()
+    .setLabel("Slap back 👋")
+    .setCustomId("slap_back")
+    .setStyle(ButtonStyle.Primary);
 
-  userData.name ||= interaction.user.displayName;
-  userData.roleplayActions ||= {};
-  userData.roleplayActions.slap ||= {};
-  userData.roleplayActions.slap[targetUser.id] = (userData.roleplayActions.slap[targetUser.id] || 0) + 1;
-  const count = userData.roleplayActions.slap[targetUser.id];
-  await database.saveUserData(userID, userData);
+  const row = new ActionRowBuilder().addComponents(slapBackBtn);
 
-  const slapimages = [
+  // --- Database logic for slapper ---
+  await database.ensureUser(slapperId);
+  const slapperData = await database.getUserData(slapperId);
+
+  slapperData.name ??= interaction.user.displayName;
+  slapperData.roleplayActions ??= {};
+  slapperData.roleplayActions.slap ??= {};
+
+  // Increment counter (slapper → target)
+  slapperData.roleplayActions.slap[targetId] =
+    (slapperData.roleplayActions.slap[targetId] || 0) + 1;
+
+  const slapCount = slapperData.roleplayActions.slap[targetId];
+
+  await database.saveUserData(slapperId, slapperData);
+
+  // --- GIF selection ---
+  const slapGifs = [
     'https://i.pinimg.com/originals/2b/3a/3e/2b3a3e107ac57d4f170a8f8e414fec9f.gif',
     'https://i.pinimg.com/originals/1e/0d/de/1e0dde7324127aa8de046ede80b89d2d.gif',
     'https://i.pinimg.com/originals/a9/b8/bd/a9b8bd2060d76ec286ec8b4c61ec1f5a.gif',
@@ -1910,54 +1985,108 @@ async function handleSlapCommand(interaction) {
     'https://i.pinimg.com/originals/a5/b6/da/a5b6da6669d9e8684fdae18932a22ff6.gif',
     'https://i.pinimg.com/originals/f3/73/d9/f373d9bd0f4e703c0f0d1eae35ec157a.gif',
   ];
-  const selectedImage = slapimages[Math.floor(Math.random() * slapimages.length)];
 
+  const gif = slapGifs[Math.floor(Math.random() * slapGifs.length)];
+
+  // --- Embed ---
   const slapEmbed = new EmbedBuilder()
-  .setColor('Random')
-  .setDescription(`<@${interaction.user.id}> has slapped <@${targetUser.id}> **${count}** time${count === 1 ? "" : "s"}!`)
-  .setImage(selectedImage)
-  .setAuthor({
-    name: interaction.user.displayName,
-    iconURL: avatar
-  })
-  .setFooter({ text: 'Owh that must hurt!' })
-  .setTimestamp();
+    .setColor('Random')
+    .setAuthor({ name: interaction.user.displayName, iconURL: avatar })
+    .setDescription(
+      `👋 **<@${slapperId}> slapped <@${targetId}>!**\nThey have slapped them **${slapCount}** time${slapCount === 1 ? '' : 's'}!`
+    )
+    .setImage(gif)
+    .setFooter({ text: "Ouch... that must've hurt!" })
+    .setTimestamp();
 
-  try {
-    await interaction.reply({
-      embeds: [slapEmbed]
+  // Send message
+  const sentMessage = await interaction.reply({
+    embeds: [slapEmbed],
+    components: [row]
+  });
+
+  // --- Slap Back Collector ---
+  const collector = sentMessage.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 60000,
+    filter: (i) =>
+      i.customId === "slap_back" &&
+      i.user.id === targetId // Only the slapped user can slap back
+  });
+
+  collector.on("collect", async (i) => {
+    // Ensure target user exists in DB
+    await database.ensureUser(targetId);
+    const targetData = await database.getUserData(targetId);
+
+    targetData.roleplayActions ??= {};
+    targetData.roleplayActions.slap ??= {};
+
+    // Increase counter (target → slapper)
+    targetData.roleplayActions.slap[slapperId] =
+      (targetData.roleplayActions.slap[slapperId] || 0) + 1;
+
+    const slapBackCount = targetData.roleplayActions.slap[slapperId];
+
+    await database.saveUserData(targetId, targetData);
+
+    await i.reply({
+      content: `👋 **<@${targetId}> slapped back <@${slapperId}>!**\nThey have slapped them **${slapBackCount}** time${slapBackCount === 1 ? '' : 's'}!`
     });
-  } catch (error) {
-    console.log(error);
-    return interaction.reply({
-      content: 'There has been an error with the command!',
-      ephemeral: true
-    });
-  }
+
+    collector.stop("slap_back_used");
+  });
+
+  // Disable button after timeout or usage
+  collector.on("end", async () => {
+    slapBackBtn.setDisabled(true);
+    const disabledRow = new ActionRowBuilder().addComponents(slapBackBtn);
+
+    await sentMessage.edit({
+      components: [disabledRow]
+    }).catch(() => {});
+  });
 }
 
 async function handleKissCommand(interaction) {
   const targetUser = interaction.options.getUser('target');
-  const userID = interaction.user.id;
-  const avatar = interaction.user.displayAvatarURL({dynamic: true});
+  const kisserId = interaction.user.id;
+  const targetId = targetUser.id;
+  const avatar = interaction.user.displayAvatarURL({ dynamic: true });
 
-  await database.ensureUser(userID);
-  const userData = await database.getUserData(userID);
-
-  if (targetUser.id === userID) {
+  // --- Prevent kissing yourself ---
+  if (kisserId === targetId) {
     return interaction.reply({
-      content: 'You cannot kiss yourself, sadly.',
+      content: "You cannot kiss yourself, sadly.",
       ephemeral: true
     });
   }
 
-  userData.name ||= interaction.user.displayName;
-  userData.roleplayActions ||= {};
-  userData.roleplayActions.kiss ||= {};
-  userData.roleplayActions.kiss[targetUser.id] = (userData.roleplayActions.kiss[targetUser.id] || 0) + 1;
-  const count = userData.roleplayActions.kiss[targetUser.id];
-  await database.saveUserData(userID, userData);
+  // --- Kiss Back button ---
+  const kissBackBtn = new ButtonBuilder()
+    .setLabel("Kiss back 💋")
+    .setCustomId("kiss_back")
+    .setStyle(ButtonStyle.Primary);
 
+  const row = new ActionRowBuilder().addComponents(kissBackBtn);
+
+  // --- Database logic for kisser ---
+  await database.ensureUser(kisserId);
+  const kisserData = await database.getUserData(kisserId);
+
+  kisserData.name ??= interaction.user.displayName;
+  kisserData.roleplayActions ??= {};
+  kisserData.roleplayActions.kiss ??= {};
+
+  // Increase kiss counter (kisser → target)
+  kisserData.roleplayActions.kiss[targetId] =
+    (kisserData.roleplayActions.kiss[targetId] || 0) + 1;
+
+  const kissCount = kisserData.roleplayActions.kiss[targetId];
+
+  await database.saveUserData(kisserId, kisserData);
+
+  // --- GIF list ---
   const kissImages = [
     'https://i.pinimg.com/originals/da/64/eb/da64eb02a04941d4eb31f173cc2c6c40.gif',
     'https://i.pinimg.com/originals/10/5a/7a/105a7ad7edbe74e5ca834348025cc650.gif',
@@ -1968,30 +2097,67 @@ async function handleKissCommand(interaction) {
     'https://i.pinimg.com/originals/d0/cd/64/d0cd64030f383d56e7edc54a484d4b8d.gif',
     'https://i.pinimg.com/originals/ae/4c/ad/ae4cad79c863407377e7f498b27bba78.gif'
   ];
-  const randomKissImage = kissImages[Math.floor(Math.random() * kissImages.length)];
 
+  const gif = kissImages[Math.floor(Math.random() * kissImages.length)];
+
+  // --- Embed ---
   const kissEmbed = new EmbedBuilder()
-  .setColor('Random')
-  .setDescription(`<@${userID}> has kissed <@${targetUser.id}> **${count}** time${count === 1 ? "" : "s"}!`)
-  .setImage(randomKissImage)
-  .setAuthor({
-    name: interaction.user.displayName,
-    iconURL: avatar,
-  })
-  .setFooter({text: 'All lovey dovey huh'})
-  .setTimestamp();
+    .setColor("Random")
+    .setAuthor({ name: interaction.user.displayName, iconURL: avatar })
+    .setDescription(
+      `💋 **<@${kisserId}> kissed <@${targetId}>!**\nThey have kissed them **${kissCount}** time${kissCount === 1 ? "" : "s"}!`
+    )
+    .setImage(gif)
+    .setFooter({ text: "All lovey dovey huh~" })
+    .setTimestamp();
 
-  try {
-    await interaction.reply({
-      embeds: [kissEmbed]
+  // Send the initial message
+  const sentMessage = await interaction.reply({
+    embeds: [kissEmbed],
+    components: [row]
+  });
+
+  // --- Kiss Back Collector ---
+  const collector = sentMessage.createMessageComponentCollector({
+    componentType: ComponentType.Button,
+    time: 60000,
+    filter: (i) =>
+      i.customId === "kiss_back" &&
+      i.user.id === targetId // Only the kissed user can click
+  });
+
+  collector.on("collect", async (i) => {
+    // Ensure target user exists in DB
+    await database.ensureUser(targetId);
+    const targetData = await database.getUserData(targetId);
+
+    targetData.roleplayActions ??= {};
+    targetData.roleplayActions.kiss ??= {};
+
+    // Increase counter (target → kisser)
+    targetData.roleplayActions.kiss[kisserId] =
+      (targetData.roleplayActions.kiss[kisserId] || 0) + 1;
+
+    const kissBackCount = targetData.roleplayActions.kiss[kisserId];
+
+    await database.saveUserData(targetId, targetData);
+
+    await i.reply({
+      content: `💋 **<@${targetId}> kissed back <@${kisserId}>!**\nThey have kissed them **${kissBackCount}** time${kissBackCount === 1 ? "" : "s"}!`
     });
-  } catch (error) {
-    console.log(error);
-    return interaction.reply({
-      content: 'There has been an issue with the command!',
-      ephemeral: true
-    });
-  }
+
+    collector.stop("kiss_back_used");
+  });
+
+  // Disable button at the end
+  collector.on("end", async () => {
+    kissBackBtn.setDisabled(true);
+    const disabledRow = new ActionRowBuilder().addComponents(kissBackBtn);
+
+    await sentMessage.edit({
+      components: [disabledRow]
+    }).catch(() => {});
+  });
 }
 
 async function handleCuddleCommand(interaction) {
