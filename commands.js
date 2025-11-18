@@ -13,6 +13,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
   UserContextMenuCommandInteraction,
+  Guild,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -2497,6 +2498,114 @@ async function handleTestEmbedCommand(interaction) {
   }
 }
 
+async function handleJailCommand(interaction) {
+  if (!interaction.guild) {
+    return interaction.reply({ content: "This command can only be used in servers.", ephemeral: true });
+  }
+
+  // executor (person running the command)
+  const executor = interaction.member;
+
+  // target user + target member
+  const targetUser = interaction.options.getUser('target');
+  const targetMember = interaction.guild.members.cache.get(targetUser.id);
+
+  // role to apply
+  const role = interaction.guild.roles.cache.get("1440420971696619661");
+
+  if (!executor.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true
+    });
+  }
+
+  // Prevent jailing admins or staff
+  if (targetMember.permissions.has(PermissionFlagsBits.Administrator) ||
+      targetMember.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: "You cannot jail this user.",
+      ephemeral: true
+    });
+  }
+
+  try {
+    await targetMember.roles.add(role, "User has been jailed.");
+
+    return interaction.reply({
+      content: `<@${executor.id}> has jailed <@${targetUser.id}>.`
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    return interaction.reply({
+      content: "There has been an issue with jailing, please try again.",
+      ephemeral: true
+    });
+  }
+}
+
+async function handleUnJailCommand(interaction) {
+  if (!interaction.guild) {
+    return interaction.reply({
+      content: 'This command can only be used inside a server.',
+      ephemeral: true
+    });
+  }
+
+  // Executor (the person running the command)
+  const executor = interaction.member;
+
+  // Target user + member
+  const targetUser = interaction.options.getUser('target');
+  const targetMember = interaction.guild.members.cache.get(targetUser.id);
+
+  // Jail role
+  const role = interaction.guild.roles.cache.get('1440420971696619661');
+
+  // Basic safety check
+  if (!targetMember) {
+    return interaction.reply({
+      content: 'Could not find that user in this server.',
+      ephemeral: true
+    });
+  }
+
+  // Prevent unauthorized users
+  if (!executor.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: 'Sorry, you do not have permission to use this command.',
+      ephemeral: true
+    });
+  }
+
+  // Prevent unjailing admins & moderators
+  if (targetMember.permissions.has(PermissionFlagsBits.Administrator) ||
+      targetMember.permissions.has(PermissionFlagsBits.ModerateMembers)) {
+    return interaction.reply({
+      content: 'You cannot unjail an administrator or moderator.',
+      ephemeral: true
+    });
+  }
+
+  try {
+    await targetMember.roles.remove(role, 'User has been unjailed.');
+
+    return interaction.reply({
+      content: `<@${targetUser.id}> has been unjailed by <@${executor.id}>.`
+    });
+
+  } catch (err) {
+    console.error('Unjail error:', err);
+
+    return interaction.reply({
+      content: 'There was an error executing the unjail command. Please try again.',
+      ephemeral: true
+    });
+  }
+}
+
 
 // Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
 function msToReadable(ms) {
@@ -2544,4 +2653,6 @@ module.exports = {
   handleClearUserWarningCommand,
   handleGiveWarningCommand,
   handleTestEmbedCommand,
+  handleJailCommand,
+  handleUnJailCommand,
 };

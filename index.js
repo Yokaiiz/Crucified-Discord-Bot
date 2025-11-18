@@ -47,6 +47,8 @@ const {
   handleClearUserWarningCommand,
   handleGiveWarningCommand,
   handleTestEmbedCommand,
+  handleJailCommand,
+  handleUnJailCommand,
 } = require("./commands.js");
 const { EmbedBuilder } = require("@discordjs/builders");
 
@@ -55,6 +57,7 @@ if (!TOKEN) throw new Error("❌ Missing DISCORD_BOT_TOKEN in .env file");
 const OWNER_ID = process.env.OWNER_ID;
 const OWNER_ID2 = process.env.OWNER_ID2;
 const MOD_LOG_CHANNEL = process.env.MOD_LOG_CHANNEL || null;
+const BOOST_SERVER_ID = '1370076988697739446';
 
 // --- Client setup ---
 const client = new Client({
@@ -186,6 +189,10 @@ const commands = [
     .addUserOption(option => option.setName('target').setDescription('The person you wish to give the warning to.').setRequired(true))
     .addStringOption(option => option.setName('reason').setDescription('Why do you want to give them a warning?').setRequired(true)),
   new SlashCommandBuilder().setName('test_embed').setDescription('this command is for the sole reason of testing different embed ideas'),
+  new SlashCommandBuilder().setName('jail').setDescription('You jail a member so they cannot see the rest of the server.')
+    .addUserOption(option => option.setName('target').setDescription('the person you wish to jail').setRequired(true)),
+  new SlashCommandBuilder().setName('unjail').setDescription('You unjail a member.')
+    .addUserOption(option => option.setName('target').setDescription('the person you wish to unjail.').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -201,23 +208,40 @@ async function deployCommands() {
 }
 
 client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
-    if (!oldMember.premiumSince && newMember.premiumSince) {
-        // Use system channel or fallback channel ID
-        const boostChannel = newMember.guild.systemChannel || newMember.guild.channels.cache.get('YOUR_FALLBACK_CHANNEL_ID');
+    // Only run in the target server
+    if (newMember.guild.id !== BOOST_SERVER_ID) return;
 
-        if (!boostChannel) return; // Stop if no valid channel
+    // Detect when someone starts boosting
+    if (!oldMember.premiumSince && newMember.premiumSince) {
+
+        const boostChannel =
+            newMember.guild.systemChannel ||
+            newMember.guild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
+
+        if (!boostChannel) return;
 
         const boostEmbed = new EmbedBuilder()
             .setColor('#A8C7FF')
             .setTitle('A new boost!')
-            .setDescription(`🎊 ${newMember} just boosted the ${newMember.guild.name}!`)
+            .setDescription(`🎊 ${newMember} just boosted **${newMember.guild.name}**!`)
             .setAuthor({
                 name: 'Light',
                 iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
             })
             .addFields({
                 name: 'Here are the benefits for boosting our server!',
-                value: '• 💠 Exclusive booster role & colour\n• 🏯 Access to our booster-only lounge\n• 🎉 Priority in events, giveaways & content\n• 🖌️ Suggest and request custom emojis, stickers, soundboards\n• 🌈 Custom nickname colour and decorations\n• 🕹️ Access to "VIP sneak peeks"\n• 🎁 Special booster-only giveaways\n• 🎶 Play music in voice channels (bot-dependent)\n• 📸 Share behind-the-scenes content\n• ⚔️ Early access to games, polls, mini-events\n• 🌟 Personal shoutout in #booster-hall-of-fame'
+                value:
+                    '• 💠 Exclusive booster role & colour\n' +
+                    '• 🏯 Access to our booster-only lounge\n' +
+                    '• 🎉 Priority in events, giveaways & content\n' +
+                    '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
+                    '• 🌈 Custom nickname colour and decorations\n' +
+                    '• 🕹️ Access to "VIP sneak peeks"\n' +
+                    '• 🎁 Special booster-only giveaways\n' +
+                    '• 🎶 Play music in voice channels (bot-dependent)\n' +
+                    '• 📸 Share behind-the-scenes content\n' +
+                    '• ⚔️ Early access to games, polls, mini-events\n' +
+                    '• 🌟 Personal shoutout in #booster-hall-of-fame'
             })
             .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
             .setTimestamp();
@@ -227,26 +251,45 @@ client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
 });
 
 client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
+    // Only run in the target server
+    if (newGuild.id !== BOOST_SERVER_ID) return;
+
     const oldCount = oldGuild.premiumSubscriptionCount || 0;
     const newCount = newGuild.premiumSubscriptionCount || 0;
 
+    // Only trigger when boost count increases
     if (newCount > oldCount) {
+
         const diff = newCount - oldCount;
-        const boostChannel = newGuild.systemChannel || newGuild.channels.cache.get('YOUR_FALLBACK_CHANNEL_ID');
+
+        const boostChannel =
+            newGuild.systemChannel ||
+            newGuild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
 
         if (!boostChannel) return;
 
         const boostEmbed = new EmbedBuilder()
             .setColor('#A8C7FF')
             .setTitle('Server boost!')
-            .setDescription(`🎊 The server received ${diff} new boost(s)! Total: ${newCount}`)
+            .setDescription(`🎊 The server received **${diff}** new boost(s)! Total: **${newCount}**`)
             .setAuthor({
                 name: 'Light',
                 iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
             })
             .addFields({
                 name: 'Boost perks',
-                value: '• 💠 Exclusive booster role & colour\n• 🏯 Access to our booster-only lounge\n• 🎉 Priority in events, giveaways & content\n• 🖌️ Suggest and request custom emojis, stickers, soundboards\n• 🌈 Custom nickname colour and decorations\n• 🕹️ Access to "VIP sneak peeks"\n• 🎁 Special booster-only giveaways\n• 🎶 Play music in voice channels (bot-dependent)\n• 📸 Share behind-the-scenes content\n• ⚔️ Early access to games, polls, mini-events\n• 🌟 Personal shoutout in #booster-hall-of-fame'
+                value:
+                    '• 💠 Exclusive booster role & colour\n' +
+                    '• 🏯 Access to our booster-only lounge\n' +
+                    '• 🎉 Priority in events, giveaways & content\n' +
+                    '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
+                    '• 🌈 Custom nickname colour and decorations\n' +
+                    '• 🕹️ Access to "VIP sneak peeks"\n' +
+                    '• 🎁 Special booster-only giveaways\n' +
+                    '• 🎶 Play music in voice channels (bot-dependent)\n' +
+                    '• 📸 Share behind-the-scenes content\n' +
+                    '• ⚔️ Early access to games, polls, mini-events\n' +
+                    '• 🌟 Personal shoutout in #booster-hall-of-fame'
             })
             .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
             .setTimestamp();
@@ -348,6 +391,8 @@ client.on("interactionCreate", async (interaction) => {
         case "clear_user": return handleClearUserWarningCommand(interaction);
         case "give_warning": return handleGiveWarningCommand(interaction);
         case "test_embed": return handleTestEmbedCommand(interaction);
+        case "jail": return handleJailCommand(interaction);
+        case 'unjail': return handleUnJailCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }
