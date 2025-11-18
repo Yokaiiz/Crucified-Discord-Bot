@@ -2469,6 +2469,34 @@ async function handleGiveWarningCommand(interaction) {
   }
 }
 
+async function handleTestEmbedCommand(interaction) {
+  const testEmbed = new EmbedBuilder()
+  .setColor('#FFD4E5')
+  .setTitle('testing')
+  .setDescription('testing')
+  .setAuthor({
+    name: 'testing'
+  })
+  .addFields({
+    name: 'testing',
+    value: 'testing'
+  })
+  .setFooter({ text: 'testing'})
+  .setTimestamp()
+
+  try {
+    return interaction.reply({
+      embeds: [testEmbed]
+    });
+  } catch (err) {
+    console.log(err);
+    return interaction.reply({
+      content: 'There has been an issue with the testing embed command.',
+      ephemeral: true
+    });
+  }
+}
+
 
 // Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
 function msToReadable(ms) {
@@ -2515,4 +2543,5 @@ module.exports = {
   handleFuckCommand,
   handleClearUserWarningCommand,
   handleGiveWarningCommand,
+  handleTestEmbedCommand,
 };
