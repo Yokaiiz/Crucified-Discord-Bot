@@ -2210,13 +2210,6 @@ async function handleFuckCommand(interaction) {
   await database.ensureUser(userID);
   const userData = await database.getUserData(userID);
 
-  if (interaction.channel.nsfw === false) {
-    return interaction.reply({
-      content: 'This command can only be used in NSFW channels.',
-      ephemeral: true
-    });
-  }
-
   userData.name ||= interaction.user.displayName;
   userData.roleplayActions ||= {};
   userData.roleplayActions.fuck ||= {};
@@ -2237,7 +2230,6 @@ async function handleFuckCommand(interaction) {
     'https://r2.greed.best/fuck/fuck11.gif',
     'https://r2.greed.best/fuck/fuck9.gif',
     'https://r2.greed.best/fuck/fuck8.gif',
-    ''
   ];
   const selectedfuckImages = fuckImages[Math.floor(Math.random() * fuckImages.length)];
 
