@@ -296,6 +296,7 @@ client.on('guildMemberAdd', (member) => {
   if (member.guild.id !== '1429168291167076502') return;
 
   const welcomeChannel = member.guild.channels.cache.get('1429181261976436879');
+  const role = member.guild.roles.cache.get('1429177737112981548');
   if (!welcomeChannel) return;
 
   const welcomeEmbed = new EmbedBuilder()
@@ -313,6 +314,7 @@ client.on('guildMemberAdd', (member) => {
 
   try {
     welcomeChannel.send({ embeds: [welcomeEmbed], content: `<@${member.id}>` });
+    member.roles.add(role);
   } catch (err) {
     console.log('There has been an error with the welcome detector', err);
   }
