@@ -210,78 +210,83 @@ async function deployCommands() {
 }
 
 client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
-    // Detect when someone starts boosting
+    // Trigger only when someone STARTS boosting
     if (!oldMember.premiumSince && newMember.premiumSince) {
 
-        if (newMember.guild.id !== '1370076988697739446') return;
+        // -------------------------
+        // 🚀 SERVER 1 BOOST SYSTEM
+        // -------------------------
+        if (newMember.guild.id === '1370076988697739446') {
 
-        const boostChannel =
-            newMember.guild.systemChannel ||
-            newMember.guild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
+            const boostChannel =
+                newMember.guild.systemChannel ||
+                newMember.guild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
 
-        if (!boostChannel) return;
+            if (!boostChannel) return;
 
-        const boostEmbed = new EmbedBuilder()
-            .setColor('#A8C7FF')
-            .setTitle('A new boost!')
-            .setDescription(`🎊 ${newMember} just boosted **${newMember.guild.name}**!`)
-            .setAuthor({
-                name: 'Light',
-                iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
-            })
-            .addFields({
-                name: 'Here are the benefits for boosting our server!',
-                value:
-                    '• 💠 Exclusive booster role & colour\n' +
-                    '• 🏯 Access to our booster-only lounge\n' +
-                    '• 🎉 Priority in events, giveaways & content\n' +
-                    '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
-                    '• 🌈 Custom nickname colour and decorations\n' +
-                    '• 🕹️ Access to "VIP sneak peeks"\n' +
-                    '• 🎁 Special booster-only giveaways\n' +
-                    '• 🎶 Play music in voice channels (bot-dependent)\n' +
-                    '• 📸 Share behind-the-scenes content\n' +
-                    '• ⚔️ Early access to games, polls, mini-events\n' +
-                    '• 🌟 Personal shoutout in #booster-hall-of-fame'
-            })
-            .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
-            .setTimestamp();
+            const boostEmbed = new EmbedBuilder()
+                .setColor('#A8C7FF')
+                .setTitle('A new boost!')
+                .setDescription(`🎊 ${newMember} just boosted **${newMember.guild.name}**!`)
+                .setAuthor({
+                    name: 'Light',
+                    iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
+                })
+                .addFields({
+                    name: 'Here are the benefits for boosting our server!',
+                    value:
+                        '• 💠 Exclusive booster role & colour\n' +
+                        '• 🏯 Access to our booster-only lounge\n' +
+                        '• 🎉 Priority in events, giveaways & content\n' +
+                        '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
+                        '• 🌈 Custom nickname colour and decorations\n' +
+                        '• 🕹️ Access to "VIP sneak peeks"\n' +
+                        '• 🎁 Special booster-only giveaways\n' +
+                        '• 🎶 Play music in voice channels (bot-dependent)\n' +
+                        '• 📸 Share behind-the-scenes content\n' +
+                        '• ⚔️ Early access to games, polls, mini-events\n' +
+                        '• 🌟 Personal shoutout in #booster-hall-of-fame'
+                })
+                .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
+                .setTimestamp();
 
-        boostChannel.send({ embeds: [boostEmbed] });
-    }
+            boostChannel.send({ embeds: [boostEmbed] });
+        }
 
-    if (!oldMember.premiumSince && newMember.premiumSince) {
-      if (newMember.guild.id !== '1429168291167076502') return;
+        // -------------------------
+        // 🔥 SERVER 2 BOOST SYSTEM
+        // -------------------------
+        if (newMember.guild.id === '1429168291167076502') {
 
-      const boostChannel = newMember.guild.channels.cache.get('1429181295136735473')
+            const boostChannel = newMember.guild.channels.cache.get('1429181295136735473');
+            if (!boostChannel) return;
 
-      if (!boostChannel) return;
+            const boostEmbed = new EmbedBuilder()
+                .setColor(Colors.DarkRed)
+                .setTitle(`Thank you for boosting ${newMember.guild.name}, ${newMember.user.tag}!`)
+                .setDescription(`The server has been boosted by <@${newMember.id}>!`)
+                .setThumbnail(newMember.guild.iconURL({ dynamic: true }))
+                .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
+                .addFields({
+                    name: 'Boost perks',
+                    value:
+                        'Exclusive booster role and colour\n' +
+                        'Priority in general\n' +
+                        'Special treatment regarding the Light Bot\n' +
+                        'Suggest and request custom emojis, stickers and soundboards (as long as they follow rules)\n' +
+                        `Personal shoutout in <#${boostChannel.id}>`
+                })
+                .setTimestamp();
 
-      const boostEmbed = new EmbedBuilder()
-      .setColor(Colors.DarkRed)
-      .setTitle(`Thank you for boosting ${newMember.guild.name}, ${newMember.user.tag}!`)
-      .setDescription(`The server has been boosted by <@${newMember.id}>!`)
-      .setThumbnail(newMember.guild.displayAvatarURL({dynamic: true}))
-      .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
-      .addFields({
-        name: 'Boost perks',
-        value:
-           'Exclusive booster role and colour\n' +
-           'Priority in general\n' +
-           'Special treatment regarding the Light Bot\n' +
-           'Suggest and request custom emojis, stickers and soundboards as long as they are not against the rules\n' +
-           `Personal shoutout in <#${boostChannel.id}>`
-      })
-      .setTimestamp()
-
-      try {
-        boostChannel.send({
-          embeds: [boostEmbed],
-          content: `<@${newMember.id}>`
-        });
-      } catch (err) {
-        console.log(err);
-      }
+            try {
+                boostChannel.send({
+                    embeds: [boostEmbed],
+                    content: `<@${newMember.id}>`
+                });
+            } catch (err) {
+                console.log(err);
+            }
+        }
     }
 });
 
@@ -339,16 +344,21 @@ client.on('guildMemberRemove', (member) => {
 })
 
 client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
-    // Only run in the target server
-    if (newGuild.id !== BOOST_SERVER_ID) return;
 
     const oldCount = oldGuild.premiumSubscriptionCount || 0;
     const newCount = newGuild.premiumSubscriptionCount || 0;
 
-    // Only trigger when boost count increases
-    if (newCount > oldCount) {
+    // Only run if boost count increased
+    if (newCount <= oldCount) return;
 
-        const diff = newCount - oldCount;
+    const diff = newCount - oldCount;
+
+    //
+    // ────────────────────────────────────────
+    // 🚀 SERVER 1 BOOST SYSTEM  (The Grand Era)
+    // ────────────────────────────────────────
+    //
+    if (newGuild.id === '1370076988697739446') {
 
         const boostChannel =
             newGuild.systemChannel ||
@@ -359,10 +369,13 @@ client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
         const boostEmbed = new EmbedBuilder()
             .setColor('#A8C7FF')
             .setTitle('Server boost!')
-            .setDescription(`🎊 The server received **${diff}** new boost(s)! Total: **${newCount}**`)
+            .setDescription(
+                `🎊 The server received **${diff}** new boost(s)! Total: **${newCount}**`,
+            )
             .setAuthor({
                 name: 'Light',
-                iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
+                iconURL:
+                    'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg',
             })
             .addFields({
                 name: 'Boost perks',
@@ -377,7 +390,7 @@ client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
                     '• 🎶 Play music in voice channels (bot-dependent)\n' +
                     '• 📸 Share behind-the-scenes content\n' +
                     '• ⚔️ Early access to games, polls, mini-events\n' +
-                    '• 🌟 Personal shoutout in #booster-hall-of-fame'
+                    '• 🌟 Personal shoutout in #booster-hall-of-fame',
             })
             .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
             .setTimestamp();
@@ -385,34 +398,42 @@ client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
         boostChannel.send({ embeds: [boostEmbed] });
     }
 
+    //
+    // ────────────────────────────────────────
+    // 🔥 SERVER 2 BOOST SYSTEM  (Light Bot)
+    // ────────────────────────────────────────
+    //
     if (newGuild.id === '1429168291167076502') {
-      if (newCount > oldCount) {
-        const diff = newCount - oldCount;
+
         const boostChannel = newGuild.channels.cache.get('1429181295136735473');
+        if (!boostChannel) return;
 
         const boostEmbed = new EmbedBuilder()
-        .setColor(Colors.DarkRed)
-        .setTitle(`Thank you for boosting ${newGuild.name}`)
-        .setDescription(`The server has received **${diff}** new boost(s)! Total: **${newCount}**`)
-        .setThumbnail(newGuild.displayAvatarURL({dynamic: true}))
-        .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
-        .addFields({
-          name: 'Boost perks',
-          value:
-              'Exclusive booster role and colour\n' +
-              'Priority in general\n' +
-              'Special treatment regarding the Light Bot\n' +
-              'Suggest and requrest custom emojis, stickers and soundboards as long as they are not against the rules\n' +
-              `Personal shoutout in <#${boostChannel.id}>`
-        })
-        .setTimestamp()
+            .setColor(Colors.DarkRed)
+            .setTitle(`Thank you for boosting ${newGuild.name}`)
+            .setDescription(
+                `The server has received **${diff}** new boost(s)! Total: **${newCount}**`,
+            )
+            .setThumbnail(newGuild.iconURL({ dynamic: true }))
+            .setImage(
+                'https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif',
+            )
+            .addFields({
+                name: 'Boost perks',
+                value:
+                    'Exclusive booster role and colour\n' +
+                    'Priority in general\n' +
+                    'Special treatment regarding the Light Bot\n' +
+                    'Suggest and request custom emojis, stickers and soundboards (as long as they follow the rules)\n' +
+                    `Personal shoutout in <#${boostChannel.id}>`,
+            })
+            .setTimestamp();
 
         try {
-          boostChannel.send({embeds: [boostEmbed]})
+            boostChannel.send({ embeds: [boostEmbed] });
         } catch (err) {
-          console.log(err);
+            console.log(err);
         }
-      }
     }
 });
 
