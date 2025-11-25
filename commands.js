@@ -162,7 +162,7 @@ const powerMovesets = {
 const bossPool = [
   {
     name:  'Sosuke Aizen',
-    health: 2000,
+    health: 1500,
     defense: 0,
     abilities: [
       { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
@@ -177,7 +177,7 @@ const bossPool = [
     defense: 0,
     abilities: [
       { name: 'Claw Slash', damage: 200, chance: 0.50 },
-      { name: 'Roar', damage: 30, chance: 0.1 },
+      { name: 'Roar', damage: 100, chance: 0.1 },
     ]
   },
   {
@@ -473,7 +473,7 @@ async function handleHelpCommand(interaction) {
           components: [selectmenurow]
         });
 
-        break; 
+        break;
 
       }
 
@@ -1233,7 +1233,7 @@ async function handleShopWeaponsCommand(interaction) {
     .setTitle("Weapon Shop")
     .setDescription("Welcome to the weapon shop! What would you like to buy?")
     .setImage("https://i.pinimg.com/1200x/d5/99/2c/d5992c7c032d63578138dd76abf3a72c.jpg")
-    .setThumbnail(interaction.user.displayAvatarURL())
+    .setThumbnail(interaction.user.displayAvatarURL({dynamic: true}))
     .setFooter({ text: "Thank you for visiting the weapon shop! || Catawampus" })
     .setTimestamp();
 
@@ -2527,6 +2527,51 @@ async function handleUnJailCommand(interaction) {
   }
 }
 
+async function handleAddRoleCommand(interaction) {
+  // Permission check
+  if (
+    !interaction.member.permissions.has(PermissionFlagsBits.Administrator) &&
+    !interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)
+  ) {
+    return interaction.reply({
+      content: "You do not have permission to add roles.",
+      ephemeral: true
+    });
+  }
+
+  // Get target member and role (FULL objects)
+  const member = interaction.options.getMember("target");
+  const role = interaction.options.getRole("role");
+
+  if (!member || !role) {
+    return interaction.reply({
+      content: "Invalid member or role.",
+      ephemeral: true
+    });
+  }
+
+  try {
+    await member.roles.add(role);
+
+    await interaction.reply({
+      content: `Successfully added **${role.name}** to **${member.user.tag}**.`,
+      ephemeral: true
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    await interaction.reply({
+      content: "There was an error adding the role.",
+      ephemeral: true
+    });
+  }
+}
+
+async function handleRemoveRoleCommand(interaction) {
+  if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator) )
+}
+
 
 // Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
 function msToReadable(ms) {
@@ -2576,4 +2621,6 @@ module.exports = {
   handleTestEmbedCommand,
   handleJailCommand,
   handleUnJailCommand,
+  handleAddRoleCommand,
+  handleRemoveRoleCommand,
 };

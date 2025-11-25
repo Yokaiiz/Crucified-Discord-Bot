@@ -195,6 +195,12 @@ const commands = [
     .addUserOption(option => option.setName('target').setDescription('the person you wish to jail').setRequired(true)),
   new SlashCommandBuilder().setName('unjail').setDescription('You unjail a member.')
     .addUserOption(option => option.setName('target').setDescription('the person you wish to unjail.').setRequired(true)),
+  new SlashCommandBuilder().setName('add_role').setDescription('You add a role to a member.')
+    .addUserOption(option => option.setName('target').setRequired(true).setDescription('The person you wish to add this role to.'))
+    .addRoleOption(option => option.setName('role').setDescription('The role you wish to add to them.').setRequired(true)),
+  new SlashCommandBuilder().setName('remove_role').setDescription('You remove a role from a member.')
+    .addUserOption(option => option.setName('target').setDescription('the person you want to remove the role from.').setRequired(true))
+    .addRoleOption(option => option.setName('role').setDescription('the role you wish to remove.').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -270,11 +276,12 @@ client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
                 .addFields({
                     name: 'Boost perks',
                     value:
-                        'Exclusive booster role and colour\n' +
-                        'Priority in general\n' +
-                        'Special treatment regarding the Light Bot\n' +
-                        'Suggest and request custom emojis, stickers and soundboards (as long as they follow rules)\n' +
-                        `Personal shoutout in <#${boostChannel.id}>`
+                        '•Exclusive booster role and colour\n' +
+                        '•Priority in general\n' +
+                        '•Special treatment regarding the Light Bot\n' +
+                        '•Suggest and request custom emojis, stickers and soundboards (as long as they follow rules)\n' +
+                        `•Personal shoutout in <#${boostChannel.id}>\n` +
+                        '•Exclusive channels to you'
                 })
                 .setTimestamp();
 
@@ -423,11 +430,12 @@ client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
             .addFields({
                 name: 'Boost perks',
                 value:
-                    'Exclusive booster role and colour\n' +
-                    'Priority in general\n' +
-                    'Special treatment regarding the Light Bot\n' +
-                    'Suggest and request custom emojis, stickers and soundboards (as long as they follow the rules)\n' +
-                    `Personal shoutout in <#${boostChannel.id}>`,
+                    '•Exclusive booster role and colour\n' +
+                    '•Priority in general\n' +
+                    '•Special treatment regarding the Light Bot\n' +
+                    '•Suggest and request custom emojis, stickers and soundboards (as long as they follow the rules)\n' +
+                    `•Personal shoutout in <#${boostChannel.id}>\n` +
+                    '•Exclusive channels to you'
             })
             .setTimestamp();
 
