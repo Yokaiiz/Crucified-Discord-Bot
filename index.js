@@ -51,6 +51,8 @@ const {
   handleTestEmbedCommand,
   handleJailCommand,
   handleUnJailCommand,
+  handleAddRoleCommand,
+  handleRemoveRoleCommand,
 } = require("./commands.js");
 const { EmbedBuilder } = require("@discordjs/builders");
 
@@ -542,6 +544,8 @@ client.on("interactionCreate", async (interaction) => {
         case "test_embed": return handleTestEmbedCommand(interaction);
         case "jail": return handleJailCommand(interaction);
         case 'unjail': return handleUnJailCommand(interaction);
+        case 'add_role': return handleAddRoleCommand(interaction);
+        case 'remove_role': return handleRemoveRoleCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }
