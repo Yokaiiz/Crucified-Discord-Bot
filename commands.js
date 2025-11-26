@@ -411,18 +411,19 @@ async function handleHelpCommand(interaction) {
     .setPlaceholder('Pick an option!')
     .setCustomId('select-menu')
     .addOptions([
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Discord Bot')
-        .setDescription('Shows information regarding the discord bot')
-        .setValue('discord_bot'),
-      new StringSelectMenuOptionBuilder()
-        .setLabel('Discord server')
-        .setDescription('Shows information regarding our support server!')
-        .setValue('discord_server')
+      {
+        label: 'Discord Bot',
+        description: 'Shows information regarding the discord bot',
+        value: 'discord_bot'
+      },
+      {
+        label: 'Discord Server',
+        description: 'Shows information regarding our support server!',
+        value: 'discord_server'
+      }
     ]);
 
-  const selectmenurow = new ActionRowBuilder()
-    .addComponents(selectmenu);
+  const selectmenurow = new ActionRowBuilder().addComponents(selectmenu);
 
   const initialEmbed = new EmbedBuilder()
     .setTitle('Help command')
@@ -430,18 +431,23 @@ async function handleHelpCommand(interaction) {
     .setColor('DarkPurple')
     .addFields({
       name: '**Options**',
-      value: 'Discord Bot\nDiscord Server\n'
+      value: 'Discord Bot\nDiscord Server'
     })
     .setImage('https://i.pinimg.com/originals/0e/13/7e/0e137e2400178875f1ad7854a1d81552.gif')
     .setThumbnail(avatar)
     .setTimestamp();
 
+  // 👇 Send the help menu
   await interaction.reply({
     embeds: [initialEmbed],
     components: [selectmenurow]
   });
 
-  const collector = interaction.channel.createMessageComponentCollector({
+  // 👇 SAFELY get the message we just sent
+  const message = await interaction.fetchReply();
+
+  // 👇 Collector is now attached to the message, never null
+  const collector = message.createMessageComponentCollector({
     time: 60000,
     componentType: ComponentType.StringSelect,
     filter: (i) => i.user.id === interaction.user.id
@@ -450,73 +456,66 @@ async function handleHelpCommand(interaction) {
   collector.on('collect', async (i) => {
     const option = i.values[0];
 
-    switch (option) {
+    if (option === 'discord_bot') {
+      const embed = new EmbedBuilder()
+        .setColor('DarkNavy')
+        .setTitle('Light Bot')
+        .setDescription('Welcome to the Light Bot!')
+        .setThumbnail('https://cdn.discordapp.com/attachments/1429177678593921119/1442575759649800362/Light_Yagami___Kira_.jpg')
+        .setImage('https://cdn.discordapp.com/attachments/1429177678593921119/1442575964344422470/death_note_header.jpg')
+        .addFields(
+          { name: '**Roleplay**', value: '`/hug`, `/slap`, `/kiss`, `/cuddle`, `/fuck`' },
+          { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`' },
+          { name: '**Economy**', value: '`/beg`, `/gamble`, `/sell`, `/donate`, `/rob`, `/shop`, `/fight`, `/fish`, `/work`' },
+          { name: '**Owner only**', value: '`/reset`, `/givemoney`, `/giveitem`, `/give_experience`, `/take_money`, `/take_exp`' },
+          { name: '**Misc**', value: '`/encyclopaedia type_soul`, `/suggest`, `/test_embed`' }
+        )
+        .setTimestamp();
 
-      case 'discord_bot': {
-        const embed = new EmbedBuilder()
-          .setColor('DarkNavy')
-          .setTitle('Light Bot')
-          .setDescription('Welcome to the Light Bot!')
-          .setThumbnail('https://cdn.discordapp.com/attachments/1429177678593921119/1442575759649800362/Light_Yagami___Kira_.jpg')
-          .setImage('https://cdn.discordapp.com/attachments/1429177678593921119/1442575964344422470/death_note_header.jpg')
-          .addFields(
-            { name: '**Roleplay**', value: '`/hug`, `/slap`, `/kiss`, `/cuddle`, `/fuck`' },
-            { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`' },
-            { name: '**Economy**', value: '`/beg`, `/gamble`, `/sell`, `/donate`, `/rob`, `/shop`, `/fight`, `/fish`, `/work`' },
-            { name: '**Owner only**', value: '`/reset`, `/givemoney`, `/giveitem`, `/give_experience`, `/take_money`, `/take_exp`' },
-            { name: '**Misc**', value: '`/encyclopaedia type_soul`, `/suggest`, `/test_embed`' }
-          )
-          .setTimestamp();
+      return i.update({
+        embeds: [embed],
+        components: [selectmenurow]
+      });
+    }
 
-        await i.update({
-          embeds: [embed],
-          components: [selectmenurow]
-        });
+    if (option === 'discord_server') {
+      const embed = new EmbedBuilder()
+        .setColor('DarkPurple')
+        .setTitle(interaction.guild?.name || "Discord Server")
+        .setDescription('Information regarding **/wxrld**!')
+        .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
+        .setThumbnail(interaction.guild?.iconURL({ dynamic: true }) ?? null)
+        .addFields(
+          {
+            name: '**Rules**',
+            value: '1. Treat everyone with respect. (ADMINS THIS INVOLVES YOU!!)\n2. No spam or self promotion...\n3. No age-restricted content...\n4. Report anything unsafe...\n5. Respect admins...\n6. English only unless in specific channels.'
+          },
+          {
+            name: '**Warn system**',
+            value: '5 warns = 1 hour timeout\n10 warns = 5 hours\n15 warns = 24 hours\n20 warns = appealable ban'
+          },
+          {
+            name: '**!NOTE!**',
+            value: 'The warning system is coded into the bot and punishments are automatic.'
+          }
+        )
+        .setTimestamp();
 
-        break;
-
-      }
-
-      case 'discord_server': {
-        const embed = new EmbedBuilder()
-          .setColor('DarkPurple')
-          .setTitle(`${interaction.guild.name}`)
-          .setDescription('Information regarding **/wxrld**!')
-          .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
-          .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
-          .addFields(
-            {
-              name: '**Rules**',
-              value: '1. Treat everyone with respect. (ADMINS THIS INVOLVES YOU!!)\n2. No spam or self promotion...\n3. No age-restricted content...\n4. Report anything unsafe...\n5. Respect admins...\n6. English only unless in specific channels.'
-            },
-            {
-              name: '**Warn system**',
-              value: '5 warns = 1 hour timeout\n10 warns = 5 hours\n15 warns = 24 hours\n20 warns = appealable ban'
-            },
-            {
-              name: '**!NOTE!**',
-              value: 'The warning system is coded into the bot and punishments are automatic.'
-            }
-          )
-          .setTimestamp();
-
-        await i.update({
-          embeds: [embed],
-          components: [selectmenurow]
-        });
-
-        break;
-      }
-
+      return i.update({
+        embeds: [embed],
+        components: [selectmenurow]
+      });
     }
   });
 
   collector.on('end', async () => {
     try {
       await interaction.editReply({
-        components: [],
+        components: []
       });
-    } catch (e) {}
+    } catch (e) {
+      // Message might be deleted, timed out, etc. Safe to ignore.
+    }
   });
 }
 
@@ -615,7 +614,7 @@ async function handleCraftCommand(interaction) {
     ephemeral: false,
   });
 
-  const craftingCollector = interaction.channel.createMessageComponentCollector({
+  const craftingCollector = message.createMessageComponentCollector({
     ComponentType: ComponentType.StringSelect,
     time: 60000,
     filter: (i) => i.user.id === interaction.user.id,
@@ -898,7 +897,9 @@ async function handleWorkCommand(interaction) {
     components: [selectWorkMenuRow],
   });
 
-  const workSelectionCollector = interaction.channel.createMessageComponentCollector({
+  const message = await interaction.fetchReply();
+
+  const workSelectionCollector = message.createMessageComponentCollector({
     ComponentType: ComponentType.StringSelect,
     time: 60000,
     filter: (i) => i.user.id === interaction.user.id,
@@ -1242,8 +1243,10 @@ async function handleShopWeaponsCommand(interaction) {
     components: [weaponBuyRow],
   });
 
+  const message = interaction.fetchReply()
+
   // Collector for menu
-  const collector = interaction.channel.createMessageComponentCollector({
+  const collector = message.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
     time: 60000,
     filter: (i) => i.user.id === interaction.user.id,
