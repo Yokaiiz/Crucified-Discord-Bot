@@ -217,236 +217,108 @@ async function deployCommands() {
   }
 }
 
-client.on(Events.GuildMemberUpdate, (oldMember, newMember) => {
-    // Trigger only when someone STARTS boosting
-    if (!oldMember.premiumSince && newMember.premiumSince) {
-
-        // -------------------------
-        // 🚀 SERVER 1 BOOST SYSTEM
-        // -------------------------
-        if (newMember.guild.id === '1370076988697739446') {
-
-            const boostChannel =
-                newMember.guild.systemChannel ||
-                newMember.guild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
-
-            if (!boostChannel) return;
-
-            const boostEmbed = new EmbedBuilder()
-                .setColor('#A8C7FF')
-                .setTitle('A new boost!')
-                .setDescription(`🎊 ${newMember} just boosted **${newMember.guild.name}**!`)
-                .setAuthor({
-                    name: 'Light',
-                    iconURL: 'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg'
-                })
-                .addFields({
-                    name: 'Here are the benefits for boosting our server!',
-                    value:
-                        '• 💠 Exclusive booster role & colour\n' +
-                        '• 🏯 Access to our booster-only lounge\n' +
-                        '• 🎉 Priority in events, giveaways & content\n' +
-                        '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
-                        '• 🌈 Custom nickname colour and decorations\n' +
-                        '• 🕹️ Access to "VIP sneak peeks"\n' +
-                        '• 🎁 Special booster-only giveaways\n' +
-                        '• 🎶 Play music in voice channels (bot-dependent)\n' +
-                        '• 📸 Share behind-the-scenes content\n' +
-                        '• ⚔️ Early access to games, polls, mini-events\n' +
-                        '• 🌟 Personal shoutout in #booster-hall-of-fame'
-                })
-                .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
-                .setTimestamp();
-
-            boostChannel.send({ embeds: [boostEmbed] });
-        }
-
-        // -------------------------
-        // 🔥 SERVER 2 BOOST SYSTEM
-        // -------------------------
-        if (newMember.guild.id === '1429168291167076502') {
-
-            const boostChannel = newMember.guild.channels.cache.get('1429181295136735473');
-            if (!boostChannel) return;
-
-            const boostEmbed = new EmbedBuilder()
-                .setColor(Colors.DarkRed)
-                .setTitle(`Thank you for boosting ${newMember.guild.name}, ${newMember.user.tag}!`)
-                .setDescription(`The server has been boosted by <@${newMember.id}>!`)
-                .setThumbnail(newMember.guild.iconURL({ dynamic: true }))
-                .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
-                .addFields({
-                    name: 'Boost perks',
-                    value:
-                        '•Exclusive booster role and colour\n' +
-                        '•Priority in general\n' +
-                        '•Special treatment regarding the Light Bot\n' +
-                        '•Suggest and request custom emojis, stickers and soundboards (as long as they follow rules)\n' +
-                        `•Personal shoutout in <#${boostChannel.id}>\n` +
-                        '•Exclusive channels to you'
-                })
-                .setTimestamp();
-
-            try {
-                boostChannel.send({
-                    embeds: [boostEmbed],
-                    content: `<@${newMember.id}>`
-                });
-            } catch (err) {
-                console.log(err);
-            }
-        }
-    }
-});
-
 client.on('guildMemberAdd', (member) => {
 
   // Check for specific server
-  if (member.guild.id !== '1429168291167076502') return;
+  if (member.guild.id === '1445905714718703767') {
+    const welcomeChannel = member.guild.channels.cache.get('1445905715859427346');
+    const role = member.guild.roles.cache.get('1445961648237052006');
+    if (!welcomeChannel) return;
 
-  const welcomeChannel = member.guild.channels.cache.get('1429181261976436879');
-  const role = member.guild.roles.cache.get('1429177737112981548');
-  if (!welcomeChannel) return;
-
-  const welcomeEmbed = new EmbedBuilder()
+    const welcomeEmbed = new EmbedBuilder()
     .setColor(Colors.DarkPurple)
     .setTitle(`Welcome to ${member.guild.name}!`)
     .setAuthor({
-      name: 'Light',
-      iconURL: 'https://cdn.discordapp.com/attachments/1433713140104691776/1441907325500653671/a4cba0f412ca7772e3383669eb6383bc.jpg'
+      name: 'Malice',
+      iconURL: 'https://cdn.discordapp.com/attachments/1445905715859427339/1446600360528576647/im_literally_zangetsu_pe_TikTok.jpg?ex=69349312&is=69334192&hm=f79dd5be1909f9ffaeccde75e68eaa3966e48b9910e8b54bce8e993cf2de3975&'
     })
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-    .setDescription(`Please check out <#1429177678593921116> and get your roles at <#1429181165968822372>!`)
-    .setImage('https://i.pinimg.com/originals/a3/51/b6/a351b6e3a9087334949311ce59329359.gif')
+    .setDescription(`Please check out <#1445905715859427345> and later get your roles at <#1445905716677443663>!`)
+    .setImage('https://i.pinimg.com/originals/10/15/d1/1015d18d7813ad9b77ef5351fe004595.gif')
     .setFooter({ text: `Members: ${member.guild.memberCount}`})
     .setTimestamp();
 
-  try {
+    try {
     welcomeChannel.send({ embeds: [welcomeEmbed], content: `<@${member.id}>` });
     member.roles.add(role);
-  } catch (err) {
+    } catch (err) {
     console.log('There has been an error with the welcome detector', err);
+    }
+  }
+
+
+  if (member.guild.id === '1445910029013225585') {
+    const newWelcomeChannel = member.guild.channels.cache.get('1446454221078663168');
+    if (!newWelcomeChannel) return;
+
+    const newWelcomeEmbed = new EmbedBuilder()
+    .setColor(Colors.DarkButNotBlack)
+    .setTitle(`Welcome to ${member.guild.name}!`)
+    .setAuthor({
+      name: 'Omegure',
+      iconURL: 'https://cdn.discordapp.com/attachments/1413440400416313385/1446604442819367125/Jojos-Bizarre-1704594082108.jpg?ex=693496df&is=6933455f&hm=5a3d275f99676e341888d4a3aecd78be5d367bb8a39200d029ce7941135e5112&'
+    })
+    .setThumbnail(member.user.displayAvatarURL({dynamic: true}))
+    .setImage('https://i.pinimg.com/originals/b3/af/0e/b3af0e45e31714af69faf111b5a78822.gif')
+    .setDescription(`Please check out <#1446447071791022121> and get your roles at <#1446447655126438090>!`)
+    .setFooter({ text: `Members: ${member.guild.memberCount}`})
+    .setTimestamp();
+
+    try {
+      newWelcomeChannel.send({ embeds: [newWelcomeEmbed], content: `<@${member.id}>`});
+    } catch (err) {
+      console.log('There has been an error with the welcome detector for the new server', err);
+    }
   }
 });
 
 client.on('guildMemberRemove', (member) => {
-  if (member.guild.id !== '1429168291167076502') return;
-  const goodbyeChannel = member.guild.channels.cache.get('1429181261976436879')
-  if (!goodbyeChannel) return;
+  if (member.guild.id === '1445905714718703767') {
+    const goodbyeChannel = member.guild.channels.cache.get('1445905716677443657')
+    if (!goodbyeChannel) return;
 
-  const goodbyeEmbed = new EmbedBuilder()
-  .setColor(Colors.DarkRed)
-  .setTitle(`Goodbye, ${member.user.tag}.`)
-  .setDescription('You wont be missed.')
-  .setAuthor({
-    name: 'Light',
-    iconURL: 'https://cdn.discordapp.com/attachments/1433713140104691776/1441907325500653671/a4cba0f412ca7772e3383669eb6383bc.jpg'
-  })
-  .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-  .setImage('https://i.pinimg.com/originals/d8/e5/b7/d8e5b7a06ef5a4d3b8bca748fc4dfe19.gif')
-  .setFooter({ text: `Members: ${member.guild.memberCount}`})
-  .setTimestamp()
+    const goodbyeEmbed = new EmbedBuilder()
+    .setColor(Colors.DarkRed)
+    .setTitle(`Goodbye, ${member.user.tag}.`)
+    .setDescription('You wont be missed.')
+    .setAuthor({
+     name: 'Malice',
+     iconURL: 'https://cdn.discordapp.com/attachments/1445905715859427339/1446600360528576647/im_literally_zangetsu_pe_TikTok.jpg?ex=69349312&is=69334192&hm=f79dd5be1909f9ffaeccde75e68eaa3966e48b9910e8b54bce8e993cf2de3975&'
+    })
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setImage('https://i.pinimg.com/originals/93/c8/71/93c87119aa0dba7159db2664bf81cd2c.gif')
+    .setFooter({ text: `Members: ${member.guild.memberCount}`})
+    .setTimestamp()
 
-  try {
-    goodbyeChannel.send({ embeds: [goodbyeEmbed], content: `<@${member.id}>`});
-  } catch (err) {
-    console.log('There has been an error with the goodbye detector', err);
+    try {
+     goodbyeChannel.send({ embeds: [goodbyeEmbed], content: `<@${member.id}>`});
+    } catch (err) {
+     console.log('There has been an error with the goodbye detector', err);
+   }
   }
-})
 
-client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
+  if (member.guild.id === '1445910029013225585') {
+    const goodbyeChannel = member.guild.channels.cache.get('1446611236170109069');
 
-    const oldCount = oldGuild.premiumSubscriptionCount || 0;
-    const newCount = newGuild.premiumSubscriptionCount || 0;
-
-    // Only run if boost count increased
-    if (newCount <= oldCount) return;
-
-    const diff = newCount - oldCount;
-
-    //
-    // ────────────────────────────────────────
-    // 🚀 SERVER 1 BOOST SYSTEM  (The Grand Era)
-    // ────────────────────────────────────────
-    //
-    if (newGuild.id === '1370076988697739446') {
-
-        const boostChannel =
-            newGuild.systemChannel ||
-            newGuild.channels.cache.get("YOUR_FALLBACK_CHANNEL_ID");
-
-        if (!boostChannel) return;
-
-        const boostEmbed = new EmbedBuilder()
-            .setColor('#A8C7FF')
-            .setTitle('Server boost!')
-            .setDescription(
-                `🎊 The server received **${diff}** new boost(s)! Total: **${newCount}**`,
-            )
-            .setAuthor({
-                name: 'Light',
-                iconURL:
-                    'https://cdn.discordapp.com/attachments/1429177678593921119/1440122522954764399/Aizen_Colored_Manga.jpg',
-            })
-            .addFields({
-                name: 'Boost perks',
-                value:
-                    '• 💠 Exclusive booster role & colour\n' +
-                    '• 🏯 Access to our booster-only lounge\n' +
-                    '• 🎉 Priority in events, giveaways & content\n' +
-                    '• 🖌️ Suggest and request custom emojis, stickers, soundboards\n' +
-                    '• 🌈 Custom nickname colour and decorations\n' +
-                    '• 🕹️ Access to "VIP sneak peeks"\n' +
-                    '• 🎁 Special booster-only giveaways\n' +
-                    '• 🎶 Play music in voice channels (bot-dependent)\n' +
-                    '• 📸 Share behind-the-scenes content\n' +
-                    '• ⚔️ Early access to games, polls, mini-events\n' +
-                    '• 🌟 Personal shoutout in #booster-hall-of-fame',
-            })
-            .setFooter({ text: 'Welcome to the elite ranks of The Grand Era! 🛡️' })
-            .setTimestamp();
-
-        boostChannel.send({ embeds: [boostEmbed] });
+    const goodbyeEmbed = new EmbedBuilder()
+    .setColor(Colors.DarkButNotBlack)
+    .setTitle(`Goodbye, ${member.user.tag}.`)
+    .setDescription('Goodbye, my friend.')
+    .setAuthor({
+      name: 'Omegure',
+      iconURL: 'https://cdn.discordapp.com/attachments/1413440400416313385/1446604442819367125/Jojos-Bizarre-1704594082108.jpg?ex=693496df&is=6933455f&hm=5a3d275f99676e341888d4a3aecd78be5d367bb8a39200d029ce7941135e5112&'
+    })
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setImage('https://i.pinimg.com/originals/a2/88/5b/a2885b8314c158f1096fd0edf7c7bdef.gif')
+    .setFooter({ text: `Members: ${member.guild.memberCount}`})
+    .setTimestamp();
+    try {
+      goodbyeChannel.send({ embeds: [goodbyeEmbed], content: `<@${member.id}>`});
+    } catch (err) {
+      console.log('There has been an error with the goodbye detector for the new server', err);
     }
+  }
 
-    //
-    // ────────────────────────────────────────
-    // 🔥 SERVER 2 BOOST SYSTEM  (Light Bot)
-    // ────────────────────────────────────────
-    //
-    if (newGuild.id === '1429168291167076502') {
-
-        const boostChannel = newGuild.channels.cache.get('1429181295136735473');
-        if (!boostChannel) return;
-
-        const boostEmbed = new EmbedBuilder()
-            .setColor(Colors.DarkRed)
-            .setTitle(`Thank you for boosting ${newGuild.name}`)
-            .setDescription(
-                `The server has received **${diff}** new boost(s)! Total: **${newCount}**`,
-            )
-            .setThumbnail(newGuild.iconURL({ dynamic: true }))
-            .setImage(
-                'https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif',
-            )
-            .addFields({
-                name: 'Boost perks',
-                value:
-                    '•Exclusive booster role and colour\n' +
-                    '•Priority in general\n' +
-                    '•Special treatment regarding the Light Bot\n' +
-                    '•Suggest and request custom emojis, stickers and soundboards (as long as they follow the rules)\n' +
-                    `•Personal shoutout in <#${boostChannel.id}>\n` +
-                    '•Exclusive channels to you'
-            })
-            .setTimestamp();
-
-        try {
-            boostChannel.send({ embeds: [boostEmbed] });
-        } catch (err) {
-            console.log(err);
-        }
-    }
 });
 
 // --- Interaction Handler ---
