@@ -924,7 +924,7 @@ async function handleWorkCommand(interaction) {
     userData.experience += selectedJob.experience_gain;
     await database.saveUserData(userId, userData);
 
-    await i.reply({
+    await i.followUp({
       content: `You worked as a **${selectedJob.name.replace(
         /_/g,
         " "
@@ -939,7 +939,7 @@ async function handleWorkCommand(interaction) {
       .addOptions(jobOptions)
       .setDisabled(true);
     const disabledRow = new ActionRowBuilder().addComponents(disabledMenu);
-    await i.message.edit({
+    await i.update({
       content: `${italic(
         "You've worked, so the components for this message have been disabled!"
       )}`,
