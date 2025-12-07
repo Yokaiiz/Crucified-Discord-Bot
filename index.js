@@ -53,6 +53,7 @@ const {
   handleUnJailCommand,
   handleAddRoleCommand,
   handleRemoveRoleCommand,
+  handlePurgeCommand,
 } = require("./commands.js");
 const { EmbedBuilder } = require("@discordjs/builders");
 
@@ -203,6 +204,8 @@ const commands = [
   new SlashCommandBuilder().setName('remove_role').setDescription('You remove a role from a member.')
     .addUserOption(option => option.setName('target').setDescription('the person you want to remove the role from.').setRequired(true))
     .addRoleOption(option => option.setName('role').setDescription('the role you wish to remove.').setRequired(true)),
+  new SlashCommandBuilder().setName('purge').setDescription('Purge messages in a channel.')
+    .addIntegerOption(option => option.setName('amount').setDescription('Number of messages to delete (max 100)').setRequired(true)),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -298,7 +301,7 @@ client.on('guildMemberRemove', (member) => {
   }
 
   if (member.guild.id === '1445910029013225585') {
-    const goodbyeChannel = member.guild.channels.cache.get('1446611236170109069');
+    const goodbyeChannel = member.guild.channels.cache.get('1446454221078663168');
 
     const goodbyeEmbed = new EmbedBuilder()
     .setColor(Colors.DarkButNotBlack)
@@ -418,6 +421,7 @@ client.on("interactionCreate", async (interaction) => {
         case 'unjail': return handleUnJailCommand(interaction);
         case 'add_role': return handleAddRoleCommand(interaction);
         case 'remove_role': return handleRemoveRoleCommand(interaction);
+        case 'purge': return handlePurgeCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

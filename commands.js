@@ -433,7 +433,7 @@ async function handleHelpCommand(interaction) {
       name: '**Options**',
       value: 'Discord Bot\nDiscord Server'
     })
-    .setImage('https://i.pinimg.com/originals/0e/13/7e/0e137e2400178875f1ad7854a1d81552.gif')
+    .setImage('https://i.pinimg.com/originals/46/63/0f/46630f8169d63fe5b29f6928d9509150.gif')
     .setThumbnail(avatar)
     .setTimestamp();
 
@@ -465,7 +465,7 @@ async function handleHelpCommand(interaction) {
         .setImage('https://cdn.discordapp.com/attachments/1429177678593921119/1442575964344422470/death_note_header.jpg')
         .addFields(
           { name: '**Roleplay**', value: '`/hug`, `/slap`, `/kiss`, `/cuddle`, `/fuck`' },
-          { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`' },
+          { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`, `/purge`' },
           { name: '**Economy**', value: '`/beg`, `/gamble`, `/sell`, `/donate`, `/rob`, `/shop`, `/fight`, `/fish`, `/work`' },
           { name: '**Owner only**', value: '`/reset`, `/givemoney`, `/giveitem`, `/give_experience`, `/take_money`, `/take_exp`' },
           { name: '**Misc**', value: '`/encyclopaedia type_soul`, `/suggest`, `/test_embed`' }
@@ -482,8 +482,8 @@ async function handleHelpCommand(interaction) {
       const embed = new EmbedBuilder()
         .setColor('DarkPurple')
         .setTitle(interaction.guild?.name || "Discord Server")
-        .setDescription('Information regarding **/wxrld**!')
-        .setImage('https://i.pinimg.com/originals/b4/f7/73/b4f77365cb14d201a7a809487540371d.gif')
+        .setDescription('Information regarding **/Zangetzu**!')
+        .setImage('https://i.pinimg.com/originals/28/23/52/2823528f0f5af99ae9d595c6e1119a48.gif')
         .setThumbnail(interaction.guild?.iconURL({ dynamic: true }) ?? null)
         .addFields(
           {
@@ -2612,6 +2612,48 @@ async function handleRemoveRoleCommand(interaction) {
   }
 }
 
+async function handlePurgeCommand(interaction) {
+  const amount = interaction.options.getInteger("amount");
+
+  if (!interaction.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+    return interaction.reply({
+      content: "You do not have permission to use this command.",
+      ephemeral: true,
+    });
+  }
+
+  if (amount < 1) {
+    return interaction.reply({
+      content: "Please specify a valid number (minimum 1).",
+      ephemeral: true,
+    });
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  let remaining = amount;
+  let totalDeleted = 0;
+
+  while (remaining > 0) {
+    const batchSize = Math.min(remaining, 100);
+
+    const deletedMessages = await interaction.channel.bulkDelete(batchSize, true).catch(() => null);
+
+    if (!deletedMessages) {
+      return interaction.editReply("❌ Failed to delete messages (messages older than 14 days cannot be deleted).");
+    }
+
+    const deletedCount = deletedMessages.size;
+    totalDeleted += deletedCount;
+    remaining -= deletedCount;
+
+    // If fewer messages were deleted, no more deletable messages remain
+    if (deletedCount < batchSize) break;
+  }
+
+  return interaction.editReply(`🧹 Successfully deleted **${totalDeleted}** message(s).`);
+}
+
 
 // Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
 function msToReadable(ms) {
@@ -2663,4 +2705,5 @@ module.exports = {
   handleUnJailCommand,
   handleAddRoleCommand,
   handleRemoveRoleCommand,
+  handlePurgeCommand,
 };
