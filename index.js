@@ -56,6 +56,7 @@ const {
   handlePurgeCommand,
 } = require("./commands.js");
 const { EmbedBuilder } = require("@discordjs/builders");
+const { ButtonStyle, ComponentType } = require("discord-api-types/v10");
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (!TOKEN) throw new Error("❌ Missing DISCORD_BOT_TOKEN in .env file");
@@ -206,6 +207,38 @@ const commands = [
     .addRoleOption(option => option.setName('role').setDescription('the role you wish to remove.').setRequired(true)),
   new SlashCommandBuilder().setName('purge').setDescription('Purge messages in a channel.')
     .addIntegerOption(option => option.setName('amount').setDescription('Number of messages to delete (max 100)').setRequired(true)),
+  new SlashCommandBuilder()
+  .setName('channel_create')
+  .setDescription('Lets admins create channels.')
+  .addStringOption(option =>
+    option.setName('name')
+      .setDescription('The name for the channel.')
+      .setRequired(true)
+  )
+  .addRoleOption(option =>
+    option.setName('role1')
+      .setDescription('First role')
+      .setRequired(true)
+  )
+  .addRoleOption(option =>
+    option.setName('role2')
+      .setDescription('Second role')
+      .setRequired(false)
+  )
+  .addRoleOption(option =>
+    option.setName('role3')
+      .setDescription('Third role')
+      .setRequired(false)
+  ),
+  new SlashCommandBuilder()
+  .setName('channel_delete')
+  .setDescription('Lets admins delete channels')
+  .addChannelOption(option =>
+    option
+    .setName('channel')
+    .setDescription('The channel to delete')
+    .setRequired(true)
+  ),
 ].map(cmd => cmd.toJSON());
 
 // --- Deploy Commands ---
@@ -422,6 +455,8 @@ client.on("interactionCreate", async (interaction) => {
         case 'add_role': return handleAddRoleCommand(interaction);
         case 'remove_role': return handleRemoveRoleCommand(interaction);
         case 'purge': return handlePurgeCommand(interaction);
+        case 'channel_create': return handleCreateChannelCommand(interaction);
+        case 'channel_delete': return handleDeleteChannelCommand(interaction);
         default:
           return interaction.reply({ content: "❌ Unknown command.", ephemeral: true });
       }

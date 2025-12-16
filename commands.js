@@ -2654,6 +2654,167 @@ async function handlePurgeCommand(interaction) {
   return interaction.editReply(`🧹 Successfully deleted **${totalDeleted}** message(s).`);
 }
 
+async function handleCreateChannelCommand(interaction) {
+  const logContext = {
+    user: interaction.user.tag,
+    userId: interaction.user.id,
+    guildId: interaction.guildId,
+    command: 'channel_create',
+  };
+
+  try {
+    // ---------- Permission checks ----------
+    if (
+      !interaction.member.permissions.has(
+        PermissionFlagsBits.ManageChannels
+      )
+    ) {
+      log.warn('User lacks ManageChannels permission', logContext);
+      return interaction.reply({
+        content: 'You do not have permission to create channels.',
+        ephemeral: true,
+      });
+    }
+
+    const botMember = interaction.guild.members.me;
+    if (
+      !botMember.permissions.has(PermissionFlagsBits.ManageChannels)
+    ) {
+      log.error('Bot lacks ManageChannels permission', logContext);
+      return interaction.reply({
+        content: 'I do not have permission to create channels.',
+        ephemeral: true,
+      });
+    }
+
+    // ---------- Inputs ----------
+    const channelName = interaction.options.getString('name');
+
+    const roles = [
+      interaction.options.getRole('role1'),
+      interaction.options.getRole('role2'),
+      interaction.options.getRole('role3'),
+    ].filter(Boolean);
+
+    if (!roles.length) {
+      log.warn('No roles provided', logContext);
+      return interaction.reply({
+        content: 'You must provide at least one role.',
+        ephemeral: true,
+      });
+    }
+
+    // ---------- Role hierarchy ----------
+    const manageableRoles = roles.filter(
+      role => role.position < botMember.roles.highest.position
+    );
+
+    if (!manageableRoles.length) {
+      log.error('No roles below bot role hierarchy', {
+        ...logContext,
+        roles: roles.map(r => r.id),
+      });
+      return interaction.reply({
+        content: 'I cannot manage any of the selected roles.',
+        ephemeral: true,
+      });
+    }
+
+    // ---------- Channel creation ----------
+    const channel = await interaction.guild.channels.create({
+      name: channelName,
+      type: ChannelType.GuildText,
+      permissionOverwrites: [
+        {
+          id: interaction.guild.id, // @everyone
+          deny: [PermissionFlagsBits.ViewChannel],
+        },
+        ...manageableRoles.map(role => ({
+          id: role.id,
+          allow: [PermissionFlagsBits.ViewChannel],
+        })),
+      ],
+    });
+
+    log.info('Channel created successfully', {
+      ...logContext,
+      channelId: channel.id,
+      roles: manageableRoles.map(r => r.id),
+    });
+
+    // ---------- Response ----------
+    await interaction.reply({
+      content: `✅ Channel **${channelName}** created successfully.`,
+      ephemeral: true,
+    });
+
+  } catch (error) {
+    log.error('Unhandled error in channel_create', {
+      ...logContext,
+      error: error.message,
+      stack: error.stack,
+    });
+
+    if (!interaction.replied) {
+      await interaction.reply({
+        content: '❌ An unexpected error occurred while creating the channel.',
+        ephemeral: true,
+      });
+    }
+  }
+}
+
+async function handleDeleteChannelCommand(interaction) {
+  try {
+    // ---------- Get channel ----------
+    const channel = interaction.options.getChannel('channel');
+
+    if (!channel) {
+      return interaction.reply({
+        content: '❌ Channel not found.',
+        ephemeral: true
+      });
+    }
+
+    // ---------- Permission checks ----------
+    if (
+      !interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)
+    ) {
+      return interaction.reply({
+        content: '❌ You do not have permission to delete channels.',
+        ephemeral: true
+      });
+    }
+
+    if (!channel.deletable) {
+      return interaction.reply({
+        content: '❌ I cannot delete that channel.',
+        ephemeral: true
+      });
+    }
+
+    // ---------- Delete channel ----------
+    const channelName = channel.name;
+    await channel.delete(`Deleted by ${interaction.user.tag}`);
+
+    await interaction.reply({
+      content: `🗑️ Channel **${channelName}** has been deleted.`,
+      ephemeral: true
+    });
+
+    console.log(`[INFO] Channel deleted: ${channelName} by ${interaction.user.tag}`);
+
+  } catch (error) {
+    console.error('[ERROR] handleDeleteChannelCommand:', error);
+
+    if (!interaction.replied) {
+      await interaction.reply({
+        content: '❌ An unexpected error occurred while deleting the channel.',
+        ephemeral: true
+      });
+    }
+  }
+}
 
 // Converts milliseconds to human readable text (e.g. "1 hour", "30 minutes")
 function msToReadable(ms) {
@@ -2706,4 +2867,6 @@ module.exports = {
   handleAddRoleCommand,
   handleRemoveRoleCommand,
   handlePurgeCommand,
+  handleCreateChannelCommand,
+  handleDeleteChannelCommand,
 };
