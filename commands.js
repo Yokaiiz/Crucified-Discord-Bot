@@ -14,6 +14,7 @@ const {
   TextInputStyle,
   UserContextMenuCommandInteraction,
   Guild,
+  ChannelType,
 } = require("discord.js");
 const database = require("./database.js");
 const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require("@discordjs/builders");
@@ -2664,12 +2665,8 @@ async function handleCreateChannelCommand(interaction) {
 
   try {
     // ---------- Permission checks ----------
-    if (
-      !interaction.member.permissions.has(
-        PermissionFlagsBits.ManageChannels
-      )
-    ) {
-      log.warn('User lacks ManageChannels permission', logContext);
+    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      console.warn('User lacks ManageChannels permission', logContext);
       return interaction.reply({
         content: 'You do not have permission to create channels.',
         ephemeral: true,
@@ -2677,10 +2674,8 @@ async function handleCreateChannelCommand(interaction) {
     }
 
     const botMember = interaction.guild.members.me;
-    if (
-      !botMember.permissions.has(PermissionFlagsBits.ManageChannels)
-    ) {
-      log.error('Bot lacks ManageChannels permission', logContext);
+    if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      console.error('Bot lacks ManageChannels permission', logContext);
       return interaction.reply({
         content: 'I do not have permission to create channels.',
         ephemeral: true,
@@ -2689,7 +2684,6 @@ async function handleCreateChannelCommand(interaction) {
 
     // ---------- Inputs ----------
     const channelName = interaction.options.getString('name');
-
     const roles = [
       interaction.options.getRole('role1'),
       interaction.options.getRole('role2'),
@@ -2697,7 +2691,7 @@ async function handleCreateChannelCommand(interaction) {
     ].filter(Boolean);
 
     if (!roles.length) {
-      log.warn('No roles provided', logContext);
+      console.warn('No roles provided', logContext);
       return interaction.reply({
         content: 'You must provide at least one role.',
         ephemeral: true,
@@ -2710,7 +2704,7 @@ async function handleCreateChannelCommand(interaction) {
     );
 
     if (!manageableRoles.length) {
-      log.error('No roles below bot role hierarchy', {
+      console.error('No roles below bot role hierarchy', {
         ...logContext,
         roles: roles.map(r => r.id),
       });
@@ -2736,7 +2730,7 @@ async function handleCreateChannelCommand(interaction) {
       ],
     });
 
-    log.info('Channel created successfully', {
+    console.info('Channel created successfully', {
       ...logContext,
       channelId: channel.id,
       roles: manageableRoles.map(r => r.id),
@@ -2749,9 +2743,9 @@ async function handleCreateChannelCommand(interaction) {
     });
 
   } catch (error) {
-    log.error('Unhandled error in channel_create', {
+    console.error('Unhandled error in channel_create', {
       ...logContext,
-      error: error.message,
+      message: error.message,
       stack: error.stack,
     });
 
@@ -2763,6 +2757,8 @@ async function handleCreateChannelCommand(interaction) {
     }
   }
 }
+
+
 
 async function handleDeleteChannelCommand(interaction) {
   try {

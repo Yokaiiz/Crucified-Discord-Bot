@@ -54,6 +54,8 @@ const {
   handleAddRoleCommand,
   handleRemoveRoleCommand,
   handlePurgeCommand,
+  handleCreateChannelCommand,
+  handleDeleteChannelCommand,
 } = require("./commands.js");
 const { EmbedBuilder } = require("@discordjs/builders");
 const { ButtonStyle, ComponentType } = require("discord-api-types/v10");
