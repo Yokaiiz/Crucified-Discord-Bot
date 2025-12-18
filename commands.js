@@ -189,6 +189,7 @@ const bossPool = [
       { name: 'Almighty', damage: 150, effect: 'dodge', chance: 0.1 },
       { name: 'Slash', damage: 125, chance: 0.1 },
       { name: "Absolute Eradication", damage: 300, chance: 0.01 },
+      { name: 'Almighty: past erasure', damage: 350, effect: 'ultimate_deactivate', chance: 0.01 },
     ]
   },
   {
@@ -200,6 +201,8 @@ const bossPool = [
       { name: 'Vastocar Regeneration', damage: 1, effect: 'heal', chance: 0.25 },
       { name: 'Hierro', damage: 1, effect: 'defenceBoost', chance: 0.75 },
       { name: 'Cero Oscuras', damage: 250, chance: 0.8 },
+      { name: 'Grab', damage: 150, chance: 0.9 },
+      { name: 'Sword slash', damage: 200, chance: 0.2 }
     ]
   }
 ]
@@ -1597,6 +1600,12 @@ async function handleFightCommand(interaction) {
         if (ability.effect === 'heal' && Math.random() < ability.chance) {
           turnLog.push(`${enemy.name} used **${ability.name}** and healed for 250 hp`)
           enemy.health += 250;
+          prevented = true;
+          break;
+        }
+        if (ability.effect === 'ultimate_deactivate' && Math.random() < ability.chance) {
+          turnLog.push(`${enemy.name} used **${ability.name}** and deactivated your ultimate`)
+          bankaiActive = false;
           prevented = true;
           break;
         }
