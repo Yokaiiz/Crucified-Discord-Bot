@@ -166,10 +166,12 @@ const bossPool = [
     health: 1500,
     defense: 0,
     abilities: [
-      { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.02 },
-      { name: 'Danku', effect: 'block', chance: 0.08 },
+      { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.1 },
+      { name: 'Danku', effect: 'block', chance: 0.1 },
       { name: 'Slash', damage: 250, chance: 0.2 },
       { name: 'Kido: Hado 90: Kurohitsugi', damage: 300, chance: 0.1 },
+      { name: 'Kido: restrain', damage: 500, chance: 0.5 },
+      { name: 'Hogyoku merge', damage: 1, effect: 'bossUltimate', chance: 0.2 }
     ]
   },
   {
@@ -1499,6 +1501,11 @@ async function handleFightCommand(interaction) {
     });
   }
 
+  // =========================
+  // Constants
+  // =========================
+  const BOSS_ULTIMATE_DAMAGE_MULT = 1.5;
+
   // Pick random boss
   const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
   let bossHealth = enemy.health;
@@ -1508,9 +1515,13 @@ async function handleFightCommand(interaction) {
   let fightActive = true;
   let bankaiActive = false;
   let battleLog = [];
+  let bossUltimate = false;
 
+  // =========================
   // Player moves
+  // =========================
   const moveset = powerMovesets[userData.power];
+
   function getAvailableMoves() {
     return moveset
       .filter(move => {
@@ -1526,43 +1537,46 @@ async function handleFightCommand(interaction) {
   }
 
   const moveMenu = new StringSelectMenuBuilder()
-    .setCustomId("fight-move-select")
-    .setPlaceholder("Choose your move")
+    .setCustomId('fight-move-select')
+    .setPlaceholder('Choose your move')
     .addOptions(getAvailableMoves());
 
   const moveRow = new ActionRowBuilder().addComponents(moveMenu);
 
-  // Initial message (fetchReply so we can attach collector)
   const fightMessage = await interaction.reply({
     embeds: [
       new EmbedBuilder()
         .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
-        .setDescription(`Boss HP: **${bossHealth}**\nYour HP: **${playerHealth}**\nYour Defense: **${playerDefense}**`)
-        .setColor("Red")
+        .setDescription(
+          `Boss HP: **${bossHealth}**\nYour HP: **${playerHealth}**\nYour Defense: **${playerDefense}**`
+        )
+        .setColor('Red'),
     ],
     components: [moveRow],
     ephemeral: false,
-    fetchReply: true, // <— KEY
+    fetchReply: true,
   });
 
-  // Collector attached to the message, not channel
   const collector = fightMessage.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
     time: 120000,
-    filter: (i) => i.user.id === userId,
+    filter: i => i.user.id === userId,
   });
 
-  collector.on("collect", async (i) => {
-    if (!fightActive || i.customId !== "fight-move-select") return;
+  collector.on('collect', async i => {
+    if (!fightActive || i.customId !== 'fight-move-select') return;
 
     const moveIdx = parseInt(i.values[0]);
     const move = moveset[moveIdx];
     let turnLog = [`**Turn ${turn}:**`];
 
-    // === Player move ===
-    if (move.name.toLowerCase() === "mugetsu") {
+    // =========================
+    // Player turn
+    // =========================
+    if (move.name.toLowerCase() === 'mugetsu') {
       bossHealth = 0;
       fightActive = false;
+
       turnLog.push(`🌑 You unleashed **Mugetsu**! ${enemy.name} was completely obliterated...`);
       turnLog.push(`⚠️ The cost of this forbidden technique is everything. Your powers have vanished...`);
 
@@ -1571,41 +1585,57 @@ async function handleFightCommand(interaction) {
 
       battleLog.push(turnLog.join('\n'));
       turn++;
-
-    } else if (move.defenseBoost) {
+    }
+    else if (move.defenseBoost) {
       playerDefense += move.defenseBoost;
       turnLog.push(`You used **${move.name}** and increased your defense by ${move.defenseBoost}!`);
-    } else {
+    }
+    else {
       let damage = move.damage;
       if (bankaiActive) damage = Math.floor(damage * 1.5);
 
       let prevented = false;
+
       for (const ability of enemy.abilities || []) {
-        if (ability.effect === "dodge" && Math.random() < ability.chance) {
+        if (ability.effect === 'dodge' && Math.random() < ability.chance) {
           turnLog.push(`${enemy.name} used **${ability.name}** and dodged your attack!`);
           prevented = true;
           break;
         }
-        if (ability.effect === "block" && Math.random() < ability.chance) {
+
+        if (ability.effect === 'block' && Math.random() < ability.chance) {
           turnLog.push(`${enemy.name} used **${ability.name}** and blocked your attack!`);
           prevented = true;
           break;
         }
+
         if (ability.effect === 'defenceBoost' && Math.random() < ability.chance) {
-          turnLog.push(`${enemy.name} used **${ability.name}** and increased their defence by 10`)
           enemy.defense += 10;
+          turnLog.push(`${enemy.name} used **${ability.name}** and increased their defence by 10!`);
           prevented = true;
           break;
         }
+
         if (ability.effect === 'heal' && Math.random() < ability.chance) {
-          turnLog.push(`${enemy.name} used **${ability.name}** and healed for 250 hp`)
           enemy.health += 250;
+          bossHealth += 250;
+          turnLog.push(`${enemy.name} used **${ability.name}** and healed for 250 HP!`);
           prevented = true;
           break;
         }
+
         if (ability.effect === 'ultimate_deactivate' && Math.random() < ability.chance) {
-          turnLog.push(`${enemy.name} used **${ability.name}** and deactivated your ultimate`)
           bankaiActive = false;
+          turnLog.push(`${enemy.name} used **${ability.name}** and deactivated your ultimate!`);
+          prevented = true;
+          break;
+        }
+
+        if (ability.effect === 'bossUltimate' && Math.random() < ability.chance) {
+          bossUltimate = true;
+          bossHealth += 900;
+          enemy.defense += 50;
+          turnLog.push(`${enemy.name} used **${ability.name}** and activated their **Ultimate**!`);
           prevented = true;
           break;
         }
@@ -1618,29 +1648,44 @@ async function handleFightCommand(interaction) {
       }
     }
 
-    if (move.counterAttack === true) {
+    if (move.counterAttack) {
       bossHealth -= move.damage;
       playerHealth += 200;
-      turnLog.push(`You countered the boss' attack, dealt **${move.damage}** damage, and healed **200 HP**.`);
+      turnLog.push(
+        `You countered the boss' attack, dealt **${move.damage}** damage, and healed **200 HP**.`
+      );
     }
 
     if (move.bankaiActivate && !bankaiActive) {
       bankaiActive = true;
       playerDefense += 50;
       playerHealth += 100;
-      turnLog.push(`🔥 You have activated **Bankai/Ressurecion**! +50 Defense and +100 HP, your attacks hit harder!`);
+      turnLog.push(
+        `🔥 You activated **Bankai/Ressurecion**! +50 Defense, +100 HP, attacks are empowered!`
+      );
     }
 
-    // === Boss turn ===
+    // =========================
+    // Boss turn
+    // =========================
     if (bossHealth > 0 && fightActive) {
       let bossDidAction = false;
 
       if (enemy.abilities?.length) {
         const ability = enemy.abilities[Math.floor(Math.random() * enemy.abilities.length)];
+
         if (ability.damage && Math.random() < ability.chance) {
+          let rawDamage = ability.damage;
+
+          if (bossUltimate) {
+            rawDamage = Math.floor(rawDamage * BOSS_ULTIMATE_DAMAGE_MULT);
+            turnLog.push(`💥 ${enemy.name}'s **Ultimate** empowers their attack!`);
+          }
+
           let effectiveDefense = Math.floor(playerDefense * 0.5);
-          let bossDmg = ability.damage - effectiveDefense;
-          bossDmg = Math.max(Math.floor(ability.damage * 0.3), bossDmg);
+          let bossDmg = rawDamage - effectiveDefense;
+          bossDmg = Math.max(Math.floor(rawDamage * 0.3), bossDmg);
+
           playerHealth -= bossDmg;
           turnLog.push(`${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`);
           bossDidAction = true;
@@ -1649,9 +1694,16 @@ async function handleFightCommand(interaction) {
 
       if (!bossDidAction) {
         let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
+
+        if (bossUltimate) {
+          baseAttack = Math.floor(baseAttack * BOSS_ULTIMATE_DAMAGE_MULT);
+          turnLog.push(`💥 ${enemy.name}'s **Ultimate** empowers their attack!`);
+        }
+
         let effectiveDefense = Math.floor(playerDefense * 0.5);
         let bossDmg = baseAttack - effectiveDefense;
         bossDmg = Math.max(Math.floor(baseAttack * 0.3), bossDmg);
+
         playerHealth -= bossDmg;
         turnLog.push(`${enemy.name} attacks and deals **${bossDmg}** damage to you!`);
       }
@@ -1663,74 +1715,68 @@ async function handleFightCommand(interaction) {
     battleLog.push(turnLog.join('\n'));
     turn++;
 
-    // === End conditions ===
+    // =========================
+    // End conditions
+    // =========================
     let resultMsg;
-    let embedColor = "Red";
+    let embedColor = 'Red';
 
     if (bossHealth <= 0) {
       fightActive = false;
+
       const rewardMoney = Math.floor(Math.random() * 3000) + 1000;
       const rewardExp = Math.floor(Math.random() * 500) + 250;
+
       userData.balance += rewardMoney;
       userData.experience += rewardExp;
       await database.saveUserData(userId, userData);
 
-      if (move.name.toLowerCase() === "mugetsu") embedColor = "#000000";
+      if (move.name.toLowerCase() === 'mugetsu') embedColor = '#000000';
 
       resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${battleLog.join('\n')}`;
       collector.stop();
-    } else if (playerHealth <= 0) {
+    }
+    else if (playerHealth <= 0) {
       fightActive = false;
       resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${battleLog.join('\n')}`;
       collector.stop();
-    } else if (turn > 20) {
+    }
+    else if (turn > 20) {
       fightActive = false;
       resultMsg = `⏳ The fight ended in a draw after 20 turns!\n\n${battleLog.join('\n')}`;
       collector.stop();
-    } else {
-      resultMsg = `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n${turnLog.join('\n')}\n\n👉 Choose another move!`;
+    }
+    else {
+      resultMsg =
+        `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n` +
+        `${turnLog.join('\n')}\n\n👉 Choose another move!`;
     }
 
-    // === Safe update ===
     try {
       await i.update({
         embeds: [
           new EmbedBuilder()
             .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
             .setDescription(resultMsg)
-            .setColor(embedColor)
+            .setColor(embedColor),
         ],
-        components: fightActive ? [new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId("fight-move-select")
-            .setPlaceholder("Choose your move")
-            .addOptions(getAvailableMoves())
-        )] : [],
+        components: fightActive
+          ? [
+              new ActionRowBuilder().addComponents(
+                new StringSelectMenuBuilder()
+                  .setCustomId('fight-move-select')
+                  .setPlaceholder('Choose your move')
+                  .addOptions(getAvailableMoves())
+              ),
+            ]
+          : [],
       });
     } catch (err) {
-      console.error("Failed to update interaction:", err);
-      try {
-        await fightMessage.edit({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
-              .setDescription(resultMsg)
-              .setColor(embedColor)
-          ],
-          components: fightActive ? [new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-              .setCustomId("fight-move-select")
-              .setPlaceholder("Choose your move")
-              .addOptions(getAvailableMoves())
-          )] : [],
-        });
-      } catch (editErr) {
-        console.error("Also failed to edit fight message:", editErr);
-      }
+      console.error('Failed to update interaction:', err);
     }
   });
 
-  collector.on("end", async () => {
+  collector.on('end', async () => {
     if (fightActive) {
       fightActive = false;
       await interaction.followUp({
@@ -1740,6 +1786,7 @@ async function handleFightCommand(interaction) {
     }
   });
 }
+
 
 async function handleFishCommand(interaction) {
   const userId = interaction.user.id;
