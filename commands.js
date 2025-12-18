@@ -466,7 +466,7 @@ async function handleHelpCommand(interaction) {
         .setImage('https://cdn.discordapp.com/attachments/1429177678593921119/1442575964344422470/death_note_header.jpg')
         .addFields(
           { name: '**Roleplay**', value: '`/hug`, `/slap`, `/kiss`, `/cuddle`, `/fuck`' },
-          { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`, `/purge`' },
+          { name: '**Moderation**', value: '`/ban`, `/timeout`, `/clear_user`, `/give_warning`, `/jail`, `/unjail`, `/add_role`, `/remove_role`, `/purge`, `/channel_create`, `/channel_delete`' },
           { name: '**Economy**', value: '`/beg`, `/gamble`, `/sell`, `/donate`, `/rob`, `/shop`, `/fight`, `/fish`, `/work`' },
           { name: '**Owner only**', value: '`/reset`, `/givemoney`, `/giveitem`, `/give_experience`, `/take_money`, `/take_exp`' },
           { name: '**Misc**', value: '`/encyclopaedia type_soul`, `/suggest`, `/test_embed`' }
