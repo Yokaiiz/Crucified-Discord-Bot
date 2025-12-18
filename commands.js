@@ -150,7 +150,7 @@ const powerMovesets = {
     { name: 'Ink Castle', damage: 0, description: 'You manifest a castle of ink that boosts your defense by 100.', defenseBoost: 100, ultimate: true },
   ],
   'Nozarashi': [
-    { name: 'Sword Smash', damage: 600, description: 'You smash your opponent with your giant axe.' },
+    { name: 'Sword Smash', damage: 600, description: 'You smash your opponent with your giant greatsword.' },
     { name: 'Earth Shatter', damage: 800, description: 'You slam your sword into the ground, causing an earth-shattering shockwave.' },
     { name: 'Bankai: RAGHHHHHH', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
     { name: 'Heavenly cleave', damage: 750, description: 'You swing your axe downwards into the ground with immense force, creating a massive shockwave and crater.'},
@@ -191,6 +191,17 @@ const bossPool = [
       { name: "Absolute Eradication", damage: 300, chance: 0.01 },
     ]
   },
+  {
+    name: 'Ulquiorra',
+    health: 1000,
+    defense: 10,
+    abilities: [
+      { name: 'Lanza de rampago', damage: 500, chance: 0.5 },
+      { name: 'Vastocar Regeneration', damage: 1, effect: 'heal', chance: 0.25 },
+      { name: 'Hierro', damage: 1, effect: 'defenceBoost', chance: 0.75 },
+      { name: 'Cero Oscuras', damage: 250, chance: 0.8 },
+    ]
+  }
 ]
 
 // --- Command Handlers ---
@@ -1574,6 +1585,18 @@ async function handleFightCommand(interaction) {
         }
         if (ability.effect === "block" && Math.random() < ability.chance) {
           turnLog.push(`${enemy.name} used **${ability.name}** and blocked your attack!`);
+          prevented = true;
+          break;
+        }
+        if (ability.effect === 'defenceBoost' && Math.random() < ability.chance) {
+          turnLog.push(`${enemy.name} used **${ability.name}** and increased their defence by 10`)
+          enemy.defense += 10;
+          prevented = true;
+          break;
+        }
+        if (ability.effect === 'heal' && Math.random() < ability.chance) {
+          turnLog.push(`${enemy.name} used **${ability.name}** and healed for 250 hp`)
+          enemy.health += 250;
           prevented = true;
           break;
         }
