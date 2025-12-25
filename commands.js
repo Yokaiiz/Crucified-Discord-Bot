@@ -22,192 +22,274 @@ const { job, } = require("./utils/utils.js");
 
 
 
+const POWER_IDS = {
+  SODE_NO_SHIRAYUKI: 'sode_no_shirayuki',
+  BENIHIME: 'benihime',
+  ZANGETSU: 'zangetsu',
+  RYUJIN_JAKKA: 'ryujin_jakka',
+  KYOKA_SUIGETSU: 'kyoka_suigetsu',
+  ZABIMARU: 'zabimaru',
+  SHINSO: 'shinso',
+  HYORINMARU: 'hyorinmaru',
+  WABISUKE: 'wabisuke',
+  SENBONZAKURA: 'senbonzakura',
+  KATEN_KYOKOTSU: 'katen_kyokotsu',
+  MINAZUKI: 'minazuki',
+  SUZUMEBACHI: 'suzumebachi',
+  BEAST: 'beast',
+  LOS_LOBOS: 'los_lobos',
+  ARROGANTE: 'arrogante',
+  SHARK: 'shark',
+  HORSE: 'horse',
+  MURCIELAGO: 'murcielago',
+  PANTERA: 'pantera',
+  ICHIMONJI: 'ichimonji',
+  NOZARASHI: 'nozarashi',
+};
+
 const powerMovesets = {
-  'Sode no Shirayuki': [
-    { name: 'Frost Slash', damage: 100, description: 'A chilling slash that may potentially freeze the boss.' },
-    { name: 'Below Freezing', damage: 0, description: 'Raises your overall defense by 20 for this fight.', defenseBoost: 20 },
-    { name: 'Freezing Aurora', damage: 200, description: 'You freeze everything that surrounds you.' },
-    { name: 'Bankai: Sode no Shirayuki - Hakka no Togame', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
-    { name: 'Ultimate Freeze', damage: 500, description: 'You unleash the ultimate freezing attack at the boss.', ultimate: true },
-    { name: 'Inescapable Blizzard', damage: 1000, description: 'You freeze everything around you forever, doing 1,000 damage.', ultimate: true }
+  [POWER_IDS.SODE_NO_SHIRAYUKI]: [
+    { id: 'sns_frost_slash', name: 'Frost Slash', damage: 100 },
+    { id: 'sns_below_freezing', name: 'Below Freezing', damage: 0, defenseBoost: 20 },
+    { id: 'sns_freezing_aurora', name: 'Freezing Aurora', damage: 200 },
+    { id: 'sns_bankai_hakka', name: 'Bankai: Hakka no Togame', damage: 0, bankaiActivate: true },
+    { id: 'sns_ultimate_freeze', name: 'Ultimate Freeze', damage: 500, ultimate: true },
+    { id: 'sns_inescapable_blizzard', name: 'Inescapable Blizzard', damage: 1000, ultimate: true }
   ],
-  'Benihime': [
-    { name: 'Fierce Slash', damage: 50, description: 'You launch a slash at the boss at fierce speeds.' },
-    { name: 'Immaculate Shield', damage: 0, description: 'You apply a shield onto yourself, increasing your defense by 15.', defenseBoost: 15 },
-    { name: 'Unstoppable Barrage', damage: 150, description: 'You create an unstoppable barrage of slashes.' },
-    { name: 'Bankai: Kannonbiraki Benihime Aratame', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
-    { name: 'Crimson Destruction', damage: 500, description: 'You unleash the ultimate attack, Crimson Destruction.', ultimate: true },
-    { name: 'Reconstruction', damage: 1000, description: 'You bring yourself back from the dead to unleash the ultimate skill upon your opponent.', ultimate: true },
+
+  [POWER_IDS.BENIHIME]: [
+    { id: 'beni_fierce_slash', name: 'Fierce Slash', damage: 50 },
+    { id: 'beni_immaculate_shield', name: 'Immaculate Shield', damage: 0, defenseBoost: 15 },
+    { id: 'beni_unstoppable_barrage', name: 'Unstoppable Barrage', damage: 150 },
+    { id: 'beni_bankai', name: 'Bankai: Benihime Aratame', damage: 0, bankaiActivate: true },
+    { id: 'beni_crimson_destruction', name: 'Crimson Destruction', damage: 500, ultimate: true },
+    { id: 'beni_reconstruction', name: 'Reconstruction', damage: 1000, ultimate: true }
   ],
-  'Zangetsu': [
-    { name: 'Getsuga Tenshou', damage: 120, description: 'You launch a powerful slash of energy at the boss.' },
-    { name: 'Getsuga Jujinshou', damage: 200, description: 'You launch 2 powerful slashes of energy in a cross formation.' },
-    { name: 'Getsuga Barrage', damage: 250, description: 'You build up energy around your blade and slash the boss repeatedly.' },
-    { name: 'Bankai: Tensa Zangetsu', damage: 0, description: 'You awaken your Bankai.', bankaiActivate: true },
-    { name: 'Mugetsu', damage: 500, description: 'You unleash the ultimate attack, Mugetsu, sacrificing your power in the process.', ultimate: true, sacrifice: true },
-    { name: 'Blut Vene', damage: 0, description: 'You use Blut Vene to boost your defense.', defenseBoost: 50 }
+
+  [POWER_IDS.ZANGETSU]: [
+    { id: 'getsuga_tenshou', name: 'Getsuga Tenshou', damage: 120 },
+    { id: 'getsuga_jujinshou', name: 'Getsuga Jujinshou', damage: 200 },
+    { id: 'getsuga_barrage', name: 'Getsuga Barrage', damage: 250 },
+    { id: 'bankai_tensa_zangetsu', name: 'Bankai: Tensa Zangetsu', damage: 0, bankaiActivate: true },
+
+    // 🔒 ONLY MOVE THAT ENDS THE FIGHT
+    {
+      id: 'mugetsu',
+      name: 'Mugetsu',
+      damage: 9999,
+      ultimate: true,
+      sacrifice: true,
+      endBattle: true,
+      nullifyUserPower: true
+    },
+
+    {
+      id: 'blut_vene',
+      name: 'Blut Vene',
+      damage: 0,
+      defenseBoost: 50
+    }
   ],
-  'Ryujin Jakka': [
-    { name: 'Incinerating Slash', damage: 200, description: 'You incinerate your opponent with a slash almost as hot as the sun.' },
-    { name: 'Devastating Bisection', damage: 150, description: 'You smite your opponent with your fiery sword dealing 150 damage.' },
-    { name: 'Fiery Hell', damage: 50, description: 'You heat up your surroundings to dangerous levels, boosting your defense.', defenseBoost: 50 },
-    { name: 'Bankai: Zanka no Tachi', damage: 100, description: 'You unleash your Bankai onto your opponent.', bankaiActivate: true },
-    { name: 'Undead Army', damage: 500, description: 'You raise past opponents from the dead as fiery skeletons and make them fight for you.', ultimate: true }
+
+  [POWER_IDS.RYUJIN_JAKKA]: [
+    { id: 'rj_incinerating_slash', name: 'Incinerating Slash', damage: 200 },
+    { id: 'rj_devastating_bisection', name: 'Devastating Bisection', damage: 150 },
+    { id: 'rj_fiery_hell', name: 'Fiery Hell', damage: 0, defenseBoost: 50 },
+    { id: 'rj_bankai_zanka', name: 'Bankai: Zanka no Tachi', damage: 0, bankaiActivate: true },
+    { id: 'rj_undead_army', name: 'Undead Army', damage: 500, ultimate: true }
   ],
-  'Kyoka Suigetsu': [
-    { name: 'Perfect Hypnosis', damage: 350, description: 'You manipulate the opponent’s optical nerves to blind them and backstab.' },
-    { name: 'Danku', damage: 50, description: 'You gather reishi to create a fortified wall, boosting defense.', defenseBoost: 100 },
-    { name: 'Hypnotic Counter', damage: 200, description: 'You hypnotize the opponent to counter their attack!', counterAttack: true },
-    { name: 'Hogyoku Ball', damage: 50, description: 'You utilize a Hogyoku Ball to evolve in this fight, boosting defense.', bankaiActivate: true, defenseBoost: 100 },
-    { name: 'Hado 90: Kurohitsugi', damage: 1000, description: 'You engulf the opponent in a black coffin filled with blades.', ultimate: true }
+
+  [POWER_IDS.KYOKA_SUIGETSU]: [
+    { id: 'ks_perfect_hypnosis', name: 'Perfect Hypnosis', damage: 350 },
+    { id: 'ks_danku', name: 'Danku', damage: 0, defenseBoost: 100 },
+    { id: 'ks_hypnotic_counter', name: 'Hypnotic Counter', damage: 200, counterAttack: true },
+    { id: 'ks_hogyoku_ball', name: 'Hogyoku Ball', damage: 50, bankaiActivate: true, defenseBoost: 100 },
+    { id: 'ks_kurohitsugi', name: 'Hado 90: Kurohitsugi', damage: 1000, ultimate: true }
   ],
-  'Zabimaru': [
-    { name: 'Bleeding Slash', damage: 150, description: 'You slash your opponent, making them bleed for 150 damage.' },
-    { name: 'Hungry Mamba', damage: 300, description: 'You unleash a large snake-like creature that attacks ferociously.' },
-    { name: 'Bankai: Zabimaru', damage: 0, description: 'You unleash your Bankai.', bankaiActivate: true }
+
+  [POWER_IDS.ZABIMARU]: [
+    { id: 'zabi_bleeding_slash', name: 'Bleeding Slash', damage: 150 },
+    { id: 'zabi_hungry_mamba', name: 'Hungry Mamba', damage: 300 },
+    { id: 'zabi_defensive_spine', name: 'Defensive Spine', damage: 0, defenseBoost: 20 },
+    { id: 'zabi_bankai', name: 'Bankai: Zabimaru', damage: 0, bankaiActivate: true },
+    { id: 'zabi_whirling_destruction', name: 'Whirling Destruction', damage: 500, ultimate: true },
+    { id: 'zabi_venomous_ichimonji', name: 'Venomous Ichimonji', damage: 1500, ultimate: true }
   ],
-  'Shinso': [
-    { name: 'Expanding Blade', damage: 500, description: 'You expand your blade to 15km, striking your opponent.' },
-    { name: 'Elongated Barrage', damage: 350, description: 'You extend your blade repeatedly to barrage your opponent.' },
-    { name: 'Bankai: Kamishini no Yari', damage: 0, description: 'You activate Bankai.', bankaiActivate: true },
-    { name: 'Murderous Expansion', damage: 1000, description: 'You expand your blade to its maximum capacity and slash everything nearby.', ultimate: true }
+
+  [POWER_IDS.SHINSO]: [
+    { id: 'shinso_expanding_blade', name: 'Expanding Blade', damage: 500 },
+    { id: 'shinso_elongated_barrage', name: 'Elongated Barrage', damage: 350 },
+    { id: 'shinso_bankai', name: 'Bankai: Kamishini no Yari', damage: 0, bankaiActivate: true },
+    { id: 'shinso_murderous_expansion', name: 'Murderous Expansion', damage: 1000, ultimate: true }
   ],
-  'Hyorinmaru': [
-    { name: 'Freezing Frost', damage: 150, description: 'You emit a freezing aura, slightly boosting defense.', defenseBoost: 10 },
-    { name: 'Freezing Tip', damage: 300, description: 'You stab your opponent with the frozen tip of your sword.' },
-    { name: 'Icy Counter', damage: 500, description: 'You use ice as a shield and counter attack!', counterAttack: true },
-    { name: 'Bankai: Daiguren Hyorinmaru', damage: 0, description: 'You activate your Bankai!', bankaiActivate: true },
-    { name: 'Icy Cross', damage: 1000, description: 'You encase your enemy in an icy cross that freezes them to death.', ultimate: true }
+
+  [POWER_IDS.HYORINMARU]: [
+    { id: 'hyo_freezing_frost', name: 'Freezing Frost', damage: 150, defenseBoost: 10 },
+    { id: 'hyo_freezing_tip', name: 'Freezing Tip', damage: 300 },
+    { id: 'hyo_icy_counter', name: 'Icy Counter', damage: 500, counterAttack: true },
+    { id: 'hyo_bankai', name: 'Bankai: Daiguren Hyorinmaru', damage: 0, bankaiActivate: true },
+    { id: 'hyo_icy_cross', name: 'Icy Cross', damage: 1000, ultimate: true }
   ],
-  'Wabisuke': [
-    { name: 'Gravity Multiplication', damage: 300, description: 'You multiply the enemy’s weight tenfold, crushing them.' },
-    { name: 'Gravity Slash', damage: 500, description: 'You conjure a kido-enhanced slash, striking heavily.' },
-    { name: 'Gravity Field', damage: 250, description: 'You increase the weight of everything nearby, boosting defense.', defenseBoost: 50 }
+
+  [POWER_IDS.ICHIMONJI]: [
+    { id: 'ichi_name_cut', name: 'Name Cut', damage: 400 },
+    { id: 'ichi_blackened_world', name: 'Blackened World', damage: 600 },
+    { id: 'ichi_bankai_shirafude', name: 'Bankai: Shirafude Ichimonji', damage: 0, bankaiActivate: true },
+    {
+      id: 'ichi_power_erasure',
+      name: 'Power Erasure',
+      damage: 1200,
+      ultimate: true,
+      nullifyTargetPowers: true
+    }
   ],
-  'Senbonzakura': [
-    { name: 'Bankai: Senbonzakura Kageyoshi', damage: 0, description: 'You unleash your Bankai!', bankaiActivate: true },
-    { name: 'Flower Blades', damage: 500, description: 'You throw thousands of flower blades at your opponent.' },
-    { name: 'Flower Colosseum', damage: 1500, description: 'You form a colosseum of blades that shreds the enemy.', defenseBoost: 50, ultimate: true },
-    { name: 'Flower Shield', damage: 100, description: 'You form a shield out of blades, countering attacks.', counterAttack: true }
-  ],
-  'Katen Kyokotsu': [
-    { name: 'Bankai: Katen Kyokotsu Shinju', damage: 2000, description: 'You unleash your Bankai and perform an instant kill ability.', bankaiActivate: true }
-  ],
-  'Minazuki': [
-    { name: 'Bleeding Slash', damage: 350, description: 'You slash your opponent with blood, causing heavy bleeding.' },
-    { name: 'Bleeding Willow', damage: 500, description: 'You whirl blood around you, critically striking enemies.' },
-    { name: 'Bankai: Minazuki', damage: 0, description: 'You summon your Bankai, a giant creature of blood.', bankaiActivate: true }
-  ],
-  'Suzumebachi': [
-    { name: 'Hornet Strike', damage: 200, description: 'You strike swiftly like a hornet.' },
-    { name: 'Death Stinger', damage: 350, description: 'You deliver a venomous sting that weakens the enemy.' },
-    { name: 'Bankai: Jakuhō Raikōben', damage: 1000, description: 'You activate Bankai, summoning a massive missile.', bankaiActivate: true },
-  ],
-  'Beast': [
-    { name: 'Savage Bite', damage: 100, description: 'You bite into the opponent with wild ferocity.' },
-    { name: 'Claw Frenzy', damage: 250, description: 'You unleash a barrage of claw strikes.' },
-    { name: 'Beast King’s Roar', damage: 300, description: 'You roar with primal fury, dealing devastating damage.', ultimate: true }
-  ],
-  'Los Lobos': [
-    { name: 'Twin Fang Shot', damage: 100, description: 'You fire twin spiritual blasts at the enemy.' },
-    { name: 'Wolf Pack Barrage', damage: 200, description: 'You summon spirit wolves to attack relentlessly.' },
-    { name: 'Cero: Corazon', damage: 150, description: 'You charge up your gun and release a large spiritual blast that does continuous damage.' },
-    { name: 'Ressurecion: Los Lobos', damage: 1, description: 'You awaken your ressurecion, unleashing your true powers', bankaiActivate: true },
-    { name: 'Cero: Metralleta', damage: 500, description: 'You shoot thousands of Ceros from your gun like a machine gun.', ultimate: true },
-  ],
-  'Arrogante': [
-    { name: 'Rotting Slash', damage: 250, description: 'You slash with decaying energy that weakens the opponent.' },
-    { name: 'Decay Field', damage: 100, description: 'You release a field of rot, lowering enemy strength.', defenseBoost: 50 },
-    { name: 'Bankai: Rōtting Apocalypse', damage: 0, description: 'You unleash ultimate decay with Bankai.', bankaiActivate: true },
-    { name: 'Rotting Grab', damage: 1000, description: 'You grab the opponent and rot them to death.', ultimate: true },
-  ],
-  'Shark': [
-    { name: 'Shark Bite', damage: 300, description: 'You bite into your enemy with shark-like jaws.' },
-    { name: 'Water Prison', damage: 400, description: 'You trap your enemy inside a water sphere, restricting them.' },
-    { name: 'Tidal Wave', damage: 600, description: 'You summon a giant wave to crush your opponent.' },
-  ],
-  'Horse': [
-    { name: 'Trample', damage: 200, description: 'You trample the enemy under hooves.' },
-    { name: 'Gallop Slash', damage: 300, description: 'You charge forward and slash the opponent.' },
-    { name: 'Lance Throw', damage: 500, description: 'You charge up your lance and throw it towards your opponent like a javelin.' },
-    { name: 'Bankai: Spirit Stallion', damage: 0, description: 'You summon your Bankai steed, a massive spirit horse.', bankaiActivate: true }
-  ],
-  'Murcielago': [
-    { name: 'Cero Oscuras', damage: 500, description: 'You fire a black cero at the opponent.' },
-    { name: 'Lanza del Relámpago', damage: 850, description: 'You throw a powerful energy spear that explodes on impact.', ultimate: true },
-    { name: 'Segunda Etapa', damage: 0, description: 'You transform into your second release form.', bankaiActivate: true }
-  ],
-  'Pantera': [
-    { name: 'Claw Slash', damage: 350, description: 'You slash your opponent with panther-like claws.' },
-    { name: 'Roaring Pounce', damage: 750, description: 'You pounce on your opponent with incredible force.' },
-    { name: 'Pantera Rampage', damage: 1250, description: 'You unleash your ultimate rampage attack.' }
-  ],
-  'Ichimonji': [
-    { name: 'Erasing Cut', damage: 500, description: 'You perform a cut with your ink brush and do 500 damage to the opponent.' },
-    { name: 'Ink Shield', damage: 0, description: 'You create a shield of ink that boosts your defense by 50.', defenseBoost: 50 },
-    { name: 'Bankai: Shirafude Ichimonji', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
-    { name: 'Futen Taisatsuryo', damage: 5000, description: 'You unleash the ultimate ink attack that is capable of existence erasure.', ultimate: true},
-    { name: 'Ink Castle', damage: 0, description: 'You manifest a castle of ink that boosts your defense by 100.', defenseBoost: 100, ultimate: true },
-  ],
-  'Nozarashi': [
-    { name: 'Sword Smash', damage: 600, description: 'You smash your opponent with your giant greatsword.' },
-    { name: 'Earth Shatter', damage: 800, description: 'You slam your sword into the ground, causing an earth-shattering shockwave.' },
-    { name: 'Bankai: RAGHHHHHH', damage: 0, description: 'You awaken your bankai.', bankaiActivate: true },
-    { name: 'Heavenly cleave', damage: 750, description: 'You swing your axe downwards into the ground with immense force, creating a massive shockwave and crater.'},
-    { name: 'Meteor Destroyer', damage: 1500, description: 'You lunge into the sky and cleave through an entire meteor.'},
-    { name: 'Heavenly Descent', damage: 2000, description: 'You smash your fists into the ground with immense force, creating a massive shock and increasing your defense by 200.', defenseBoost: 200, ultimate: true },
+
+  [POWER_IDS.NOZARASHI]: [
+    { id: 'noza_sword_smash', name: 'Sword Smash', damage: 600 },
+    { id: 'noza_earth_shatter', name: 'Earth Shatter', damage: 800 },
+    { id: 'noza_bankai', name: 'Bankai: Nozarashi', damage: 0, bankaiActivate: true },
+    { id: 'noza_heavenly_cleave', name: 'Heavenly Cleave', damage: 750 },
+    { id: 'noza_meteor_destroyer', name: 'Meteor Destroyer', damage: 1500, ultimate: true },
+    {
+      id: 'noza_heavenly_descent',
+      name: 'Heavenly Descent',
+      damage: 2000,
+      defenseBoost: 200,
+      ultimate: true
+    }
   ]
 };
 
-
 const bossPool = [
   {
-    name:  'Sosuke Aizen',
-    health: 1500,
-    defense: 0,
+    id: 'menos_grande',
+    name: 'Menos Grande',
+    health: 4500,
+    defense: 120,
+
     abilities: [
-      { name: 'Perfect Hypnosis', effect: 'dodge', chance: 0.1 },
-      { name: 'Danku', effect: 'block', chance: 0.1 },
-      { name: 'Slash', damage: 250, chance: 0.2 },
-      { name: 'Kido: Hado 90: Kurohitsugi', damage: 300, chance: 0.1 },
-      { name: 'Kido: restrain', damage: 500, chance: 0.5 },
-      { name: 'Hogyoku merge', damage: 1, effect: 'bossUltimate', chance: 0.2 }
+      {
+        id: 'menos_cero',
+        name: 'Cero',
+        damage: 180,
+        chance: 0.6
+      },
+      {
+        id: 'menos_hard_skin',
+        name: 'Hardened Skin',
+        defenseBoost: 30,
+        chance: 0.3
+      }
     ]
   },
+
   {
-    name: 'Grimmjow',
-    health: 1000,
-    defense: 0,
+    id: 'adjuchas',
+    name: 'Adjuchas',
+    health: 6000,
+    defense: 160,
+
     abilities: [
-      { name: 'Claw Slash', damage: 200, chance: 0.50 },
-      { name: 'Roar', damage: 100, chance: 0.1 },
+      {
+        id: 'adjuchas_cero',
+        name: 'Cero Barrage',
+        damage: 250,
+        chance: 0.6
+      },
+      {
+        id: 'adjuchas_regen',
+        name: 'Rapid Regeneration',
+        heal: 300,
+        chance: 0.25
+      }
     ]
   },
+
   {
-    name: 'Yhwach',
-    health: 1500,
-    defense: 0,
+    id: 'vasto_lorde',
+    name: 'Vasto Lorde',
+    health: 8500,
+    defense: 220,
+
     abilities: [
-      { name: 'Almighty', damage: 150, effect: 'dodge', chance: 0.1 },
-      { name: 'Slash', damage: 125, chance: 0.1 },
-      { name: "Absolute Eradication", damage: 300, chance: 0.01 },
-      { name: 'Almighty: past erasure', damage: 350, effect: 'ultimate_deactivate', chance: 0.01 },
+      {
+        id: 'vasto_cero_osc',
+        name: 'Cero Oscuras',
+        damage: 400,
+        chance: 0.55
+      },
+      {
+        id: 'vasto_hierro',
+        name: 'Hierro',
+        defenseBoost: 50,
+        chance: 0.35
+      },
+      {
+        id: 'vasto_ultimate',
+        name: 'Despair Incarnate',
+        bossUltimate: true,
+        heal: 800,
+        defenseBoost: 100,
+        chance: 0.2
+      }
     ]
   },
+
   {
-    name: 'Ulquiorra',
-    health: 1000,
-    defense: 10,
+    id: 'arrancar_commander',
+    name: 'Arrancar Commander',
+    health: 7000,
+    defense: 190,
+
     abilities: [
-      { name: 'Lanza de rampago', damage: 500, chance: 0.5 },
-      { name: 'Vastocar Regeneration', damage: 1, effect: 'heal', chance: 0.25 },
-      { name: 'Hierro', damage: 1, effect: 'defenceBoost', chance: 0.75 },
-      { name: 'Cero Oscuras', damage: 250, chance: 0.8 },
-      { name: 'Grab', damage: 150, chance: 0.9 },
-      { name: 'Sword slash', damage: 200, chance: 0.2 }
+      {
+        id: 'arrancar_blade_fury',
+        name: 'Blade Fury',
+        damage: 320,
+        chance: 0.6
+      },
+      {
+        id: 'arrancar_tactician',
+        name: 'Tactician’s Guard',
+        defenseBoost: 60,
+        chance: 0.3
+      }
+    ]
+  },
+
+  {
+    id: 'espada_elite',
+    name: 'Espada Elite',
+    health: 10000,
+    defense: 260,
+
+    abilities: [
+      {
+        id: 'espada_gran_cero',
+        name: 'Gran Rey Cero',
+        damage: 550,
+        chance: 0.5
+      },
+      {
+        id: 'espada_hierro_mastery',
+        name: 'Hierro Mastery',
+        defenseBoost: 80,
+        chance: 0.35
+      },
+      {
+        id: 'espada_ultimate',
+        name: 'Dominion of Death',
+        bossUltimate: true,
+        damage: 650,
+        defenseBoost: 120,
+        heal: 1000,
+        chance: 0.2
+      }
     ]
   }
-]
+];
+
+
 
 // --- Command Handlers ---
 
@@ -1260,7 +1342,7 @@ async function handleShopWeaponsCommand(interaction) {
     components: [weaponBuyRow],
   });
 
-  const message = interaction.fetchReply()
+  const message = await interaction.fetchReply()
 
   // Collector for menu
   const collector = message.createMessageComponentCollector({
@@ -1488,304 +1570,218 @@ async function handleFightCommand(interaction) {
   const userData = await database.getUserData(userId);
 
   if (!userData.power || !powerMovesets[userData.power]) {
-    return interaction.reply({
-      content: 'You require a shikai/power to fight or your current shikai is not implemented yet.',
-      ephemeral: true,
-    });
+    return interaction.reply({ content: 'You do not have a usable power.', ephemeral: true });
   }
 
   if (userData.race?.toLowerCase() === 'human') {
-    return interaction.reply({
-      content: `You are a ${userData.race}, you cannot utilise this command yet.`,
-      ephemeral: false,
-    });
+    return interaction.reply({ content: 'Humans cannot fight yet.', ephemeral: true });
   }
 
-  // =========================
-  // Constants
-  // =========================
-  const BOSS_ULTIMATE_DAMAGE_MULT = 1.5;
+  const boss = structuredClone(
+    bossPool[Math.floor(Math.random() * bossPool.length)]
+  );
 
-  // Pick random boss
-  const enemy = bossPool[Math.floor(Math.random() * bossPool.length)];
-  let bossHealth = enemy.health;
-  let playerDefense = userData.defense || 0;
-  let playerHealth = 700 + (userData.healthBoost || 0);
+  let bossHP = boss.health;
+  let bossDefense = boss.defense ?? 0;
+  let bossUltimateUsed = false;
+
+  let playerHP = 1000 + (userData.healthBoost ?? 0);
+  let playerDefense = userData.defense ?? 0;
+  let bankaiActive = false;
+
   let turn = 1;
   let fightActive = true;
-  let bankaiActive = false;
-  let battleLog = [];
-  let bossUltimate = false;
-
-  // =========================
-  // Player moves
-  // =========================
   const moveset = powerMovesets[userData.power];
+  const battleLog = [];
 
-  function getAvailableMoves() {
-    return moveset
-      .filter(move => {
-        if (move.ultimate && !bankaiActive) return false;
-        if (move.name.toLowerCase() === 'mugetsu' && !bankaiActive) return false;
+  /* ================= DAMAGE FORMULAS ================= */
+
+  const calcPlayerDamage = (base, defense) => {
+    const reduced = base * (1 - defense / (defense + 150));
+    return Math.max(25, Math.floor(reduced));
+  };
+
+  const calcBossDamage = (base, defense) => {
+    const reduced = base * (1 - defense / (defense + 100));
+    return Math.max(Math.floor(base * 0.25), Math.floor(reduced));
+  };
+
+  /* ================= MOVE FILTER ================= */
+
+  const getMoves = () =>
+    moveset
+      .filter(m => {
+        if (m.ultimate && !bankaiActive) return false;
+        if (m.bankaiActivate && bankaiActive) return false;
         return true;
       })
-      .map((move, idx) => ({
-        label: move.name.slice(0, 100),
-        value: idx.toString(),
-        description: move.description.slice(0, 100),
+      .map((m, i) => ({
+        label: m.name.slice(0, 100),
+        value: i.toString(),
       }));
-  }
 
-  const moveMenu = new StringSelectMenuBuilder()
-    .setCustomId('fight-move-select')
-    .setPlaceholder('Choose your move')
-    .addOptions(getAvailableMoves());
+  /* ================= INITIAL MESSAGE ================= */
 
-  const moveRow = new ActionRowBuilder().addComponents(moveMenu);
-
-  const fightMessage = await interaction.reply({
+  const message = await interaction.reply({
+    fetchReply: true,
     embeds: [
       new EmbedBuilder()
-        .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
-        .setDescription(
-          `Boss HP: **${bossHealth}**\nYour HP: **${playerHealth}**\nYour Defense: **${playerDefense}**`
-        )
+        .setTitle(`⚔️ Boss Fight: ${boss.name}`)
+        .setDescription(`Boss HP: **${bossHP}**\nYour HP: **${playerHP}**`)
         .setColor('Red'),
     ],
-    components: [moveRow],
-    ephemeral: false,
-    fetchReply: true,
+    components: [
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId('fight_move')
+          .setPlaceholder('Choose your move')
+          .addOptions(getMoves())
+      ),
+    ],
   });
 
-  const collector = fightMessage.createMessageComponentCollector({
+  const collector = message.createMessageComponentCollector({
     componentType: ComponentType.StringSelect,
-    time: 120000,
+    time: 120_000,
     filter: i => i.user.id === userId,
   });
 
+  /* ================= MAIN LOOP ================= */
+
   collector.on('collect', async i => {
-    if (!fightActive || i.customId !== 'fight-move-select') return;
+    if (!fightActive) return;
 
-    const moveIdx = parseInt(i.values[0]);
-    const move = moveset[moveIdx];
-    let turnLog = [`**Turn ${turn}:**`];
+    const move = moveset[Number(i.values[0])];
+    const log = [`**Turn ${turn}**`];
 
-    // =========================
-    // Player turn
-    // =========================
-    if (move.name.toLowerCase() === 'mugetsu') {
-      bossHealth = 0;
+    /* ================= MUUGETSU ================= */
+
+    if (move.id === 'mugetsu') {
       fightActive = false;
+      collector.stop('mugetsu');
 
-      turnLog.push(`🌑 You unleashed **Mugetsu**! ${enemy.name} was completely obliterated...`);
-      turnLog.push(`⚠️ The cost of this forbidden technique is everything. Your powers have vanished...`);
+      const money = Math.floor(Math.random() * 3000) + 1500;
+      const exp = Math.floor(Math.random() * 600) + 600;
 
+      userData.balance += money;
+      userData.experience += exp;
       userData.power = null;
+
       await database.saveUserData(userId, userData);
 
-      battleLog.push(turnLog.join('\n'));
-      turn++;
-    }
-    else if (move.defenseBoost) {
-      playerDefense += move.defenseBoost;
-      turnLog.push(`You used **${move.name}** and increased your defense by ${move.defenseBoost}!`);
-    }
-    else {
-      let damage = move.damage;
-      if (bankaiActive) damage = Math.floor(damage * 1.5);
-
-      let prevented = false;
-
-      for (const ability of enemy.abilities || []) {
-        if (ability.effect === 'dodge' && Math.random() < ability.chance) {
-          turnLog.push(`${enemy.name} used **${ability.name}** and dodged your attack!`);
-          prevented = true;
-          break;
-        }
-
-        if (ability.effect === 'block' && Math.random() < ability.chance) {
-          turnLog.push(`${enemy.name} used **${ability.name}** and blocked your attack!`);
-          prevented = true;
-          break;
-        }
-
-        if (ability.effect === 'defenceBoost' && Math.random() < ability.chance) {
-          enemy.defense += 10;
-          turnLog.push(`${enemy.name} used **${ability.name}** and increased their defence by 10!`);
-          prevented = true;
-          break;
-        }
-
-        if (ability.effect === 'heal' && Math.random() < ability.chance) {
-          enemy.health += 250;
-          bossHealth += 250;
-          turnLog.push(`${enemy.name} used **${ability.name}** and healed for 250 HP!`);
-          prevented = true;
-          break;
-        }
-
-        if (ability.effect === 'ultimate_deactivate' && Math.random() < ability.chance) {
-          bankaiActive = false;
-          turnLog.push(`${enemy.name} used **${ability.name}** and deactivated your ultimate!`);
-          prevented = true;
-          break;
-        }
-
-        if (ability.effect === 'bossUltimate' && Math.random() < ability.chance) {
-          bossUltimate = true;
-          bossHealth += 900;
-          enemy.defense += 50;
-          turnLog.push(`${enemy.name} used **${ability.name}** and activated their **Ultimate**!`);
-          prevented = true;
-          break;
-        }
-      }
-
-      if (!prevented) {
-        const dmg = Math.max(1, damage - enemy.defense);
-        bossHealth -= dmg;
-        turnLog.push(`You used **${move.name}** and dealt **${dmg}** damage to ${enemy.name}!`);
-      }
-    }
-
-    if (move.counterAttack) {
-      bossHealth -= move.damage;
-      playerHealth += 200;
-      turnLog.push(
-        `You countered the boss' attack, dealt **${move.damage}** damage, and healed **200 HP**.`
-      );
-    }
-
-    if (move.bankaiActivate && !bankaiActive) {
-      bankaiActive = true;
-      playerDefense += 50;
-      playerHealth += 100;
-      turnLog.push(
-        `🔥 You activated **Bankai/Ressurecion**! +50 Defense, +100 HP, attacks are empowered!`
-      );
-    }
-
-    // =========================
-    // Boss turn
-    // =========================
-    if (bossHealth > 0 && fightActive) {
-      let bossDidAction = false;
-
-      if (enemy.abilities?.length) {
-        const ability = enemy.abilities[Math.floor(Math.random() * enemy.abilities.length)];
-
-        if (ability.damage && Math.random() < ability.chance) {
-          let rawDamage = ability.damage;
-
-          if (bossUltimate) {
-            rawDamage = Math.floor(rawDamage * BOSS_ULTIMATE_DAMAGE_MULT);
-            turnLog.push(`💥 ${enemy.name}'s **Ultimate** empowers their attack!`);
-          }
-
-          let effectiveDefense = Math.floor(playerDefense * 0.5);
-          let bossDmg = rawDamage - effectiveDefense;
-          bossDmg = Math.max(Math.floor(rawDamage * 0.3), bossDmg);
-
-          playerHealth -= bossDmg;
-          turnLog.push(`${enemy.name} used **${ability.name}** and dealt **${bossDmg}** damage to you!`);
-          bossDidAction = true;
-        }
-      }
-
-      if (!bossDidAction) {
-        let baseAttack = enemy.abilities?.find(a => a.damage)?.damage || 15;
-
-        if (bossUltimate) {
-          baseAttack = Math.floor(baseAttack * BOSS_ULTIMATE_DAMAGE_MULT);
-          turnLog.push(`💥 ${enemy.name}'s **Ultimate** empowers their attack!`);
-        }
-
-        let effectiveDefense = Math.floor(playerDefense * 0.5);
-        let bossDmg = baseAttack - effectiveDefense;
-        bossDmg = Math.max(Math.floor(baseAttack * 0.3), bossDmg);
-
-        playerHealth -= bossDmg;
-        turnLog.push(`${enemy.name} attacks and deals **${bossDmg}** damage to you!`);
-      }
-    }
-
-    playerHealth = Math.max(0, playerHealth);
-    bossHealth = Math.max(0, bossHealth);
-
-    battleLog.push(turnLog.join('\n'));
-    turn++;
-
-    // =========================
-    // End conditions
-    // =========================
-    let resultMsg;
-    let embedColor = 'Red';
-
-    if (bossHealth <= 0) {
-      fightActive = false;
-
-      const rewardMoney = Math.floor(Math.random() * 3000) + 1000;
-      const rewardExp = Math.floor(Math.random() * 500) + 250;
-
-      userData.balance += rewardMoney;
-      userData.experience += rewardExp;
-      await database.saveUserData(userId, userData);
-
-      if (move.name.toLowerCase() === 'mugetsu') embedColor = '#000000';
-
-      resultMsg = `🎉 You defeated **${enemy.name}**!\n\n**Rewards:**\n¥${rewardMoney} and ${rewardExp} EXP\n\n${battleLog.join('\n')}`;
-      collector.stop();
-    }
-    else if (playerHealth <= 0) {
-      fightActive = false;
-      resultMsg = `💀 You were defeated by **${enemy.name}**!\n\n${battleLog.join('\n')}`;
-      collector.stop();
-    }
-    else if (turn > 20) {
-      fightActive = false;
-      resultMsg = `⏳ The fight ended in a draw after 20 turns!\n\n${battleLog.join('\n')}`;
-      collector.stop();
-    }
-    else {
-      resultMsg =
-        `Boss HP: ${bossHealth}\nYour HP: ${playerHealth}\nYour Defense: ${playerDefense}\n\n` +
-        `${turnLog.join('\n')}\n\n👉 Choose another move!`;
-    }
-
-    try {
       await i.update({
         embeds: [
           new EmbedBuilder()
-            .setTitle(`⚔️ Boss Fight: ${enemy.name}`)
-            .setDescription(resultMsg)
-            .setColor(embedColor),
+            .setTitle('🌑 Mugetsu — Final Technique')
+            .setDescription(
+              [
+                '🌑 You unleashed **Mugetsu**.',
+                `💀 ${boss.name} was erased from existence.`,
+                `🎁 Rewards: **+¥${money}**, **+${exp} EXP**`,
+                '🕯️ Your powers have vanished forever.',
+              ].join('\n')
+            )
+            .setColor('#000000'),
         ],
-        components: fightActive
-          ? [
-              new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder()
-                  .setCustomId('fight-move-select')
-                  .setPlaceholder('Choose your move')
-                  .addOptions(getAvailableMoves())
-              ),
-            ]
-          : [],
+        components: [],
       });
-    } catch (err) {
-      console.error('Failed to update interaction:', err);
+      return;
     }
-  });
 
-  collector.on('end', async () => {
-    if (fightActive) {
-      fightActive = false;
-      await interaction.followUp({
-        content: `⌛ The fight timed out after 2 minutes!`,
-        ephemeral: false,
-      });
+    /* ================= PLAYER TURN ================= */
+
+    if (move.bankaiActivate) {
+      bankaiActive = true;
+      playerHP += 200;
+      playerDefense += 50;
+      log.push(`🔥 You activated **Bankai / Resurrección**!`);
+    } else {
+      if (move.defenseBoost) {
+        playerDefense += move.defenseBoost;
+        log.push(`🛡️ Defense increased by **${move.defenseBoost}**.`);
+      }
+
+      if (move.damage > 0) {
+        const base = bankaiActive ? Math.floor(move.damage * 1.4) : move.damage;
+        const dmg = calcPlayerDamage(base, bossDefense);
+        bossHP -= dmg;
+        log.push(`⚔️ You used **${move.name}** dealing **${dmg} damage**.`);
+      }
     }
+
+    /* ================= BOSS TURN ================= */
+
+    if (bossHP > 0) {
+      const ability = boss.abilities.find(a => Math.random() < a.chance);
+
+      if (ability) {
+        if (ability.bossUltimate && !bossUltimateUsed) {
+          bossUltimateUsed = true;
+          bossDefense += ability.defenseBoost ?? 100;
+          bossHP += ability.heal ?? 800;
+          log.push(`💥 ${boss.name} unleashed their **Ultimate**!`);
+        } else {
+          if (ability.defenseBoost) {
+            bossDefense += ability.defenseBoost;
+            log.push(`🛡️ ${boss.name} hardened their defense.`);
+          }
+
+          if (ability.heal) {
+            bossHP += ability.heal;
+            log.push(`💉 ${boss.name} regenerated **${ability.heal} HP**.`);
+          }
+
+          if (ability.damage) {
+            const dmg = calcBossDamage(
+              ability.damage,
+              Math.max(0, playerDefense - 40)
+            );
+            playerHP -= dmg;
+            log.push(`💢 ${boss.name} dealt **${dmg} damage**.`);
+          }
+        }
+      }
+    }
+
+    /* ================= CLEANUP ================= */
+
+    bossHP = Math.max(0, bossHP);
+    playerHP = Math.max(0, playerHP);
+
+    battleLog.push(log.join('\n'));
+    if (battleLog.length > 7) battleLog.shift();
+
+    if (bossHP <= 0 || playerHP <= 0) {
+      fightActive = false;
+      collector.stop(bossHP <= 0 ? 'win' : 'lose');
+    }
+
+    await i.update({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(`⚔️ Boss Fight: ${boss.name}`)
+          .setDescription(
+            battleLog.join('\n') +
+              `\n\n**Boss HP:** ${bossHP}\n**Your HP:** ${playerHP}`
+          )
+          .setColor(bossHP <= 0 ? 'Green' : 'Red'),
+      ],
+      components: fightActive
+        ? [
+            new ActionRowBuilder().addComponents(
+              new StringSelectMenuBuilder()
+                .setCustomId('fight_move')
+                .setPlaceholder('Choose your move')
+                .addOptions(getMoves())
+            ),
+          ]
+        : [],
+    });
+
+    turn++;
   });
 }
+
 
 
 async function handleFishCommand(interaction) {
